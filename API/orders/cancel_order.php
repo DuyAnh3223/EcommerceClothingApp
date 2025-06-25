@@ -1,0 +1,25 @@
+<?php
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json");
+require_once '../config/db_connect.php';
+
+$data = json_decode(file_get_contents("php://input"), true);
+
+$order_id = $data['order_id'] ?? null;
+
+if (!$order_id) {
+    echo json_encode(["success" => false, "message" => "Thiếu order_id"]);
+    exit();
+}
+
+$stmt = $conn->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?");
+$stmt->bind_param("i", $order_id);
+
+if ($stmt->execute()) {
+    echo json_encode(["success" => true, "message" => "Đã hủy đơn hàng"]);
+} else {
+    echo json_encode(["success" => false, "message" => "Lỗi: " . $conn->error]);
+}
+$stmt->close();
+$conn->close();
+?>
