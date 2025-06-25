@@ -1,47 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'components/product_table.dart';
-// import 'add_edit_product_screen.dart';
-
-// class ProductScreen extends StatelessWidget {
-//   const ProductScreen({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: Padding(
-//         padding: const EdgeInsets.all(16),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Row(
-//               children: [
-//                 const Text(
-//                   "Sản phẩm",
-//                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-//                 ),
-//                 const Spacer(),
-//                 ElevatedButton.icon(
-//                   icon: const Icon(Icons.add),
-//                   label: const Text("Thêm sản phẩm"),
-//                   onPressed: () {
-//                     Navigator.push(
-//                       context,
-//                       MaterialPageRoute(
-//                         builder: (context) => const AddEditProductScreen(),
-//                       ),
-//                     );
-//                   },
-//                 ),
-//               ],
-//             ),
-//             const SizedBox(height: 20),
-//             const Expanded(child: ProductTable()),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
 
 import 'package:flutter/material.dart';
 import '../../models/product_model.dart';
@@ -75,9 +31,7 @@ class _ProductScreenState extends State<ProductScreen> {
     });
 
     try {
-      final response = await http.get(
-        Uri.parse('http://localhost/clothing_project/tonbaongu/API/products/get_products.php'),
-      );
+      final response = await http.get(Uri.parse('http://localhost/EcommerceClothingApp/API/products/get_products.php'));
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -153,7 +107,7 @@ class _ProductScreenState extends State<ProductScreen> {
     if (confirmed == true) {
       try {
         final response = await http.post(
-          Uri.parse('http://localhost/clothing_project/tonbaongu/API/products/delete_product.php'),
+          Uri.parse('http://localhost/EcommerceClothingApp/API/products/delete_product.php'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'id': productId}),
         );

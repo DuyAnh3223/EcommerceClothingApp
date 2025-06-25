@@ -27,7 +27,7 @@ class UserTable extends StatelessWidget {
     if (confirm == true) {
       try {
         final response = await http.post(
-          Uri.parse("http://localhost/MyProject/backendapi/users/delete_user.php"),
+          Uri.parse("http://localhost/EcommerceClothingApp/API/users/delete_user.php"),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'MaND': userId}),
         );

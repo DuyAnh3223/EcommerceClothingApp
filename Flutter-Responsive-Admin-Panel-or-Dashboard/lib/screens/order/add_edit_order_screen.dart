@@ -54,10 +54,10 @@ class _AddEditOrderScreenState extends State<AddEditOrderScreen> {
       Map<String, dynamic> body;
 
       if (widget.order == null) {
-        url = 'http://localhost/MyProject/backendapi/orders/add_order.php';
+        url = 'http://localhost/EcommerceClothingApp/API/orders/add_order.php';
         body = newOrder.toJson();
       } else {
-        url = 'http://localhost/MyProject/backendapi/orders/update_order.php';
+        url = 'http://localhost/EcommerceClothingApp/API/orders/update_order.php';
         body = newOrder.toJson();
       }
 

@@ -103,13 +103,17 @@ class ProductTable extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.add_circle, color: Colors.green),
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => ProductVariantScreen(productId: product.id),
                       ),
                     );
+                    // Refresh product data when returning from variant management
+                    if (result == true) {
+                      onReload();
+                    }
                   },
                 ),
                 IconButton(

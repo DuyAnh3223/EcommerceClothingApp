@@ -1,41 +1,3 @@
-// class Product {
-//   final String id;
-//   final String name;
-//   final String description;
-//   final double price;
-//   final int stock;
-//   final String status;
-//   final String color;
-//   final String size;
-//   final String image;
-
-//   Product({
-//     required this.id,
-//     required this.name,
-//     required this.description,
-//     required this.price,
-//     required this.stock,
-//     required this.status,
-//     required this.color,
-//     required this.size,
-//     required this.image,
-//   });
-
-//   Map<String, dynamic> toJson() {
-//     return {
-//       'id': id,
-//       'name': name,
-//       'description': description,
-//       'price': price,
-//       'stock': stock,
-//       'status': status,
-//       'color': color,
-//       'size': size,
-//       'image': image,
-//     };
-//   }
-// }
-
 class Product {
   final int id;
   final String name;
@@ -61,7 +23,7 @@ class Product {
     List<ProductVariant> variantsList = [];
     if (json['variants'] != null) {
       variantsList = (json['variants'] as List)
-          .map((variant) => ProductVariant.fromJson(variant))
+          .map((variant) => ProductVariant.fromJson(variant, json['id']))
           .toList();
     }
 
@@ -119,8 +81,8 @@ class Product {
 }
 
 class ProductVariant {
-  final int id;
-  final int productId;
+  final int id; // product_variant_id
+  final int productId; // product_id
   final String color;
   final String size;
   final String material;
@@ -141,10 +103,11 @@ class ProductVariant {
     required this.status,
   });
 
-  factory ProductVariant.fromJson(Map<String, dynamic> json) {
+  // Chú ý: truyền productId từ ngoài vào vì API trả về mỗi variant không có product_id, chỉ có id (product_variant_id)
+  factory ProductVariant.fromJson(Map<String, dynamic> json, int productId) {
     return ProductVariant(
-      id: json['id'] ?? 0,
-      productId: json['product_id'] ?? 0,
+      id: json['id'] ?? json['product_variant_id'] ?? 0,
+      productId: productId,
       color: json['color'] ?? '',
       size: json['size'] ?? '',
       material: json['material'] ?? '',

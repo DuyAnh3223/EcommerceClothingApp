@@ -27,7 +27,7 @@ class OrderTable extends StatelessWidget {
     if (confirm == true) {
       try {
         final response = await http.post(
-          Uri.parse("http://localhost/MyProject/backendapi/orders/delete_order.php"),
+          Uri.parse("http://localhost/EcommerceClothingApp/API/orders/delete_order.php"),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'MaDH': orderId}),
         );

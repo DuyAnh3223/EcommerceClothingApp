@@ -34,9 +34,9 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
     try {
       String url;
       if (widget.productId != null) {
-        url = 'http://localhost/clothing_project/tonbaongu/API/products/get_variants.php?product_id=${widget.productId}';
+        url = 'http://localhost/EcommerceClothingApp/API/products/get_variants.php?product_id=${widget.productId}';
       } else {
-        url = 'http://localhost/clothing_project/tonbaongu/API/products/get_variants.php';
+        url = 'http://localhost/EcommerceClothingApp/API/products/get_variants.php';
       }
 
       final response = await http.get(Uri.parse(url));
@@ -45,7 +45,7 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
         final data = json.decode(response.body);
         if (data['success'] == true) {
           final List<ProductVariant> loadedVariants = (data['variants'] as List)
-              .map((item) => ProductVariant.fromJson(item))
+              .map((item) => ProductVariant.fromJson(item, widget.productId ?? 0))
               .toList();
           
           setState(() {
@@ -97,9 +97,12 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
     if (confirmed == true) {
       try {
         final response = await http.post(
-          Uri.parse('http://localhost/clothing_project/tonbaongu/API/products/delete_variant.php'),
+          Uri.parse('http://localhost/EcommerceClothingApp/API/products/delete_variant.php'),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'variant_id': variantId}),
+          body: json.encode({
+            'product_id': widget.productId,
+            'variant_id': variantId
+          }),
         );
 
         if (response.statusCode == 200) {
@@ -126,6 +129,18 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Quản lý biến thể sản phẩm"),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Refresh product data when going back
+            Navigator.pop(context, true);
+          },
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

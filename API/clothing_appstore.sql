@@ -1,4 +1,8 @@
 -- SQL schema for clothing e-commerce (Shopee-like)
+-- Create database
+CREATE DATABASE IF NOT EXISTS clothing_appstore;
+USE clothing_appstore;
+
 -- Drop old tables if exist
 DROP TABLE IF EXISTS cart_items;
 DROP TABLE IF EXISTS payments;
@@ -54,17 +58,17 @@ CREATE TABLE product_variants (
   id INT AUTO_INCREMENT PRIMARY KEY,
   color VARCHAR(50) NOT NULL,
   size VARCHAR(20) NOT NULL,
-  material VARCHAR(50) NOT NULL,
-  price DECIMAL(15,2) NOT NULL,
-  stock INT NOT NULL DEFAULT 0,
-  image_url VARCHAR(255),
-  status ENUM('active','inactive','out_of_stock') DEFAULT 'active'
+  material VARCHAR(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- PRODUCT_PRODUCT_VARIANT
 CREATE TABLE product_product_variant (
   product_id INT NOT NULL,
   product_variant_id INT NOT NULL,
+  price DECIMAL(15,2) NOT NULL,
+  stock INT NOT NULL DEFAULT 0,
+  image_url VARCHAR(255),
+  status ENUM('active','inactive','out_of_stock') DEFAULT 'active',
   PRIMARY KEY (product_id, product_variant_id),
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
   FOREIGN KEY (product_variant_id) REFERENCES product_variants(id) ON DELETE CASCADE
@@ -146,73 +150,57 @@ CREATE TABLE cart_items (
   FOREIGN KEY (product_variant_id) REFERENCES product_variants(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dữ liệu mẫu cho bảng products
-INSERT INTO products (id, name, description, category, gender_target, created_at, updated_at)
-VALUES
-  (1, 'Áo thun nam basic', 'Áo thun cotton 100% cho nam, thoáng mát, dễ phối đồ.', 'Áo thun', 'Nam', NOW(), NOW()),
-  (2, 'Quần jeans nữ skinny', 'Quần jeans co giãn, ôm dáng, phù hợp cho nữ.', 'Quần jeans', 'Nữ', NOW(), NOW()),
-  (3, 'Áo khoác gió unisex', 'Áo khoác gió nhẹ, chống nước, phù hợp cả nam và nữ.', 'Áo khoác', 'Unisex', NOW(), NOW());
+INSERT INTO users (username, email, phone, password, gender, dob, role)
+VALUES 
+('alice123', 'alice@example.com', '0909000001', 'hashed_pass_1', 'female', '1995-06-01', 'user'),
+('bobshop', 'bob@example.com', '0909000002', 'hashed_pass_2', 'male', '1990-01-15', 'admin');
 
--- Dữ liệu mẫu cho bảng product_variants
-INSERT INTO product_variants (id, color, size, material, price, stock, image_url, status)
+INSERT INTO user_addresses (user_id, address_line, city, province, postal_code, is_default)
 VALUES
-  (1, 'Trắng', 'M', 'Cotton', 150000, 50, 'https://example.com/images/ao-thun-trang-m.jpg', 'active'),
-  (2, 'Đen', 'L', 'Cotton', 155000, 30, 'https://example.com/images/ao-thun-den-l.jpg', 'active'),
-  (3, 'Xanh', 'S', 'Denim', 320000, 20, 'https://example.com/images/quan-jeans-xanh-s.jpg', 'active'),
-  (4, 'Xanh', 'M', 'Denim', 320000, 15, 'https://example.com/images/quan-jeans-xanh-m.jpg', 'active'),
-  (5, 'Đen', 'M', 'Polyester', 250000, 25, 'https://example.com/images/ao-khoac-den-m.jpg', 'active'),
-  (6, 'Xám', 'L', 'Polyester', 255000, 10, 'https://example.com/images/ao-khoac-xam-l.jpg', 'active');
+(1, '123 Lê Lợi', 'Hà Nội', 'Hà Nội', '100000', TRUE),
+(2, '456 Nguyễn Huệ', 'TP.HCM', 'Hồ Chí Minh', '700000', TRUE);
 
--- Dữ liệu mẫu cho bảng product_product_variant (liên kết sản phẩm và biến thể)
-INSERT INTO product_product_variant (product_id, product_variant_id)
+INSERT INTO products (name, description, category, gender_target)
 VALUES
-  (1, 1),
-  (1, 2),
-  (2, 3),
-  (2, 4),
-  (3, 5),
-  (3, 6);
+('Áo thun basic', 'Áo thun cotton thoáng mát', 'T-Shirts', 'unisex'),
+('Quần jeans slim fit', 'Chất liệu denim cao cấp', 'Pants', 'male');
 
--- Dữ liệu mẫu cho bảng users
-INSERT INTO users (id, username, email, password, full_name, phone, address, created_at)
+INSERT INTO product_variants (color, size, material)
 VALUES
-  (1, 'nguyenvana', 'vana@example.com', 'hashed_password_1', 'Nguyễn Văn A', '0901234567', 'Hà Nội', NOW()),
-  (2, 'lethib', 'lethib@example.com', 'hashed_password_2', 'Lê Thị B', '0912345678', 'TP.HCM', NOW());
+('white', 'M', 'Cotton'),
+('white', 'L', 'Denim');
 
--- Dữ liệu mẫu cho bảng orders
-INSERT INTO orders (id, user_id, status, total_amount, created_at, updated_at)
+INSERT INTO product_product_variant (product_id, product_variant_id,price, stock, image_url, status)
 VALUES
-  (1, 1, 'pending', 305000, NOW(), NOW()),
-  (2, 2, 'completed', 575000, NOW(), NOW());
+(1, 1, 150000, 100, 'url_image1.jpg', 'active'), -- Áo thun - Trắng M
+(2, 2, 350000, 50, 'url_image2.jpg', 'active'); -- Quần jeans - Xanh L
 
--- Dữ liệu mẫu cho bảng order_items
-INSERT INTO order_items (id, order_id, product_variant_id, quantity, price)
+INSERT INTO orders (user_id, address_id, total_amount, status)
 VALUES
-  (1, 1, 1, 2, 150000),
-  (2, 2, 3, 1, 320000),
-  (3, 2, 5, 1, 250000);
+(1, 1, 150000, 'confirmed'),
+(2, 2, 350000, 'shipping');
 
--- Dữ liệu mẫu cho bảng cart_items
-INSERT INTO cart_items (user_id, product_variant_id, quantity)
+INSERT INTO order_items (order_id, product_variant_id, quantity, price)
 VALUES
-  (1, 4, 1),
-  (2, 2, 2);
+(1, 1, 1, 150000),
+(2, 2, 1, 350000);
 
--- Dữ liệu mẫu cho bảng product_reviews
-INSERT INTO product_reviews (user_id, product_id, order_id, rating, content, image_url, video_url)
+INSERT INTO product_reviews (user_id, product_id, order_id, rating, content, image_url)
 VALUES
-  (1, 1, 1, 5, 'Áo rất đẹp, chất vải mát và mềm.', 'https://example.com/review/1.jpg', NULL),
-  (2, 2, 2, 4, 'Quần jeans co giãn tốt, mặc vừa vặn.', NULL, NULL);
+(1, 1, 1, 5, 'Áo đẹp, thoải mái', 'review_img1.jpg'),
+(2, 2, 2, 4, 'Quần ôm dáng, đẹp', 'review_img2.jpg');
 
--- Dữ liệu mẫu cho bảng notifications
-INSERT INTO notifications (user_id, title, content, type, is_read)
+INSERT INTO notifications (user_id, title, content, type)
 VALUES
-  (1, 'Đơn hàng mới', 'Bạn vừa đặt đơn hàng #1 thành công.', 'order_status', FALSE),
-  (2, 'Khuyến mãi', 'Nhận ngay voucher giảm giá 10% cho đơn hàng tiếp theo!', 'voucher', FALSE);
+(1, 'Đơn hàng đã xác nhận', 'Đơn hàng của bạn đang được xử lý', 'order_status'),
+(2, 'Ưu đãi cuối tuần', 'Giảm giá 10% cho mọi đơn hàng', 'sale');
 
--- Dữ liệu mẫu cho bảng payments
 INSERT INTO payments (order_id, payment_method, amount, status, transaction_code, paid_at)
 VALUES
-  (1, 'COD', 305000, 'pending', NULL, NULL),
-  (2, 'Bank', 575000, 'paid', 'BANK123456', NOW());
+(1, 'Momo', 150000, 'paid', 'MOMO123456', NOW()),
+(2, 'COD', 350000, 'pending', NULL, NULL);
 
+INSERT INTO cart_items (user_id, product_variant_id, quantity)
+VALUES
+(1, 2, 1),
+(2, 1, 2);

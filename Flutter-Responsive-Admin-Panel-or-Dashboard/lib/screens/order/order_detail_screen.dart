@@ -31,7 +31,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost/clothing_project/tonbaongu/API/orders/get_order_items.php?order_id=${widget.order.id}'),
+        Uri.parse('http://localhost/EcommerceClothingApp/API/orders/get_order_items.php?order_id=${widget.order.id}'),
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

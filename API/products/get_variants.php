@@ -1,29 +1,19 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Methods: GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
 require_once '../config/db_connect.php';
 
-// Get product_id from query parameters or POST data
-$product_id = null;
-
-if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-    $product_id = $_GET['product_id'] ?? null;
-} else {
-    $data = json_decode(file_get_contents("php://input"), true);
-    $product_id = $data['product_id'] ?? null;
-}
-
+$product_id = isset($_GET['product_id']) ? (int)$_GET['product_id'] : null;
 if ($product_id) {
-    // Get variants for specific product (dùng bảng trung gian)
-    $sql = "SELECT pv.id, pv.color, pv.size, pv.material, pv.price, pv.stock, pv.image_url, pv.status
+    $sql = "SELECT ppv.product_variant_id, pv.color, pv.size, pv.material, ppv.price, ppv.stock, ppv.status, ppv.image_url
             FROM product_product_variant ppv
             JOIN product_variants pv ON ppv.product_variant_id = pv.id
             WHERE ppv.product_id = ?
@@ -35,77 +25,33 @@ if ($product_id) {
     $variants = [];
     while ($row = $result->fetch_assoc()) {
         $variants[] = [
-            'id' => (int)$row['id'],
+            'id' => (int)$row['product_variant_id'],
             'color' => $row['color'],
             'size' => $row['size'],
             'material' => $row['material'],
             'price' => (float)$row['price'],
             'stock' => (int)$row['stock'],
-            'image_url' => $row['image_url'],
-            'status' => $row['status']
+            'status' => $row['status'],
+            'image_url' => $row['image_url']
         ];
     }
     $stmt->close();
-    
-    // Get product info
-    $product_stmt = $conn->prepare("SELECT id, name, description, category, gender_target FROM products WHERE id = ?");
-    $product_stmt->bind_param("i", $product_id);
-    $product_stmt->execute();
-    $product_result = $product_stmt->get_result();
-    $product_row = $product_result->fetch_assoc();
-    $product_stmt->close();
-    
-    if ($product_row) {
-        $product_info = [
-            'id' => (int)$product_row['id'],
-            'name' => $product_row['name'],
-            'description' => $product_row['description'],
-            'category' => $product_row['category'],
-            'gender_target' => $product_row['gender_target']
-        ];
-        
-        echo json_encode([
-            "success" => true,
-            "message" => "Lấy danh sách biến thể thành công",
-            "product" => $product_info,
-            "variants" => $variants,
-            "total_variants" => count($variants)
-        ]);
-    } else {
-        echo json_encode([
-            "success" => false,
-            "message" => "Sản phẩm không tồn tại"
-        ]);
-    }
-    
+    http_response_code(200);
+    echo json_encode(["success" => true, "variants" => $variants, "total_variants" => count($variants)]);
 } else {
-    // Get all variants (for admin purposes)
-    $sql = "SELECT pv.id, pv.color, pv.size, pv.material, pv.price, pv.stock, pv.image_url, pv.status
-            FROM product_variants pv
-            ORDER BY pv.id";
+    $sql = "SELECT id, color, size, material FROM product_variants ORDER BY id";
     $result = $conn->query($sql);
-    
     $variants = [];
     while ($row = $result->fetch_assoc()) {
         $variants[] = [
             'id' => (int)$row['id'],
             'color' => $row['color'],
             'size' => $row['size'],
-            'material' => $row['material'],
-            'price' => (float)$row['price'],
-            'stock' => (int)$row['stock'],
-            'image_url' => $row['image_url'],
-            'status' => $row['status']
+            'material' => $row['material']
         ];
     }
-    
-    echo json_encode([
-        "success" => true,
-        "message" => "Lấy tất cả biến thể thành công",
-        "variants" => $variants,
-        "total_variants" => count($variants)
-    ]);
+    http_response_code(200);
+    echo json_encode(["success" => true, "variants" => $variants, "total_variants" => count($variants)]);
 }
-
 $conn->close();
 ?>

@@ -79,11 +79,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
       if (widget.product == null) {
         // Add new product
-        url = 'http://localhost/clothing_project/tonbaongu/API/products/add_product.php';
+        url = 'http://localhost/EcommerceClothingApp/API/products/add_product.php';
         method = 'POST';
       } else {
         // Update existing product
-        url = 'http://localhost/clothing_project/tonbaongu/API/products/update_product.php';
+        url = 'http://localhost/EcommerceClothingApp/API/products/update_product.php';
         method = 'POST';
         productData['id'] = widget.product!.id.toString(); // Convert int to String
       }

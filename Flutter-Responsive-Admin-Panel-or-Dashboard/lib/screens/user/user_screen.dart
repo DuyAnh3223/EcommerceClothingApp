@@ -31,7 +31,7 @@ class _UserScreenState extends State<UserScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost/clothing_project/tonbaongu/API/users/get_users.php'),
+        Uri.parse('http://localhost/EcommerceClothingApp/API/users/get_users.php'),
       );
 
       if (response.statusCode == 200) {

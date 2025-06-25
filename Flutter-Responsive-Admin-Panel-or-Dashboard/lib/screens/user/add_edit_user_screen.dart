@@ -55,7 +55,7 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
       String url;
       Map<String, dynamic> body;
       if (widget.user == null) {
-        url = 'http://localhost/MyProject/backendapi/users/add_user.php';
+        url = 'http://localhost/EcommerceClothingApp/API/users/add_user.php';
         body = {
           'Ten': newUser.ten,
           'MatKhau': newUser.matKhau,
@@ -64,7 +64,7 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
           'Role': newUser.role,
         };
       } else {
-        url = 'http://localhost/MyProject/backendapi/users/update_user.php';
+        url = 'http://localhost/EcommerceClothingApp/API/users/update_user.php';
         body = {
           'MaND': newUser.maND,
           'Ten': newUser.ten,
