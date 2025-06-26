@@ -105,25 +105,32 @@ class _UserTableState extends State<UserTable> {
         ],
         rows: widget.users.map((user) {
           String gender = _selectedGender[user.id] ?? user.gender;
+
           if (!allowedGenders.contains(gender)) gender = 'male';
           return DataRow(cells: [
             DataCell(Text(user.id.toString())),
             DataCell(Text(user.username)),
             DataCell(Text(user.email)),
             DataCell(Text(user.phone)),
-            DataCell(DropdownButton<String>(
-              value: gender,
-              items: const [
-                DropdownMenuItem(value: 'male', child: Text('male')),
-                DropdownMenuItem(value: 'female', child: Text('female')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedGender[user.id] = value ?? user.gender;
-                });
-                // TODO: Gọi API cập nhật gender nếu muốn
-              },
-            )),
+            
+            // Có nút để lựa chọn
+            // DataCell(DropdownButton<String>(
+            //   value: gender,
+            //   items: const [
+            //     DropdownMenuItem(value: 'male', child: Text('male')),
+            //     DropdownMenuItem(value: 'female', child: Text('female')),
+            //   ],
+            //   onChanged: (value) {
+            //     setState(() {
+            //       _selectedGender[user.id] = value ?? user.gender;
+            //     });
+            //     // TODO: Gọi API cập nhật gender nếu muốn
+            //   },
+            // )),
+
+            //Đơn giản chỉ là text
+            DataCell(Text(gender)),
+
             DataCell(Text(user.role)),
             DataCell(Text(user.dob ?? '')),
             DataCell(Row(
