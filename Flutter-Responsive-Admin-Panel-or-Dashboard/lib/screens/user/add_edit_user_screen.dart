@@ -14,65 +14,80 @@ class AddEditUserScreen extends StatefulWidget {
 
 class _AddEditUserScreenState extends State<AddEditUserScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController maNDController;
-  late TextEditingController tenController;
-  late TextEditingController matKhauController;
-  late TextEditingController sdtController;
+  late TextEditingController idController;
+  late TextEditingController usernameController;
+  late TextEditingController passwordController;
+  late TextEditingController phoneController;
   late TextEditingController emailController;
-  String selectedRole = 'user'; // Default role
+  late TextEditingController dobController;
+  String selectedRole = 'user';
+  String selectedGender = 'male';
 
   @override
   void initState() {
     super.initState();
-    maNDController = TextEditingController(text: widget.user?.maND ?? '');
-    tenController = TextEditingController(text: widget.user?.ten ?? '');
-    matKhauController = TextEditingController(text: widget.user?.matKhau ?? '');
-    sdtController = TextEditingController(text: widget.user?.soDienThoai ?? '');
+    idController = TextEditingController(text: widget.user?.id.toString() ?? '');
+    usernameController = TextEditingController(text: widget.user?.username ?? '');
+    passwordController = TextEditingController(text: widget.user?.password ?? '');
+    phoneController = TextEditingController(text: widget.user?.phone ?? '');
     emailController = TextEditingController(text: widget.user?.email ?? '');
+    dobController = TextEditingController(text: widget.user?.dob ?? '');
     selectedRole = widget.user?.role ?? 'user';
+    selectedGender = widget.user?.gender ?? 'male';
   }
 
   @override
   void dispose() {
-    maNDController.dispose();
-    tenController.dispose();
-    matKhauController.dispose();
-    sdtController.dispose();
+    idController.dispose();
+    usernameController.dispose();
+    passwordController.dispose();
+    phoneController.dispose();
     emailController.dispose();
+    dobController.dispose();
     super.dispose();
   }
 
   void _saveUser() async {
     if (_formKey.currentState!.validate()) {
       final newUser = User(
-        maND: maNDController.text,
-        ten: tenController.text,
-        matKhau: matKhauController.text,
-        soDienThoai: sdtController.text,
+        id: int.tryParse(idController.text) ?? 0,
+        username: usernameController.text,
+        password: passwordController.text.isNotEmpty ? passwordController.text : null,
+        phone: phoneController.text,
         email: emailController.text,
+        gender: selectedGender,
         role: selectedRole,
+        createdAt: widget.user?.createdAt ?? '',
+        updatedAt: widget.user?.updatedAt ?? '',
+        dob: dobController.text,
       );
       String url;
       Map<String, dynamic> body;
       if (widget.user == null) {
         url = 'http://localhost/EcommerceClothingApp/API/users/add_user.php';
         body = {
-          'Ten': newUser.ten,
-          'MatKhau': newUser.matKhau,
-          'SoDienThoai': newUser.soDienThoai,
-          'Email': newUser.email,
-          'Role': newUser.role,
+          'username': newUser.username,
+          'password': newUser.password,
+          'phone': newUser.phone,
+          'email': newUser.email,
+          'gender': newUser.gender,
+          'role': newUser.role,
+          'dob': newUser.dob,
         };
       } else {
         url = 'http://localhost/EcommerceClothingApp/API/users/update_user.php';
         body = {
-          'MaND': newUser.maND,
-          'Ten': newUser.ten,
-          'MatKhau': newUser.matKhau,
-          'SoDienThoai': newUser.soDienThoai,
-          'Email': newUser.email,
-          'Role': newUser.role,
+          'id': newUser.id,
+          'username': newUser.username,
+          'phone': newUser.phone,
+          'email': newUser.email,
+          'gender': newUser.gender,
+          'role': newUser.role,
+          'dob': newUser.dob,
         };
+        if (newUser.password != null && newUser.password!.isNotEmpty) {
+          body['password'] = newUser.password;
+        }
       }
       try {
         final response = await http.post(
@@ -96,13 +111,15 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
     }
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
+  Widget _buildTextField(TextEditingController controller, String label, {bool isNumber = false, bool readOnly = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         decoration: InputDecoration(labelText: label),
         validator: (value) => value!.isEmpty ? "Không được để trống" : null,
+        readOnly: readOnly,
       ),
     );
   }
@@ -114,8 +131,8 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
         value: selectedRole,
         decoration: const InputDecoration(labelText: 'Vai trò'),
         items: const [
-          DropdownMenuItem(value: 'user', child: Text('Người dùng')),
-          DropdownMenuItem(value: 'admin', child: Text('Quản trị viên')),
+          DropdownMenuItem(value: 'user', child: Text('user')),
+          DropdownMenuItem(value: 'admin', child: Text('admin')),
         ],
         onChanged: (value) {
           setState(() {
@@ -123,6 +140,50 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
           });
         },
         validator: (value) => value == null ? "Vui lòng chọn vai trò" : null,
+      ),
+    );
+  }
+
+  Widget _buildGenderDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: DropdownButtonFormField<String>(
+        value: selectedGender,
+        decoration: const InputDecoration(labelText: 'Giới tính'),
+        items: const [
+          DropdownMenuItem(value: 'male', child: Text('male')),
+          DropdownMenuItem(value: 'female', child: Text('female')),
+        ],
+        onChanged: (value) {
+          setState(() {
+            selectedGender = value!;
+          });
+        },
+        validator: (value) => value == null ? "Vui lòng chọn giới tính" : null,
+      ),
+    );
+  }
+
+  Widget _buildDobField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: dobController,
+        readOnly: true,
+        decoration: const InputDecoration(labelText: 'Ngày sinh'),
+        onTap: () async {
+          DateTime? picked = await showDatePicker(
+            context: context,
+            initialDate: dobController.text.isNotEmpty
+                ? DateTime.tryParse(dobController.text) ?? DateTime.now()
+                : DateTime.now(),
+            firstDate: DateTime(1900),
+            lastDate: DateTime.now(),
+          );
+          if (picked != null) {
+            dobController.text = picked.toIso8601String().split('T').first;
+          }
+        },
       ),
     );
   }
@@ -139,12 +200,15 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
           key: _formKey,
           child: Column(
             children: [
-              _buildTextField(maNDController, "Mã người dùng"),
-              _buildTextField(tenController, "Tên"),
-              _buildTextField(matKhauController, "Mật khẩu"),
-              _buildTextField(sdtController, "Số điện thoại"),
+              if (widget.user != null)
+                _buildTextField(idController, "ID", isNumber: true, readOnly: true),
+              _buildTextField(usernameController, "Tên đăng nhập"),
+              _buildTextField(passwordController, "Mật khẩu"),
+              _buildTextField(phoneController, "Số điện thoại"),
               _buildTextField(emailController, "Email"),
+              _buildGenderDropdown(),
               _buildRoleDropdown(),
+              _buildDobField(),
               const SizedBox(height: 20),
               ElevatedButton(onPressed: _saveUser, child: const Text("Lưu")),
             ],

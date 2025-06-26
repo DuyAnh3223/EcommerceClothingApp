@@ -74,6 +74,52 @@ class _UserScreenState extends State<UserScreen> {
     }
   }
 
+  void _deleteUser(int userId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận xóa'),
+        content: const Text('Bạn có chắc chắn muốn xóa người dùng này?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      try {
+        final response = await http.post(
+          Uri.parse('http://localhost/EcommerceClothingApp/API/users/delete_user.php'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'id': userId}),
+        );
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          if (data['success'] == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(data['message'])),
+            );
+            _loadUsers();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(data['message'] ?? 'Lỗi xóa người dùng')),
+            );
+          }
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,6 +168,7 @@ class _UserScreenState extends State<UserScreen> {
                   child: UserTable(
                     users: users,
                     onReload: _loadUsers,
+                    onDelete: _deleteUser,
                   ),
                 ),
               ),

@@ -5,11 +5,22 @@ import 'dart:convert';
 import '../../../models/user_model.dart';
 import '../add_edit_user_screen.dart';
 
-class UserTable extends StatelessWidget {
+class UserTable extends StatefulWidget {
   final List<User> users;
   final Function onReload;
+  final Function(User)? onEdit;
+  final Function(int)? onDelete;
 
-  const UserTable({Key? key, required this.users, required this.onReload}) : super(key: key);
+  const UserTable({Key? key, required this.users, required this.onReload, this.onEdit, this.onDelete}) : super(key: key);
+
+  @override
+  State<UserTable> createState() => _UserTableState();
+}
+
+class _UserTableState extends State<UserTable> {
+  final Map<int, bool> _showPassword = {};
+  final Map<int, String> _selectedGender = {};
+  final List<String> allowedGenders = ['male', 'female'];
 
   Future<void> _deleteUser(BuildContext context, String userId) async {
     final confirm = await showDialog<bool>(
@@ -38,7 +49,7 @@ class UserTable extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Xóa người dùng thành công")),
             );
-            onReload();
+            widget.onReload();
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text("Lỗi: ${result['message']}")),
@@ -58,9 +69,9 @@ class UserTable extends StatelessWidget {
   String _getRoleDisplayName(String role) {
     switch (role) {
       case 'admin':
-        return 'Quản trị viên';
+        return 'admin';
       case 'user':
-        return 'Người dùng';
+        return 'user';
       default:
         return role;
     }
@@ -84,54 +95,46 @@ class UserTable extends StatelessWidget {
       child: DataTable(
         columns: const [
           DataColumn(label: Text('ID')),
-          DataColumn(label: Text('Tên')),
-          DataColumn(label: Text('Mật khẩu')),
-          DataColumn(label: Text('SĐT')),
+          DataColumn(label: Text('Username')),
           DataColumn(label: Text('Email')),
-          DataColumn(label: Text('Vai trò')),
+          DataColumn(label: Text('Phone')),
+          DataColumn(label: Text('Gender')),
+          DataColumn(label: Text('Role')),
+          DataColumn(label: Text('DOB')),
           DataColumn(label: Text('Hành động')),
         ],
-        rows: users.map((user) {
+        rows: widget.users.map((user) {
+          String gender = _selectedGender[user.id] ?? user.gender;
+          if (!allowedGenders.contains(gender)) gender = 'male';
           return DataRow(cells: [
-            DataCell(Text(user.maND)),
-            DataCell(Text(user.ten)),
-            DataCell(Text(user.matKhau)),
-            DataCell(Text(user.soDienThoai)),
+            DataCell(Text(user.id.toString())),
+            DataCell(Text(user.username)),
             DataCell(Text(user.email)),
-            DataCell(
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getRoleColor(user.role),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _getRoleDisplayName(user.role),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
+            DataCell(Text(user.phone)),
+            DataCell(DropdownButton<String>(
+              value: gender,
+              items: const [
+                DropdownMenuItem(value: 'male', child: Text('male')),
+                DropdownMenuItem(value: 'female', child: Text('female')),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedGender[user.id] = value ?? user.gender;
+                });
+                // TODO: Gọi API cập nhật gender nếu muốn
+              },
+            )),
+            DataCell(Text(user.role)),
+            DataCell(Text(user.dob ?? '')),
             DataCell(Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () async {
-                    final updatedUser = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AddEditUserScreen(user: user),
-                      ),
-                    );
-                    if (updatedUser != null) onReload();
-                  },
-                ),
-                IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _deleteUser(context, user.maND),
+                  onPressed: () {
+                    if (widget.onDelete != null) {
+                      widget.onDelete!(user.id);
+                    }
+                  },
                 ),
               ],
             )),
@@ -141,3 +144,4 @@ class UserTable extends StatelessWidget {
     );
   }
 }
+
