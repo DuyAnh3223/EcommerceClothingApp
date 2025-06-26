@@ -19,171 +19,130 @@ class AddEditVariantScreen extends StatefulWidget {
 
 class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+  late TextEditingController skuController;
   late TextEditingController priceController;
   late TextEditingController stockController;
   late TextEditingController imageUrlController;
-  
-  String? selectedColor;
-  String? selectedSize;
   String? selectedStatus;
-  String? selectedMaterial;
-  
   bool isLoading = false;
   bool isDropdownLoading = true;
-
-  List<String> colors = [];
-  List<String> sizes = [];
   List<String> statuses = ['active', 'inactive', 'out_of_stock'];
-  List<String> materials = [];
+
+  // Thuộc tính động
+  List<Map<String, dynamic>> attributes = [];
+  Map<int, List<Map<String, dynamic>>> attributeValues = {}; // attribute_id -> List<value>
+  Map<int, int?> selectedValueIds = {}; // attribute_id -> value_id
 
   @override
   void initState() {
     super.initState();
-    _loadDropdownData();
-    if (widget.variant != null) {
-      // Edit mode
-      priceController = TextEditingController(text: widget.variant!.price.toString());
-      stockController = TextEditingController(text: widget.variant!.stock.toString());
-      imageUrlController = TextEditingController(text: widget.variant!.imageUrl ?? '');
-      selectedColor = widget.variant!.color;
-      selectedSize = widget.variant!.size;
-      selectedStatus = widget.variant!.status;
-      selectedMaterial = widget.variant!.material;
-    } else {
-      // Add mode
-      priceController = TextEditingController();
-      stockController = TextEditingController();
-      imageUrlController = TextEditingController();
-      selectedStatus = statuses.first;
-    }
+    skuController = TextEditingController(text: widget.variant?.sku ?? '');
+    priceController = TextEditingController(text: widget.variant?.price.toString() ?? '');
+    stockController = TextEditingController(text: widget.variant?.stock.toString() ?? '');
+    imageUrlController = TextEditingController(text: widget.variant?.imageUrl ?? '');
+    selectedStatus = widget.variant?.status ?? statuses.first;
+    _loadAttributesAndValues();
   }
 
-  Future<void> _loadDropdownData() async {
+  Future<void> _loadAttributesAndValues() async {
     setState(() { isDropdownLoading = true; });
     try {
-      // Giả sử có các API get_colors.php, get_sizes.php, get_materials.php
-      // Nếu chưa có, mock dữ liệu
-      // final colorRes = await http.get(Uri.parse('http://localhost/API/get_colors.php'));
-      // final sizeRes = await http.get(Uri.parse('http://localhost/API/get_sizes.php'));
-      // final materialRes = await http.get(Uri.parse('http://localhost/API/get_materials.php'));
-      // colors = List<String>.from(json.decode(colorRes.body)['data']);
-      // sizes = List<String>.from(json.decode(sizeRes.body)['data']);
-      // materials = List<String>.from(json.decode(materialRes.body)['data']);
-      await Future.delayed(const Duration(milliseconds: 300));
-      colors = ['white', 'black', 'purple', 'pink', 'blue', 'silver', 'red', 'yellow', 'green', 'brown', 'gray', 'orange'];
-      sizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-      materials = ['Cotton', 'Linen', 'Wool', 'Polyester', 'Denim', 'Leather', 'Silk', 'Nylon'];
+      // Lấy danh sách thuộc tính
+      final attrRes = await http.get(Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/get_attributes.php'));
+      final attrData = json.decode(attrRes.body);
+      if (attrData['success'] == true) {
+        attributes = List<Map<String, dynamic>>.from(attrData['attributes']);
+        // Lấy giá trị cho từng thuộc tính
+        for (var attr in attributes) {
+          final attrId = attr['id'];
+          final valRes = await http.get(Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/get_attribute_values.php?attribute_id=$attrId'));
+          final valData = json.decode(valRes.body);
+          if (valData['success'] == true) {
+            attributeValues[attrId] = List<Map<String, dynamic>>.from(valData['values']);
+          } else {
+            attributeValues[attrId] = [];
+          }
+        }
+        // Nếu là sửa, map giá trị đã chọn
+        if (widget.variant != null) {
+          for (var av in widget.variant!.attributeValues) {
+            selectedValueIds[av.attributeId] = av.valueId;
+          }
+        } else {
+          for (var attr in attributes) {
+            selectedValueIds[attr['id']] = null;
+          }
+        }
+      }
       setState(() { isDropdownLoading = false; });
     } catch (e) {
       setState(() { isDropdownLoading = false; });
     }
   }
 
-  @override
-  void dispose() {
-    priceController.dispose();
-    stockController.dispose();
-    imageUrlController.dispose();
-    super.dispose();
-  }
-
   Future<void> _saveVariant() async {
     if (!_formKey.currentState!.validate()) return;
+    if (selectedValueIds.values.any((v) => v == null)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn đầy đủ giá trị cho tất cả thuộc tính!'), backgroundColor: Colors.red),
+      );
+      return;
+    }
     setState(() { isLoading = true; });
     try {
       final url = widget.variant == null
-          ? 'http://localhost/EcommerceClothingApp/API/products/add_variant.php'
-          : 'http://localhost/EcommerceClothingApp/API/products/update_variant.php';
+          ? 'http://localhost/EcommerceClothingApp/API/variants_attributes/add_variant.php'
+          : 'http://localhost/EcommerceClothingApp/API/variants_attributes/update_variant.php';
       final data = {
         if (widget.variant != null) 'variant_id': widget.variant!.id,
         'product_id': widget.productId,
-        'color': selectedColor,
-        'size': selectedSize,
+        'sku': skuController.text.trim(),
+        'attribute_value_ids': selectedValueIds.values.toList(),
         'price': double.parse(priceController.text),
         'stock': int.parse(stockController.text),
         'image_url': imageUrlController.text.isNotEmpty ? imageUrlController.text : null,
         'status': selectedStatus,
-        'material': selectedMaterial,
       };
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(data),
       );
-      
       final responseData = json.decode(response.body);
-      
-      if (response.statusCode == 200) {
-        if (responseData['success'] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(responseData['message']),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pop(context, true);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(responseData['message'] ?? 'Lỗi không xác định'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } else {
-        // Hiển thị thông báo lỗi từ API cho tất cả status codes khác
-        String errorMessage = 'Lỗi không xác định';
-        if (responseData['message'] != null) {
-          errorMessage = responseData['message'];
-        } else {
-          switch (response.statusCode) {
-            case 400:
-              errorMessage = 'Dữ liệu không hợp lệ';
-              break;
-            case 404:
-              errorMessage = 'Không tìm thấy tài nguyên';
-              break;
-            case 409:
-              errorMessage = 'Biến thể đã tồn tại';
-              break;
-            case 500:
-              errorMessage = 'Lỗi máy chủ';
-              break;
-            default:
-              errorMessage = 'Lỗi kết nối: ${response.statusCode}';
-          }
-        }
-        
+      if (response.statusCode == 200 && responseData['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
+          SnackBar(content: Text(responseData['message']), backgroundColor: Colors.green),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(responseData['message'] ?? 'Lỗi không xác định'), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
       );
     } finally {
       setState(() { isLoading = false; });
     }
   }
 
-  Widget _buildDropdown(String label, String? value, List<String> items, ValueChanged<String?> onChanged) {
+  Widget _buildAttributeDropdown(Map<String, dynamic> attr) {
+    final attrId = attr['id'];
+    final attrName = attr['name'];
+    final values = attributeValues[attrId] ?? [];
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: DropdownButtonFormField<String>(
-        value: value,
-        decoration: InputDecoration(labelText: label, border: OutlineInputBorder()),
-        items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
-        onChanged: onChanged,
-        validator: (val) => val == null || val.isEmpty ? 'Vui lòng chọn $label' : null,
+      child: DropdownButtonFormField<int>(
+        value: selectedValueIds[attrId],
+        decoration: InputDecoration(labelText: attrName, border: OutlineInputBorder()),
+        items: values.map<DropdownMenuItem<int>>((item) => DropdownMenuItem(
+          value: item['value_id'],
+          child: Text(item['value']),
+        )).toList(),
+        onChanged: (val) => setState(() => selectedValueIds[attrId] = val),
+        validator: (val) => val == null ? 'Vui lòng chọn $attrName' : null,
       ),
     );
   }
@@ -220,8 +179,8 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
                   children: [
                     Text('Thông tin biến thể', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo[800])),
                     const SizedBox(height: 20),
-                    _buildDropdown('Màu sắc *', selectedColor, colors, (value) => setState(() => selectedColor = value)),
-                    _buildDropdown('Kích thước *', selectedSize, sizes, (value) => setState(() => selectedSize = value)),
+                    _buildTextField(skuController, "SKU *", validator: (v) => v!.isEmpty ? "SKU không được để trống" : null),
+                    ...attributes.map(_buildAttributeDropdown).toList(),
                     _buildTextField(priceController, "Giá *", keyboardType: TextInputType.number, validator: (value) {
                       if (value!.isEmpty) return "Giá không được để trống";
                       if (double.tryParse(value) == null) return "Giá phải là số";
@@ -235,8 +194,16 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
                       return null;
                     }),
                     _buildTextField(imageUrlController, "Link hình ảnh"),
-                    _buildDropdown('Trạng thái *', selectedStatus, statuses, (value) => setState(() => selectedStatus = value)),
-                    _buildDropdown('Chất liệu *', selectedMaterial, materials, (value) => setState(() => selectedMaterial = value)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: DropdownButtonFormField<String>(
+                        value: selectedStatus,
+                        decoration: const InputDecoration(labelText: 'Trạng thái', border: OutlineInputBorder()),
+                        items: statuses.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+                        onChanged: (val) => setState(() => selectedStatus = val),
+                        validator: (val) => val == null || val.isEmpty ? 'Vui lòng chọn trạng thái' : null,
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,

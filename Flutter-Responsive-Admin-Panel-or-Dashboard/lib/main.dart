@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
             .apply(bodyColor: Colors.white),
         canvasColor: secondaryColor,
       ),
-      initialRoute: '/login',
+      initialRoute: '/dashboard',
       routes: {
         '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => MultiProvider(

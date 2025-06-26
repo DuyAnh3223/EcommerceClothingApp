@@ -101,6 +101,7 @@ import '../dashboard/dashboard_screen.dart';
 import '../products/product_screen.dart';
 import '../user/user_screen.dart'; // thêm dòng này
 import '../order/order_screen.dart'; // thêm dòng này
+import '../products/attribute_manager_screen.dart';
 
 import 'components/side_menu.dart';
 
@@ -140,6 +141,9 @@ class _MainScreenState extends State<MainScreen> {
           break;
         case "Địa chỉ":
           _selectedScreen = const Center(child: Text("Trang 'Địa chỉ' đang cập nhật"));
+          break;
+        case "Quản lý thuộc tính":
+          _selectedScreen = const AttributeManagerScreen();
           break;
         default:
           _selectedScreen = Center(child: Text("Trang '$menu' đang cập nhật"));

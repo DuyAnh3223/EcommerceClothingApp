@@ -1,3 +1,26 @@
+class AttributeValue {
+  final int attributeId;
+  final String attributeName;
+  final int valueId;
+  final String value;
+
+  AttributeValue({
+    required this.attributeId,
+    required this.attributeName,
+    required this.valueId,
+    required this.value,
+  });
+
+  factory AttributeValue.fromJson(Map<String, dynamic> json) {
+    return AttributeValue(
+      attributeId: json['attribute_id'] ?? 0,
+      attributeName: json['attribute_name'] ?? '',
+      valueId: json['value_id'] ?? 0,
+      value: json['value'] ?? '',
+    );
+  }
+}
+
 class Product {
   final int id;
   final String name;
@@ -67,54 +90,48 @@ class Product {
     return variants.fold(0, (sum, variant) => sum + variant.stock);
   }
 
-  List<String> get availableColors {
-    return variants.map((v) => v.color).toSet().toList();
-  }
-
-  List<String> get availableSizes {
-    return variants.map((v) => v.size).toSet().toList();
-  }
-
   bool get hasActiveVariants {
     return variants.any((v) => v.status == 'active');
   }
 }
 
 class ProductVariant {
-  final int id; // product_variant_id
-  final int productId; // product_id
-  final String color;
-  final String size;
-  final String material;
+  final int id;
+  final int productId;
+  final String sku;
   final double price;
   final int stock;
   final String imageUrl;
   final String status;
+  final List<AttributeValue> attributeValues;
 
   ProductVariant({
     required this.id,
     required this.productId,
-    required this.color,
-    required this.size,
-    required this.material,
+    required this.sku,
     required this.price,
     required this.stock,
     required this.imageUrl,
     required this.status,
+    required this.attributeValues,
   });
 
-  // Chú ý: truyền productId từ ngoài vào vì API trả về mỗi variant không có product_id, chỉ có id (product_variant_id)
   factory ProductVariant.fromJson(Map<String, dynamic> json, int productId) {
+    List<AttributeValue> attrs = [];
+    if (json['attribute_values'] != null) {
+      attrs = (json['attribute_values'] as List)
+          .map((e) => AttributeValue.fromJson(e))
+          .toList();
+    }
     return ProductVariant(
-      id: json['id'] ?? json['product_variant_id'] ?? 0,
+      id: json['variant_id'] ?? json['id'] ?? 0,
       productId: productId,
-      color: json['color'] ?? '',
-      size: json['size'] ?? '',
-      material: json['material'] ?? '',
+      sku: json['sku'] ?? '',
       price: double.tryParse(json['price']?.toString() ?? '0.0') ?? 0.0,
       stock: json['stock'] ?? 0,
       imageUrl: json['image_url'] ?? '',
       status: json['status'] ?? '',
+      attributeValues: attrs,
     );
   }
 
@@ -122,19 +139,22 @@ class ProductVariant {
     return {
       'id': id,
       'product_id': productId,
-      'color': color,
-      'size': size,
-      'material': material,
+      'sku': sku,
       'price': price,
       'stock': stock,
       'image_url': imageUrl,
       'status': status,
+      'attribute_values': attributeValues.map((e) => {
+        'attribute_id': e.attributeId,
+        'attribute_name': e.attributeName,
+        'value_id': e.valueId,
+        'value': e.value,
+      }).toList(),
     };
   }
 
-  // Helper methods
   bool get isInStock => stock > 0;
   bool get isActive => status == 'active';
-  String get displayName => '$color - $size';
   String get priceFormatted => '${price.toStringAsFixed(0)} VNĐ';
+  String get attributesDisplay => attributeValues.map((e) => '${e.attributeName}: ${e.value}').join(', ');
 }

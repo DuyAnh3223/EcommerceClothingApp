@@ -34,9 +34,9 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
     try {
       String url;
       if (widget.productId != null) {
-        url = 'http://localhost/EcommerceClothingApp/API/products/get_variants.php?product_id=${widget.productId}';
+        url = 'http://localhost/EcommerceClothingApp/API/variants_attributes/get_variants.php?product_id=${widget.productId}';
       } else {
-        url = 'http://localhost/EcommerceClothingApp/API/products/get_variants.php';
+        url = 'http://localhost/EcommerceClothingApp/API/variants_attributes/get_variants.php';
       }
 
       final response = await http.get(Uri.parse(url));
@@ -97,7 +97,7 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
     if (confirmed == true) {
       try {
         final response = await http.post(
-          Uri.parse('http://localhost/EcommerceClothingApp/API/products/delete_variant.php'),
+          Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/delete_variant.php'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
             'product_id': widget.productId,
@@ -220,9 +220,8 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
                   child: DataTable(
                     columns: const [
                       DataColumn(label: Text('ID')),
-                      DataColumn(label: Text('Màu sắc')),
-                      DataColumn(label: Text('Kích thước')),
-                      DataColumn(label: Text('Chất liệu')),
+                      DataColumn(label: Text('SKU')),
+                      DataColumn(label: Text('Thuộc tính')),
                       DataColumn(label: Text('Giá')),
                       DataColumn(label: Text('Tồn kho')),
                       DataColumn(label: Text('Trạng thái')),
@@ -232,9 +231,8 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
                       return DataRow(
                         cells: [
                           DataCell(Text(variant.id.toString())),
-                          DataCell(Text(variant.color)),
-                          DataCell(Text(variant.size)),
-                          DataCell(Text(variant.material)),
+                          DataCell(Text(variant.sku)),
+                          DataCell(Text(variant.attributesDisplay)),
                           DataCell(Text(variant.priceFormatted)),
                           DataCell(
                             Container(

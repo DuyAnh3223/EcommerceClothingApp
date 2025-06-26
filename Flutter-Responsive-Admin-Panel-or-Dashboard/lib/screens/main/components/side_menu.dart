@@ -131,6 +131,15 @@ class SideMenu extends StatelessWidget {
               }
             },
           ),
+          DrawerListTile(
+            title: "Quản lý thuộc tính",
+            svgSrc: "assets/icons/caidat.svg",
+            press: () {
+              if (onMenuSelected != null) {
+                onMenuSelected!("Quản lý thuộc tính");
+              }
+            },
+          ),
           const Divider(color: Colors.white54),
           DrawerListTile(
             title: "Đăng xuất",
