@@ -11,14 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once '../config/db_connect.php';
 
-$sql = "SELECT p.id, p.name, p.description, p.category, p.gender_target, p.created_at, p.updated_at,
-               ppv.product_variant_id, ppv.price, ppv.stock, ppv.status, ppv.image_url,
-               pv.color, pv.size, pv.material
-        FROM products p
-        LEFT JOIN product_product_variant ppv ON p.id = ppv.product_id
-        LEFT JOIN product_variants pv ON ppv.product_variant_id = pv.id
-        ORDER BY p.id, ppv.product_variant_id";
-
+$sql = "SELECT id, name, description, category, gender_target, created_at, updated_at FROM products ORDER BY id";
 $result = $conn->query($sql);
 if (!$result) {
     http_response_code(500);
@@ -31,40 +24,61 @@ if (!$result) {
 }
 
 $products = [];
-$current_product = null;
-
 while ($row = $result->fetch_assoc()) {
     $product_id = (int)$row['id'];
-    if ($current_product === null || $current_product['id'] != $product_id) {
-        if ($current_product !== null) {
-            $products[] = $current_product;
+    // Lấy variants động cho sản phẩm này
+    $variant_sql = "SELECT v.id as variant_id, v.sku, pv.price, pv.stock, pv.status, pv.image_url
+                    FROM product_variant pv
+                    JOIN variants v ON pv.variant_id = v.id
+                    WHERE pv.product_id = ?";
+    $variant_stmt = $conn->prepare($variant_sql);
+    $variant_stmt->bind_param("i", $product_id);
+    $variant_stmt->execute();
+    $variant_result = $variant_stmt->get_result();
+    $variants = [];
+    while ($vrow = $variant_result->fetch_assoc()) {
+        $variant_id = (int)$vrow['variant_id'];
+        // Lấy các giá trị thuộc tính của variant này
+        $attr_sql = "SELECT av.id as value_id, av.value, a.id as attribute_id, a.name as attribute_name
+                     FROM variant_attribute_values vav
+                     JOIN attribute_values av ON vav.attribute_value_id = av.id
+                     JOIN attributes a ON av.attribute_id = a.id
+                     WHERE vav.variant_id = ?";
+        $attr_stmt = $conn->prepare($attr_sql);
+        $attr_stmt->bind_param("i", $variant_id);
+        $attr_stmt->execute();
+        $attr_result = $attr_stmt->get_result();
+        $attribute_values = [];
+        while ($arow = $attr_result->fetch_assoc()) {
+            $attribute_values[] = [
+                'attribute_id' => (int)$arow['attribute_id'],
+                'attribute_name' => $arow['attribute_name'],
+                'value_id' => (int)$arow['value_id'],
+                'value' => $arow['value']
+            ];
         }
-        $current_product = [
-            'id' => $product_id,
-            'name' => $row['name'],
-            'description' => $row['description'],
-            'category' => $row['category'],
-            'gender_target' => $row['gender_target'],
-            'created_at' => $row['created_at'],
-            'updated_at' => $row['updated_at'],
-            'variants' => []
+        $attr_stmt->close();
+        $variants[] = [
+            'variant_id' => $variant_id,
+            'sku' => $vrow['sku'],
+            'price' => (float)$vrow['price'],
+            'stock' => (int)$vrow['stock'],
+            'status' => $vrow['status'],
+            'image_url' => $vrow['image_url'],
+            'attribute_values' => $attribute_values
         ];
     }
-    if ($row['product_variant_id'] !== null) {
-        $current_product['variants'][] = [
-            'id' => (int)$row['product_variant_id'],
-            'color' => $row['color'],
-            'size' => $row['size'],
-            'material' => $row['material'],
-            'price' => (float)$row['price'],
-            'stock' => (int)$row['stock'],
-            'status' => $row['status'],
-            'image_url' => $row['image_url']
-        ];
-    }
-}
-if ($current_product !== null) {
-    $products[] = $current_product;
+    $variant_stmt->close();
+    $products[] = [
+        'id' => $product_id,
+        'name' => $row['name'],
+        'description' => $row['description'],
+        'category' => $row['category'],
+        'gender_target' => $row['gender_target'],
+        'created_at' => $row['created_at'],
+        'updated_at' => $row['updated_at'],
+        'variants' => $variants
+    ];
 }
 
 http_response_code(200);

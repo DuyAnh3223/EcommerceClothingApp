@@ -1,5 +1,6 @@
 -- SQL schema for clothing e-commerce (Shopee-like)
 -- Create database
+DROP DATABASE IF EXISTS clothing_appstore;
 CREATE DATABASE IF NOT EXISTS clothing_appstore;
 USE clothing_appstore;
 
@@ -53,25 +54,46 @@ CREATE TABLE products (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- PRODUCT VARIANTS
-CREATE TABLE product_variants (
+-- ATTRIBUTES (color, size, brand, ...)
+CREATE TABLE attributes (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  color VARCHAR(50) NOT NULL,
-  size VARCHAR(20) NOT NULL,
-  material VARCHAR(50) NOT NULL
+  name VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- PRODUCT_PRODUCT_VARIANT
-CREATE TABLE product_product_variant (
+-- ATTRIBUTE VALUES (red, blue, S, M, Nike, Adidas, ...)
+CREATE TABLE attribute_values (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  attribute_id INT NOT NULL,
+  value VARCHAR(50) NOT NULL,
+  FOREIGN KEY (attribute_id) REFERENCES attributes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- VARIANTS (mỗi variant là 1 tổ hợp giá trị thuộc tính, có SKU)
+CREATE TABLE variants (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  sku VARCHAR(100) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- VARIANT_ATTRIBUTE_VALUES (liên kết variant với các giá trị thuộc tính)
+CREATE TABLE variant_attribute_values (
+  variant_id INT NOT NULL,
+  attribute_value_id INT NOT NULL,
+  PRIMARY KEY (variant_id, attribute_value_id),
+  FOREIGN KEY (variant_id) REFERENCES variants(id) ON DELETE CASCADE,
+  FOREIGN KEY (attribute_value_id) REFERENCES attribute_values(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- PRODUCT_VARIANT (liên kết product với variant, có giá và tồn kho riêng)
+CREATE TABLE product_variant (
   product_id INT NOT NULL,
-  product_variant_id INT NOT NULL,
+  variant_id INT NOT NULL,
   price DECIMAL(15,2) NOT NULL,
   stock INT NOT NULL DEFAULT 0,
   image_url VARCHAR(255),
   status ENUM('active','inactive','out_of_stock') DEFAULT 'active',
-  PRIMARY KEY (product_id, product_variant_id),
+  PRIMARY KEY (product_id, variant_id),
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
-  FOREIGN KEY (product_variant_id) REFERENCES product_variants(id) ON DELETE CASCADE
+  FOREIGN KEY (variant_id) REFERENCES variants(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ORDERS
@@ -92,11 +114,12 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
   id INT AUTO_INCREMENT PRIMARY KEY,
   order_id INT NOT NULL,
-  product_variant_id INT NOT NULL,
+  product_id INT NOT NULL,
+  variant_id INT NOT NULL,
   quantity INT NOT NULL,
   price DECIMAL(15,2) NOT NULL, -- price at order time
   FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-  FOREIGN KEY (product_variant_id) REFERENCES product_variants(id)
+  FOREIGN KEY (product_id, variant_id) REFERENCES product_variant(product_id, variant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- PRODUCT REVIEWS
@@ -143,11 +166,12 @@ CREATE TABLE payments (
 CREATE TABLE cart_items (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
-  product_variant_id INT NOT NULL,
+  product_id INT NOT NULL,
+  variant_id INT NOT NULL,
   quantity INT NOT NULL DEFAULT 1,
   added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (product_variant_id) REFERENCES product_variants(id)
+  FOREIGN KEY (product_id, variant_id) REFERENCES product_variant(product_id, variant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO users (username, email, phone, password, gender, dob, role)
@@ -165,25 +189,55 @@ VALUES
 ('Áo thun basic', 'Áo thun cotton thoáng mát', 'T-Shirts', 'unisex'),
 ('Quần jeans slim fit', 'Chất liệu denim cao cấp', 'Pants', 'male');
 
-INSERT INTO product_variants (color, size, material)
-VALUES
-('white', 'M', 'Cotton'),
-('white', 'L', 'Denim');
+INSERT INTO attributes (name) VALUES
+('color'),
+('size'),
+('brand');
 
-INSERT INTO product_product_variant (product_id, product_variant_id,price, stock, image_url, status)
-VALUES
-(1, 1, 150000, 100, 'url_image1.jpg', 'active'), -- Áo thun - Trắng M
-(2, 2, 350000, 50, 'url_image2.jpg', 'active'); -- Quần jeans - Xanh L
+INSERT INTO attribute_values (attribute_id, value) VALUES
+(1, 'white'),
+(1, 'black'),
+(1, 'blue'),
+(2, 'M'),
+(2, 'L'),
+(2, 'XL'),
+(3, 'Nike'),
+(3, 'Adidas');
+
+INSERT INTO variants (sku) VALUES
+('TSHIRT-WHITE-M-NIKE'),
+('TSHIRT-BLACK-L-ADIDAS'),
+('JEANS-BLUE-XL-NIKE');
+
+INSERT INTO variant_attribute_values (variant_id, attribute_value_id) VALUES
+(1, 1),
+(1, 4),
+(1, 7);
+
+INSERT INTO variant_attribute_values (variant_id, attribute_value_id) VALUES
+(2, 2),
+(2, 5),
+(2, 8);
+
+INSERT INTO variant_attribute_values (variant_id, attribute_value_id) VALUES
+(3, 3),
+(3, 6),
+(3, 7);
+
+INSERT INTO product_variant (product_id, variant_id, price, stock, image_url, status) VALUES
+(1, 1, 150000, 100, 'url_image1.jpg', 'active'),
+(1, 2, 155000, 80, 'url_image2.jpg', 'active'),
+(2, 3, 350000, 50, 'url_image3.jpg', 'active');
 
 INSERT INTO orders (user_id, address_id, total_amount, status)
 VALUES
 (1, 1, 150000, 'confirmed'),
 (2, 2, 350000, 'shipping');
 
-INSERT INTO order_items (order_id, product_variant_id, quantity, price)
-VALUES
-(1, 1, 1, 150000),
-(2, 2, 1, 350000);
+INSERT INTO order_items (order_id, product_id, variant_id, quantity, price) VALUES
+(1, 1, 1, 1, 150000), -- Đơn hàng 1: Áo thun basic - trắng M Nike
+(1, 1, 2, 2, 155000), -- Đơn hàng 1: Áo thun basic - đen L Adidas
+(2, 2, 3, 1, 350000); -- Đơn hàng 2: Quần jeans slim fit - xanh XL Nike
 
 INSERT INTO product_reviews (user_id, product_id, order_id, rating, content, image_url)
 VALUES
@@ -200,7 +254,6 @@ VALUES
 (1, 'Momo', 150000, 'paid', 'MOMO123456', NOW()),
 (2, 'COD', 350000, 'pending', NULL, NULL);
 
-INSERT INTO cart_items (user_id, product_variant_id, quantity)
-VALUES
-(1, 2, 1),
-(2, 1, 2);
+INSERT INTO cart_items (user_id, product_id, variant_id, quantity) VALUES
+(1, 2, 3, 1), -- User 1 thêm Quần jeans slim fit - xanh XL Nike vào giỏ
+(2, 1, 1, 2); -- User 2 thêm Áo thun basic - trắng M Nike vào giỏ
