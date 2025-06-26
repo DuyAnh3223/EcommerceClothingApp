@@ -25,28 +25,12 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final result = await AuthService.login(
+      final result = await AuthService.adminLogin(
         _emailController.text.trim(),
         _passwordController.text,
       );
 
-      print('Login result: $result'); // Debug log
-
-      if (result['success'] == 200) {
-        // Check if user is admin
-        final userRole = result['user']?['Role'] ?? 'user';
-        
-        if (userRole != 'admin') {
-          // User is not admin
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Bạn không có quyền truy cập vào admin panel'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
-        }
-
+      if (result['success'] == true) {
         // Login successful for admin
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -73,7 +57,6 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-      print('Login error: $e'); // Debug log
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Lỗi kết nối: $e'),
