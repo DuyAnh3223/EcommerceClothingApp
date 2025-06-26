@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://localhost/MyProject/backendapi';
+  static const String baseUrl = 'http://localhost/EcommerceClothingApp/API';
   static const String _userKey = 'user_data';
   static const String _roleKey = 'user_role';
 
@@ -15,8 +15,8 @@ class AuthService {
           'Content-Type': 'application/json',
         },
         body: json.encode({
-          'Email': email,
-          'MatKhau': password,
+          'email': email,
+          'password': password,
         }),
       );
 
@@ -24,7 +24,43 @@ class AuthService {
         final result = json.decode(response.body);
         
         // Lưu thông tin user nếu đăng nhập thành công
-        if (result['success'] == 200 && result['user'] != null) {
+        if (result['success'] == true && result['user'] != null) {
+          await _saveUserData(result['user']);
+        }
+        
+        return result;
+      } else {
+        return {
+          'success': false,
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Lỗi kết nối: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> userLogin(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/user_login.php'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final result = json.decode(response.body);
+        
+        // Lưu thông tin user nếu đăng nhập thành công
+        if (result['success'] == true && result['user'] != null) {
           await _saveUserData(result['user']);
         }
         
@@ -46,7 +82,7 @@ class AuthService {
   static Future<void> _saveUserData(Map<String, dynamic> user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userKey, json.encode(user));
-    await prefs.setString(_roleKey, user['Role'] ?? 'user');
+    await prefs.setString(_roleKey, user['role'] ?? 'user');
   }
 
   static Future<Map<String, dynamic>?> getUserData() async {
@@ -69,12 +105,37 @@ class AuthService {
     await prefs.remove(_roleKey);
   }
 
+  static Future<Map<String, dynamic>> serverLogout() async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/logout.php'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Lỗi kết nối: $e',
+      };
+    }
+  }
+
   static Future<bool> isLoggedIn() async {
     final userData = await getUserData();
     return userData != null;
   }
 
-  static Future<Map<String, dynamic>> register(String name, String email, String password, String phone) async {
+  static Future<Map<String, dynamic>> register(String username, String email, String password, String phone) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/add_user.php'),
@@ -82,10 +143,10 @@ class AuthService {
           'Content-Type': 'application/json',
         },
         body: json.encode({
-          'Ten': name,
-          'Email': email,
-          'MatKhau': password,
-          'SoDienThoai': phone,
+          'username': username,
+          'email': email,
+          'password': password,
+          'phone': phone,
         }),
       );
 
@@ -125,7 +186,7 @@ class AuthService {
     } catch (e) {
       return {
         'success': false,
-        'message': 'Lỗi kết nối 111: $e',
+        'message': 'Lỗi kết nối: $e',
       };
     }
   }

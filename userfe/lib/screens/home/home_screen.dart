@@ -2,6 +2,7 @@ import 'dart:math' as console;
 
 import 'package:flutter/material.dart';
 import 'package:userfe/services/auth_service.dart';
+import 'package:userfe/screens/auth/login_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,13 +19,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     _loadProducts();
-    // You can store user data in shared preferences or state management
-    // For now, we'll simulate user data
-    currentUser = {
-      'Ten': 'Người dùng',
-      'Email': 'user@example.com',
-    };
+  }
+
+  Future<void> _loadUserData() async {
+    final userData = await AuthService.getUserData();
+    setState(() {
+      currentUser = userData;
+    });
   }
 
   Future<void> _loadProducts() async {
@@ -59,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _logout() {
+  Future<void> _logout() async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -72,13 +75,59 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Text('Hủy'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/login',
-                  (route) => false,
+                
+                // Hiển thị loading
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Đang đăng xuất...'),
+                    backgroundColor: Colors.orange,
+                  ),
                 );
+
+                try {
+                  // Gọi logout từ server (optional)
+                  await AuthService.serverLogout();
+                  
+                  // Gọi logout local
+                  await AuthService.logout();
+
+                  // Hiển thị thông báo thành công
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã đăng xuất thành công'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+
+                    // Chuyển về login screen
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  }
+                } catch (e) {
+                  // Nếu server logout thất bại, vẫn logout local
+                  await AuthService.logout();
+                  
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã đăng xuất thành công'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  }
+                }
               },
               child: const Text('Đăng xuất'),
             ),
@@ -107,6 +156,11 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _logout,
+            tooltip: 'Đăng xuất',
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.person),
             onSelected: (value) {
@@ -128,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     const Icon(Icons.person),
                     const SizedBox(width: 8),
-                    Text('Hồ sơ: ${currentUser?['Ten'] ?? 'User'}'),
+                    Text('Hồ sơ: ${currentUser?['username'] ?? 'User'}'),
                   ],
                 ),
               ),
@@ -162,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const Icon(Icons.waving_hand, color: Colors.orange),
                         const SizedBox(width: 8),
                         Text(
-                          'Chào mừng ${currentUser?['Ten'] ?? 'bạn'}!',
+                          'Chào mừng ${currentUser?['username'] ?? 'bạn'}!',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

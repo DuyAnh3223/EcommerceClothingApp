@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:userfe/screens/auth/login_screen.dart';
 import 'package:userfe/screens/home/home_screen.dart';
-import 'package:userfe/screens/dashboard/admin_dashboard_screen.dart';
 import 'package:userfe/services/auth_service.dart';
 
 void main() {
@@ -48,23 +47,13 @@ class _SplashScreenState extends State<SplashScreen> {
     final isLoggedIn = await AuthService.isLoggedIn();
     
     if (isLoggedIn) {
-      final userData = await AuthService.getUserData();
-      final userRole = await AuthService.getUserRole();
-      
-      if (userRole == 'admin' && userData != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AdminDashboardScreen(user: userData),
-          ),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      }
+      // Nếu đã đăng nhập, chuyển đến Home Screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
     } else {
+      // Nếu chưa đăng nhập, chuyển đến Login Screen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),

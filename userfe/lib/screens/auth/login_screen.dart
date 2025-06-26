@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:userfe/screens/home/home_screen.dart';
-import 'package:userfe/screens/dashboard/admin_dashboard_screen.dart';
 import 'package:userfe/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,95 +17,74 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
 
   Future<void> _login() async {
-  // Kiểm tra form
-  if (!_formKey.currentState!.validate()) {
-    print('Form validation failed');
-    return;
-  }
+    // Kiểm tra form
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-  // Hiển thị loading
-  setState(() {
-    _isLoading = true;
-  });
+    // Hiển thị loading
+    setState(() {
+      _isLoading = true;
+    });
 
-  print('Starting login process...');
-
-  try {
-    // Gọi hàm đăng nhập từ AuthService
-    final result = await AuthService.login(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
-
-    print('Login result: $result');
-
-    // Nếu đăng nhập thành công
-    if (result['success'] == 200) {
-      if (!mounted) return;
-
-      // Hiển thị SnackBar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? 'Đăng nhập thành công'),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 1),
-        ),
+    try {
+      // Gọi hàm đăng nhập từ AuthService
+      final result = await AuthService.userLogin(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
 
-      // Chờ một chút để người dùng thấy thông báo (tùy chọn)
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Nếu đăng nhập thành công
+      if (result['success'] == true) {
+        if (!mounted) return;
 
-      // Kiểm tra role và điều hướng
-      final userRole = result['user']['Role'] ?? 'user';
-      
-      if (userRole == 'admin') {
-        // Điều hướng đến Admin Dashboard
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AdminDashboardScreen(user: result['user']),
+        // Hiển thị SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Đăng nhập thành công'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 1),
           ),
         );
-      } else {
-        // Điều hướng đến Home Screen cho user thường
+
+        // Chờ một chút để người dùng thấy thông báo
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Điều hướng đến Home Screen cho user
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
+      } else {
+        // Đăng nhập thất bại
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Đăng nhập thất bại'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-    } else {
-      // Đăng nhập thất bại
+    } catch (e) {
+      // Lỗi hệ thống hoặc mạng
       if (!mounted) return;
 
-      print('Login failed: ${result['message']}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? 'Đăng nhập thất bại'),
+          content: Text('Lỗi kết nối: $e'),
           backgroundColor: Colors.red,
         ),
       );
-    }
-  } catch (e) {
-    // Lỗi hệ thống hoặc mạng
-    if (!mounted) return;
-
-    print('Login error: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Lỗi kết nối: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  } finally {
-    // Tắt trạng thái loading
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+    } finally {
+      // Tắt trạng thái loading
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
