@@ -37,7 +37,7 @@ if (!empty($data['id'])) {
     if ($gender) { $fields[] = 'gender=?'; $params[] = $gender; $types .= 's'; }
     if ($role) { $fields[] = 'role=?'; $params[] = $role; $types .= 's'; }
     if ($dob) { $fields[] = 'dob=?'; $params[] = $dob; $types .= 's'; }
-    if ($password) { $fields[] = 'password=?'; $params[] = password_hash($password, PASSWORD_DEFAULT); $types .= 's'; }
+    if ($password) { $fields[] = 'password=?'; $params[] = md5($password); $types .= 's'; }
 
     if (count($fields) > 0) {
         $sql = "UPDATE users SET ".implode(", ", $fields).", updated_at=NOW() WHERE id=?";

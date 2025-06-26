@@ -18,20 +18,22 @@ if (!empty($data['email']) && !empty($data['password'])) {
     $password = $data['password'];
 
     $stmt = $conn->prepare("SELECT id, username, email, phone, gender, dob, role FROM users WHERE email = ? AND password = ?");
-    $stmt->bind_param("ss", $email, $password);
+    $md5_password = md5($password);
+    $stmt->bind_param("ss", $email, $md5_password);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
+        unset($user['password']);
         echo json_encode([
-            "success" => true, 
+            "success" => true,
             "message" => "Đăng nhập thành công",
             "user" => $user
         ]);
     } else {
         echo json_encode([
-            "success" => false, 
+            "success" => false,
             "message" => "Email hoặc mật khẩu không đúng"
         ]);
     }

@@ -26,7 +26,7 @@ if (
     !empty($data['role'])
 ) {
     $username = $data['username'];
-    $password = password_hash($data['password'], PASSWORD_DEFAULT);
+    $password = md5($data['password']);
     $email = $data['email'];
     $phone = $data['phone'];
     $gender = $data['gender'];
@@ -34,7 +34,7 @@ if (
     $dob = !empty($data['dob']) ? $data['dob'] : null;
 
     // Validate gender and role
-    $allowed_genders = ['male', 'female', 'other'];
+    $allowed_genders = ['male', 'female'];
     $allowed_roles = ['user', 'admin'];
     if (!in_array($gender, $allowed_genders) || !in_array($role, $allowed_roles)) {
         echo json_encode([

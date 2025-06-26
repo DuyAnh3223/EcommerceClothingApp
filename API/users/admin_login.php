@@ -17,31 +17,30 @@ if (!empty($data['email']) && !empty($data['password'])) {
     $email = $data['email'];
     $password = $data['password'];
 
-    // Kiểm tra user với email và password
     $stmt = $conn->prepare("SELECT id, username, email, phone, gender, dob, role FROM users WHERE email = ? AND password = ?");
-    $stmt->bind_param("ss", $email, $password);
+    $md5_password = md5($password);
+    $stmt->bind_param("ss", $email, $md5_password);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
-        
-        // Kiểm tra role admin
         if ($user['role'] === 'admin') {
+            unset($user['password']);
             echo json_encode([
-                "success" => true, 
+                "success" => true,
                 "message" => "Đăng nhập admin thành công",
                 "user" => $user
             ]);
         } else {
             echo json_encode([
-                "success" => false, 
+                "success" => false,
                 "message" => "Bạn không có quyền truy cập trang admin"
             ]);
         }
     } else {
         echo json_encode([
-            "success" => false, 
+            "success" => false,
             "message" => "Email hoặc mật khẩu không đúng"
         ]);
     }

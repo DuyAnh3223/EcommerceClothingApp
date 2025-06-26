@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 require_once '../config/db_connect.php';
 
 try {
-    $sql = "SELECT id, username, email, phone, gender, dob, role, created_at, updated_at FROM users ORDER BY created_at DESC";
+    $sql = "SELECT id, username, email, phone, gender, dob, role, created_at, updated_at FROM users WHERE gender IN ('male', 'female') ORDER BY created_at DESC";
     $result = $conn->query($sql);
 
     $users = [];
