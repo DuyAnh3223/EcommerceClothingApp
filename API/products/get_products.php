@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once '../config/db_connect.php';
 
-$sql = "SELECT id, name, description, category, gender_target, created_at, updated_at FROM products ORDER BY id";
+$sql = "SELECT id, name, description, category, gender_target, main_image, created_at, updated_at FROM products ORDER BY id";
 $result = $conn->query($sql);
 if (!$result) {
     http_response_code(500);
@@ -75,6 +75,7 @@ while ($row = $result->fetch_assoc()) {
         'description' => $row['description'],
         'category' => $row['category'],
         'gender_target' => $row['gender_target'],
+        'main_image' => $row['main_image'],
         'created_at' => $row['created_at'],
         'updated_at' => $row['updated_at'],
         'variants' => $variants

@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../../models/user_model.dart';
 import 'add_edit_user_screen.dart';
 import 'components/user_table.dart';
+import 'user_address_screen.dart';
 
 class UserScreen extends StatefulWidget {
   const UserScreen({Key? key}) : super(key: key);
@@ -31,7 +32,7 @@ class _UserScreenState extends State<UserScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost/EcommerceClothingApp/API/users/get_users.php'),
+        Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/users/get_users.php'),
       );
 
       if (response.statusCode == 200) {
@@ -95,7 +96,7 @@ class _UserScreenState extends State<UserScreen> {
     if (confirmed == true) {
       try {
         final response = await http.post(
-          Uri.parse('http://localhost/EcommerceClothingApp/API/users/delete_user.php'),
+          Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/users/delete_user.php'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'id': userId}),
         );

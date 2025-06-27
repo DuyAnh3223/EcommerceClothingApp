@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../models/product_model.dart';
+import '../../services/image_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 
 class AddEditVariantScreen extends StatefulWidget {
   final ProductVariant? variant;
@@ -28,6 +32,11 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
   bool isDropdownLoading = true;
   List<String> statuses = ['active', 'inactive', 'out_of_stock'];
 
+  // Image upload variables
+  XFile? _selectedImage;
+  Uint8List? _imageBytes;
+  bool _shouldRemoveImage = false;
+
   // Thuộc tính động
   List<Map<String, dynamic>> attributes = [];
   Map<int, List<Map<String, dynamic>>> attributeValues = {}; // attribute_id -> List<value>
@@ -48,14 +57,14 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
     setState(() { isDropdownLoading = true; });
     try {
       // Lấy danh sách thuộc tính
-      final attrRes = await http.get(Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/get_attributes.php'));
+      final attrRes = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/get_attributes.php'));
       final attrData = json.decode(attrRes.body);
       if (attrData['success'] == true) {
         attributes = List<Map<String, dynamic>>.from(attrData['attributes']);
         // Lấy giá trị cho từng thuộc tính
         for (var attr in attributes) {
           final attrId = attr['id'];
-          final valRes = await http.get(Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/get_attribute_values.php?attribute_id=$attrId'));
+          final valRes = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/get_attribute_values.php?attribute_id=$attrId'));
           final valData = json.decode(valRes.body);
           if (valData['success'] == true) {
             attributeValues[attrId] = List<Map<String, dynamic>>.from(valData['values']);
@@ -80,6 +89,69 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
     }
   }
 
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        if (mounted) {
+          setState(() {
+            _selectedImage = image;
+            _imageBytes = bytes;
+            _shouldRemoveImage = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi chọn hình ảnh: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<String?> _uploadImage() async {
+    if (_imageBytes == null) return null;
+
+    try {
+      final result = await ImageService.uploadImageFromBytes(_imageBytes!);
+      if (result['success'] == true) {
+        return result['filename'];
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Lỗi upload hình ảnh: ${result['message']}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return null;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi upload hình ảnh: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return null;
+    }
+  }
+
   Future<void> _saveVariant() async {
     if (!_formKey.currentState!.validate()) return;
     if (selectedValueIds.values.any((v) => v == null)) {
@@ -90,9 +162,24 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
     }
     setState(() { isLoading = true; });
     try {
+      // Upload hình ảnh nếu có
+      String? imageUrl;
+      if (_imageBytes != null) {
+        imageUrl = await _uploadImage();
+        if (imageUrl == null) {
+          setState(() { isLoading = false; });
+          return;
+        }
+      } else if (_shouldRemoveImage) {
+        imageUrl = null;
+      } else {
+        // Giữ nguyên hình ảnh cũ nếu có
+        imageUrl = widget.variant?.imageUrl;
+      }
+
       final url = widget.variant == null
-          ? 'http://localhost/EcommerceClothingApp/API/variants_attributes/add_variant.php'
-          : 'http://localhost/EcommerceClothingApp/API/variants_attributes/update_variant.php';
+          ? 'http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/add_variant.php'
+          : 'http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/update_variant.php';
       final data = {
         if (widget.variant != null) 'variant_id': widget.variant!.id,
         'product_id': widget.productId,
@@ -100,7 +187,7 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
         'attribute_value_ids': selectedValueIds.values.toList(),
         'price': double.parse(priceController.text),
         'stock': int.parse(stockController.text),
-        'image_url': imageUrlController.text.isNotEmpty ? imageUrlController.text : null,
+        'image_url': imageUrl,
         'status': selectedStatus,
       };
       final response = await http.post(
@@ -193,7 +280,146 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
                       if (int.parse(value) < 0) return "Tồn kho không được âm";
                       return null;
                     }),
-                    _buildTextField(imageUrlController, "Link hình ảnh"),
+                    
+                    // Image Upload Section
+                    const SizedBox(height: 20),
+                    Text(
+                      'Hình ảnh biến thể',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.indigo[700],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Image Preview
+                    Container(
+                      constraints: const BoxConstraints(
+                        minHeight: 200,
+                        maxHeight: 400,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey.shade50,
+                      ),
+                      child: _imageBytes != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.memory(
+                                _imageBytes!,
+                                fit: BoxFit.contain,
+                                width: double.infinity,
+                                height: double.infinity,
+                                errorBuilder: (context, error, stackTrace) => const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.error, size: 64, color: Colors.red),
+                                      SizedBox(height: 8),
+                                      Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                          : (widget.variant != null && widget.variant!.imageUrl != null && widget.variant!.imageUrl!.isNotEmpty)
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.variant!.imageUrl!}',
+                                    fit: BoxFit.contain,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    errorBuilder: (context, error, stackTrace) => const Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.image, size: 64, color: Colors.grey),
+                                          SizedBox(height: 8),
+                                          Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.grey)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  height: 200,
+                                  child: const Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.image, size: 64, color: Colors.grey),
+                                        SizedBox(height: 8),
+                                        Text('Chưa có hình ảnh', style: TextStyle(color: Colors.grey)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Image Selection Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _pickImage(ImageSource.gallery),
+                            icon: const Icon(Icons.photo_library),
+                            label: const Text('Chọn từ thư viện'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _pickImage(ImageSource.camera),
+                            icon: const Icon(Icons.camera_alt),
+                            label: const Text('Chụp ảnh'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    // Nút xóa hình ảnh (chỉ hiển thị khi có hình ảnh)
+                    if ((_imageBytes != null) || 
+                        (widget.variant != null && widget.variant!.imageUrl != null && widget.variant!.imageUrl!.isNotEmpty))
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _selectedImage = null;
+                                _imageBytes = null;
+                              });
+                              // Nếu đang sửa biến thể, đánh dấu để xóa hình ảnh
+                              if (widget.variant != null) {
+                                _shouldRemoveImage = true;
+                              }
+                            },
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            label: const Text('Xóa hình ảnh', style: TextStyle(color: Colors.red)),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.red),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: DropdownButtonFormField<String>(

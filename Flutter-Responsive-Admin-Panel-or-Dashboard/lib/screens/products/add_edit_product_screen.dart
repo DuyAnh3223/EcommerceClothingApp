@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../models/product_model.dart';
+import '../../services/image_service.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 
 class AddEditProductScreen extends StatefulWidget {
   final Product? product;
@@ -23,6 +27,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
   String selectedCategory = 'T-Shirts';
   String selectedGenderTarget = 'unisex';
+  File? _selectedImage;
+  Uint8List? _imageBytes;
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
+  bool _shouldRemoveImage = false;
 
   final List<String> categories = [
     'T-Shirts',
@@ -65,25 +74,135 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (image != null && mounted) {
+        final file = File(image.path);
+        final bytes = await image.readAsBytes();
+        
+        setState(() {
+          _selectedImage = file;
+          _imageBytes = bytes;
+          _shouldRemoveImage = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi khi chọn hình ảnh: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<String?> _uploadImage() async {
+    if (_selectedImage == null || _imageBytes == null) {
+      return null;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isUploading = true;
+      });
+    }
+
+    try {
+      final result = await ImageService.uploadImageFromBytes(_imageBytes!);
+
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+
+      if (result['success']) {
+        return result['image_url'];
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Upload thất bại: ${result['message']}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return null;
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return null;
+    }
+  }
+
   void _saveProduct() async {
     if (_formKey.currentState!.validate()) {
-      final productData = {
+      // Upload hình ảnh trước nếu có hình ảnh mới được chọn
+      String? imageUrl;
+      if (_selectedImage != null) {
+        imageUrl = await _uploadImage();
+        if (imageUrl == null) {
+          return; // Dừng nếu upload thất bại
+        }
+      }
+
+      final productData = <String, dynamic>{
         'name': nameController.text,
         'description': descriptionController.text,
         'category': selectedCategory,
         'gender_target': selectedGenderTarget,
       };
 
+      // Xử lý main_image
+      if (widget.product == null) {
+        // Thêm sản phẩm mới: chỉ thêm main_image nếu có hình ảnh mới
+        if (imageUrl != null) {
+          productData['main_image'] = imageUrl;
+        }
+      } else {
+        // Cập nhật sản phẩm: 
+        if (imageUrl != null) {
+          // Có hình ảnh mới được upload
+          productData['main_image'] = imageUrl;
+        } else if (_shouldRemoveImage) {
+          // Người dùng muốn xóa hình ảnh
+          productData['main_image'] = null;
+        } else if (widget.product!.mainImage != null && widget.product!.mainImage!.isNotEmpty) {
+          // Giữ nguyên hình ảnh cũ
+          productData['main_image'] = widget.product!.mainImage!;
+        }
+        // Nếu không có hình ảnh cũ và không có hình ảnh mới, thì không gửi main_image
+      }
+
       String url;
       String method;
 
       if (widget.product == null) {
         // Add new product
-        url = 'http://localhost/EcommerceClothingApp/API/products/add_product.php';
+        url = 'http://127.0.0.1/EcommerceClothingApp/API/products/add_product.php';
         method = 'POST';
       } else {
         // Update existing product
-        url = 'http://localhost/EcommerceClothingApp/API/products/update_product.php';
+        url = 'http://127.0.0.1/EcommerceClothingApp/API/products/update_product.php';
         method = 'POST';
         productData['id'] = widget.product!.id.toString(); // Convert int to String
       }
@@ -213,6 +332,226 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   });
                 },
               ),
+              
+              const SizedBox(height: 20),
+              
+              // Hình ảnh sản phẩm
+              Text(
+                'Hình ảnh sản phẩm',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.indigo[700],
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // Image Preview
+              GestureDetector(
+                onTap: () {
+                  // Hiển thị hình ảnh full size khi click
+                  if (_imageBytes != null || 
+                      (widget.product != null && widget.product!.mainImage != null && widget.product!.mainImage!.isNotEmpty)) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => Dialog(
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.8,
+                            maxHeight: MediaQuery.of(context).size.height * 0.8,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AppBar(
+                                title: const Text('Xem hình ảnh'),
+                                backgroundColor: Colors.transparent,
+                                elevation: 0,
+                                actions: [
+                                  IconButton(
+                                    icon: const Icon(Icons.close),
+                                    onPressed: () => Navigator.of(context).pop(),
+                                  ),
+                                ],
+                              ),
+                              Expanded(
+                                child: _imageBytes != null
+                                    ? Image.memory(
+                                        _imageBytes!,
+                                        fit: BoxFit.contain,
+                                      )
+                                    : Image.network(
+                                        'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.product!.mainImage!}',
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (context, error, stackTrace) => const Center(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.error, size: 64, color: Colors.red),
+                                              SizedBox(height: 8),
+                                              Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minHeight: 200,
+                    maxHeight: 400,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.grey.shade50,
+                  ),
+                  child: Stack(
+                    children: [
+                      _imageBytes != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.memory(
+                                _imageBytes!,
+                                fit: BoxFit.contain,
+                                width: double.infinity,
+                                height: double.infinity,
+                                errorBuilder: (context, error, stackTrace) => const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.error, size: 64, color: Colors.red),
+                                      SizedBox(height: 8),
+                                      Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
+                          : (widget.product != null && widget.product!.mainImage != null && widget.product!.mainImage!.isNotEmpty)
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.product!.mainImage!}',
+                                    fit: BoxFit.contain,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    errorBuilder: (context, error, stackTrace) => const Center(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.image, size: 64, color: Colors.grey),
+                                          SizedBox(height: 8),
+                                          Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.grey)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  height: 200,
+                                  child: const Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.image, size: 64, color: Colors.grey),
+                                        SizedBox(height: 8),
+                                        Text('Chưa có hình ảnh', style: TextStyle(color: Colors.grey)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                      // Overlay để hiển thị icon zoom khi có hình ảnh
+                      if (_imageBytes != null || 
+                          (widget.product != null && widget.product!.mainImage != null && widget.product!.mainImage!.isNotEmpty))
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Icon(
+                              Icons.zoom_in,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Image Selection Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text('Chọn từ thư viện'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Chụp ảnh'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              // Nút xóa hình ảnh (chỉ hiển thị khi có hình ảnh)
+              if ((_imageBytes != null) || 
+                  (widget.product != null && widget.product!.mainImage != null && widget.product!.mainImage!.isNotEmpty))
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _selectedImage = null;
+                          _imageBytes = null;
+                        });
+                        // Nếu đang sửa sản phẩm, đánh dấu để xóa hình ảnh
+                        if (widget.product != null) {
+                          // Thêm logic để xóa hình ảnh khi lưu
+                          _shouldRemoveImage = true;
+                        }
+                      },
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      label: const Text('Xóa hình ảnh', style: TextStyle(color: Colors.red)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ),
               
               const SizedBox(height: 20),
               

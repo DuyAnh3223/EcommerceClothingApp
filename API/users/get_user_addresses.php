@@ -34,7 +34,7 @@ while ($row = $result->fetch_assoc()) {
         'city' => $row['city'],
         'province' => $row['province'],
         'postal_code' => $row['postal_code'],
-        'is_default' => (bool)$row['is_default']
+        'is_default' => (int)$row['is_default']
     ];
 }
 $stmt->close();

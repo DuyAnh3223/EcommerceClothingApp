@@ -1,9 +1,13 @@
 import 'dart:math' as console;
 
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:userfe/services/auth_service.dart';
+import 'package:userfe/services/notification_service.dart';
 import 'package:userfe/screens/auth/login_screen.dart';
 import 'package:userfe/screens/home/cart_screen.dart';
+import 'package:userfe/screens/profile/profile_screen.dart';
+import 'package:userfe/screens/notifications/notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -17,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = true;
   Map<String, dynamic>? currentUser;
   int cartCount = 0;
+  int notificationCount = 0;
 
   @override
   void initState() {
@@ -24,44 +29,65 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadUserData();
     _loadProducts();
     _loadCartCount();
+    _loadNotificationCount();
   }
 
   Future<void> _loadUserData() async {
     final userData = await AuthService.getUserData();
-    setState(() {
-      currentUser = userData;
-    });
+    if (mounted) {
+      setState(() {
+        currentUser = userData;
+      });
+    }
   }
 
   Future<void> _loadProducts() async {
     try {
       final result = await AuthService.getProducts();
       if (result['success'] == true) {
-        setState(() {
-          products = List<Map<String, dynamic>>.from(result['data'] ?? []);
-          isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            products = List<Map<String, dynamic>>.from(result['data'] ?? []);
+            isLoading = false;
+          });
+          
+          // Debug: In ra thông tin sản phẩm để kiểm tra
+          print('=== DEBUG PRODUCTS ===');
+          for (var product in products) {
+            print('Product: ${product['name']}');
+            print('Main Image: ${product['main_image']}');
+            print('Variants: ${product['variants']?.length ?? 0}');
+            if (product['variants'] != null && product['variants'].isNotEmpty) {
+              print('First variant image: ${product['variants'][0]['image_url']}');
+            }
+            print('---');
+          }
+        }
       } else {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message'] ?? 'Lỗi tải sản phẩm'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Lỗi tải sản phẩm'),
+            content: Text('Lỗi: $e'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
@@ -70,9 +96,22 @@ class _HomeScreenState extends State<HomeScreen> {
     final userId = userData?['id'];
     if (userId == null) return;
     final result = await AuthService.getCart(userId: userId);
-    if (result['success'] == true && result['data'] is List) {
+    if (result['success'] == true && result['data'] is List && mounted) {
       setState(() {
         cartCount = (result['data'] as List).fold<int>(0, (sum, item) => (sum + (item['quantity'] ?? 0)).toInt());
+      });
+    }
+  }
+
+  Future<void> _loadNotificationCount() async {
+    final userData = await AuthService.getUserData();
+    final userId = userData?['id'];
+    if (userId == null) return;
+    
+    final result = await NotificationService.getUnreadCount(userId: userId);
+    if (result['success'] == true && result['data'] != null && mounted) {
+      setState(() {
+        notificationCount = result['data']['unread_count'] ?? 0;
       });
     }
   }
@@ -164,6 +203,49 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.orange.shade700,
         foregroundColor: Colors.white,
         actions: [
+          // Notification button
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+                  );
+                  // Reload notification count when returning from notifications screen
+                  _loadNotificationCount();
+                },
+                tooltip: 'Thông báo',
+              ),
+              if (notificationCount > 0)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Text(
+                      notificationCount > 99 ? '99+' : '$notificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          // Cart button
           Stack(
             children: [
               IconButton(
@@ -212,10 +294,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onSelected: (value) {
               if (value == 'profile') {
                 // Navigate to profile
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Tính năng hồ sơ đang phát triển'),
-                  ),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
                 );
               } else if (value == 'logout') {
                 _logout();
@@ -345,28 +426,178 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                           color: Colors.grey.shade200,
                                         ),
-                                        child: (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '')
-                                            ? ClipRRect(
-                                                borderRadius: const BorderRadius.vertical(
-                                                  top: Radius.circular(12),
-                                                ),
-                                                child: Image.network(
-                                                  firstVariant['image_url'],
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) {
-                                                    return const Icon(
-                                                      Icons.image,
-                                                      size: 50,
-                                                      color: Colors.grey,
-                                                    );
-                                                  },
-                                                ),
-                                              )
-                                            : const Icon(
-                                                Icons.image,
-                                                size: 50,
-                                                color: Colors.grey,
-                                              ),
+                                        child: ClipRRect(
+                                          borderRadius: const BorderRadius.vertical(
+                                            top: Radius.circular(12),
+                                          ),
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              // Hiển thị hình ảnh full size
+                                              final imageUrl = (product['main_image'] != null && product['main_image'] != '')
+                                                  ? 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product['main_image']}'
+                                                  : (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '')
+                                                      ? 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${firstVariant['image_url']}'
+                                                      : null;
+                                              
+                                              if (imageUrl != null) {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (context) => Dialog(
+                                                    child: Container(
+                                                      constraints: BoxConstraints(
+                                                        maxWidth: MediaQuery.of(context).size.width * 0.9,
+                                                        maxHeight: MediaQuery.of(context).size.height * 0.8,
+                                                      ),
+                                                      child: Column(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          AppBar(
+                                                            title: Text('Hình ảnh: ${product['name']}'),
+                                                            backgroundColor: Colors.transparent,
+                                                            elevation: 0,
+                                                            actions: [
+                                                              IconButton(
+                                                                icon: const Icon(Icons.close),
+                                                                onPressed: () => Navigator.of(context).pop(),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          Expanded(
+                                                            child: Stack(
+                                                              children: [
+                                                                // Ưu tiên hiển thị hình ảnh của biến thể đã chọn
+                                                                (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '')
+                                                                    ? CachedNetworkImage(
+                                                                        imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${firstVariant['image_url']}',
+                                                                        height: 180,
+                                                                        placeholder: (context, url) {
+                                                                          print('Loading variant image: $url');
+                                                                          return const Center(
+                                                                            child: CircularProgressIndicator(),
+                                                                          );
+                                                                        },
+                                                                        errorWidget: (context, url, error) {
+                                                                          print('Error loading variant image: $url');
+                                                                          print('Error: $error');
+                                                                          return const Icon(Icons.image, size: 100, color: Colors.grey);
+                                                                        },
+                                                                      )
+                                                                    : (product['main_image'] != null && product['main_image'] != '')
+                                                                        ? CachedNetworkImage(
+                                                                            imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product['main_image']}',
+                                                                            height: 180,
+                                                                            placeholder: (context, url) {
+                                                                              print('Loading image: $url');
+                                                                              return const Center(
+                                                                                child: CircularProgressIndicator(),
+                                                                              );
+                                                                            },
+                                                                            errorWidget: (context, url, error) {
+                                                                              print('Error loading image: $url');
+                                                                              print('Error: $error');
+                                                                              return const Icon(Icons.image, size: 100, color: Colors.grey);
+                                                                            },
+                                                                          )
+                                                                        : const Icon(Icons.image, size: 100, color: Colors.grey),
+                                                                // Icon zoom khi có hình ảnh
+                                                                if ((firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '') ||
+                                                                    (product['main_image'] != null && product['main_image'] != ''))
+                                                                  Positioned(
+                                                                    top: 8,
+                                                                    right: 8,
+                                                                    child: Container(
+                                                                      padding: const EdgeInsets.all(4),
+                                                                      decoration: BoxDecoration(
+                                                                        color: Colors.black.withOpacity(0.6),
+                                                                        borderRadius: BorderRadius.circular(4),
+                                                                      ),
+                                                                      child: const Icon(
+                                                                        Icons.zoom_in,
+                                                                        color: Colors.white,
+                                                                        size: 20,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                            child: Stack(
+                                              children: [
+                                                (product['main_image'] != null && product['main_image'] != '')
+                                                    ? CachedNetworkImage(
+                                                        imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product['main_image']}',
+                                                        fit: BoxFit.cover,
+                                                        placeholder: (context, url) {
+                                                          print('Loading image: $url');
+                                                          return const Center(
+                                                            child: CircularProgressIndicator(),
+                                                          );
+                                                        },
+                                                        errorWidget: (context, url, error) {
+                                                          print('Error loading image: $url');
+                                                          print('Error: $error');
+                                                          return const Icon(
+                                                            Icons.image,
+                                                            size: 50,
+                                                            color: Colors.grey,
+                                                          );
+                                                        },
+                                                      )
+                                                    : (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '')
+                                                        ? CachedNetworkImage(
+                                                            imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${firstVariant['image_url']}',
+                                                            fit: BoxFit.cover,
+                                                            placeholder: (context, url) {
+                                                              print('Loading variant image: $url');
+                                                              return const Center(
+                                                                child: CircularProgressIndicator(),
+                                                              );
+                                                            },
+                                                            errorWidget: (context, url, error) {
+                                                              print('Error loading variant image: $url');
+                                                              print('Error: $error');
+                                                              return const Icon(
+                                                                Icons.image,
+                                                                size: 50,
+                                                                color: Colors.grey,
+                                                              );
+                                                            },
+                                                          )
+                                                        : const Icon(
+                                                            Icons.image,
+                                                            size: 50,
+                                                            color: Colors.grey,
+                                                          ),
+                                                // Icon zoom khi có hình ảnh
+                                                if ((product['main_image'] != null && product['main_image'] != '') ||
+                                                    (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != ''))
+                                                  Positioned(
+                                                    top: 8,
+                                                    right: 8,
+                                                    child: Container(
+                                                      padding: const EdgeInsets.all(4),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black.withOpacity(0.6),
+                                                        borderRadius: BorderRadius.circular(4),
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons.zoom_in,
+                                                        color: Colors.white,
+                                                        size: 16,
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     
@@ -510,9 +741,162 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
             children: [
               // Ảnh lớn
               Center(
-                child: (selectedVariant != null && selectedVariant!['image_url'] != null && selectedVariant!['image_url'] != '')
-                    ? Image.network(selectedVariant!['image_url'], height: 180)
-                    : const Icon(Icons.image, size: 100, color: Colors.grey),
+                child: GestureDetector(
+                  onTap: () {
+                    // Hiển thị hình ảnh full size
+                    final imageUrl = (widget.product['main_image'] != null && widget.product['main_image'] != '')
+                        ? 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.product['main_image']}'
+                        : (selectedVariant != null && selectedVariant!['image_url'] != null && selectedVariant!['image_url'] != '')
+                            ? 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${selectedVariant!['image_url']}'
+                            : null;
+                    
+                    if (imageUrl != null) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => Dialog(
+                          child: Container(
+                            constraints: BoxConstraints(
+                              maxWidth: MediaQuery.of(context).size.width * 0.9,
+                              maxHeight: MediaQuery.of(context).size.height * 0.8,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AppBar(
+                                  title: Text('Hình ảnh: ${widget.product['name']}'),
+                                  backgroundColor: Colors.transparent,
+                                  elevation: 0,
+                                  actions: [
+                                    IconButton(
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () => Navigator.of(context).pop(),
+                                    ),
+                                  ],
+                                ),
+                                Expanded(
+                                  child: Stack(
+                                    children: [
+                                      // Ưu tiên hiển thị hình ảnh của biến thể đã chọn
+                                      (selectedVariant != null && selectedVariant!['image_url'] != null && selectedVariant!['image_url'] != '')
+                                          ? CachedNetworkImage(
+                                              imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${selectedVariant!['image_url']}',
+                                              height: 180,
+                                              placeholder: (context, url) {
+                                                print('Loading variant image: $url');
+                                                return const Center(
+                                                  child: CircularProgressIndicator(),
+                                                );
+                                              },
+                                              errorWidget: (context, url, error) {
+                                                print('Error loading variant image: $url');
+                                                print('Error: $error');
+                                                return const Icon(Icons.image, size: 100, color: Colors.grey);
+                                              },
+                                            )
+                                          : (widget.product['main_image'] != null && widget.product['main_image'] != '')
+                                              ? CachedNetworkImage(
+                                                  imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.product['main_image']}',
+                                                  height: 180,
+                                                  placeholder: (context, url) {
+                                                    print('Loading image: $url');
+                                                    return const Center(
+                                                      child: CircularProgressIndicator(),
+                                                    );
+                                                  },
+                                                  errorWidget: (context, url, error) {
+                                                    print('Error loading image: $url');
+                                                    print('Error: $error');
+                                                    return const Icon(Icons.image, size: 100, color: Colors.grey);
+                                                  },
+                                                )
+                                              : const Icon(Icons.image, size: 100, color: Colors.grey),
+                                      // Icon zoom khi có hình ảnh
+                                      if ((selectedVariant != null && selectedVariant!['image_url'] != null && selectedVariant!['image_url'] != '') ||
+                                          (widget.product['main_image'] != null && widget.product['main_image'] != ''))
+                                        Positioned(
+                                          top: 8,
+                                          right: 8,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withOpacity(0.6),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: const Icon(
+                                              Icons.zoom_in,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Stack(
+                    children: [
+                      // Ưu tiên hiển thị hình ảnh của biến thể đã chọn
+                      (selectedVariant != null && selectedVariant!['image_url'] != null && selectedVariant!['image_url'] != '')
+                          ? CachedNetworkImage(
+                              imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${selectedVariant!['image_url']}',
+                              height: 180,
+                              placeholder: (context, url) {
+                                print('Loading variant image: $url');
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              },
+                              errorWidget: (context, url, error) {
+                                print('Error loading variant image: $url');
+                                print('Error: $error');
+                                return const Icon(Icons.image, size: 100, color: Colors.grey);
+                              },
+                            )
+                          : (widget.product['main_image'] != null && widget.product['main_image'] != '')
+                              ? CachedNetworkImage(
+                                  imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.product['main_image']}',
+                                  height: 180,
+                                  placeholder: (context, url) {
+                                    print('Loading image: $url');
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  },
+                                  errorWidget: (context, url, error) {
+                                    print('Error loading image: $url');
+                                    print('Error: $error');
+                                    return const Icon(Icons.image, size: 100, color: Colors.grey);
+                                  },
+                                )
+                              : const Icon(Icons.image, size: 100, color: Colors.grey),
+                      // Icon zoom khi có hình ảnh
+                      if ((selectedVariant != null && selectedVariant!['image_url'] != null && selectedVariant!['image_url'] != '') ||
+                          (widget.product['main_image'] != null && widget.product['main_image'] != ''))
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Icon(
+                              Icons.zoom_in,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
               Text(widget.product['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
@@ -779,6 +1163,14 @@ class _OrderConfirmDialogState extends State<OrderConfirmDialog> {
     final attrs = (widget.variant['attribute_values'] as List?)?.map((attr) => '${attr['attribute_name']}: ${attr['value']}').join(' / ') ?? '';
     final price = widget.variant['price'] ?? 0;
     final stock = widget.variant['stock'] ?? 0;
+    
+    // Determine which image to show - prioritize variant image, fall back to product image
+    final imageUrl = (widget.variant['image_url'] != null && widget.variant['image_url'] != '')
+        ? 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.variant['image_url']}'
+        : (widget.product['main_image'] != null && widget.product['main_image'] != '')
+            ? 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.product['main_image']}'
+            : null;
+    
     return Dialog(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -791,9 +1183,106 @@ class _OrderConfirmDialogState extends State<OrderConfirmDialog> {
               const Divider(),
               Row(
                 children: [
-                  widget.variant['image_url'] != null && widget.variant['image_url'] != ''
-                      ? Image.network(widget.variant['image_url'], width: 80, height: 80, fit: BoxFit.cover)
-                      : const Icon(Icons.image, size: 80, color: Colors.grey),
+                  GestureDetector(
+                    onTap: () {
+                      if (imageUrl != null) {
+                        showDialog(
+                          context: context,
+                          builder: (context) => Dialog(
+                            child: Container(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width * 0.9,
+                                maxHeight: MediaQuery.of(context).size.height * 0.8,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  AppBar(
+                                    title: Text('Hình ảnh: ${widget.product['name']}'),
+                                    backgroundColor: Colors.transparent,
+                                    elevation: 0,
+                                    actions: [
+                                      IconButton(
+                                        icon: const Icon(Icons.close),
+                                        onPressed: () => Navigator.of(context).pop(),
+                                      ),
+                                    ],
+                                  ),
+                                  Expanded(
+                                    child: CachedNetworkImage(
+                                      imageUrl: imageUrl,
+                                      fit: BoxFit.contain,
+                                      placeholder: (context, url) => const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                      errorWidget: (context, url, error) => const Icon(
+                                        Icons.image,
+                                        size: 100,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Stack(
+                        children: [
+                          imageUrl != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: CachedNetworkImage(
+                                    imageUrl: imageUrl,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                    errorWidget: (context, url, error) => const Icon(
+                                      Icons.image,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.image,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
+                          // Icon zoom when image exists
+                          if (imageUrl != null)
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.6),
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                                child: const Icon(
+                                  Icons.zoom_in,
+                                  color: Colors.white,
+                                  size: 12,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

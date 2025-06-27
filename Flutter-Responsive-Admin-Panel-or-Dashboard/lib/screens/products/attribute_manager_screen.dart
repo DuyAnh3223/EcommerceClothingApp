@@ -25,7 +25,7 @@ class _AttributeManagerScreenState extends State<AttributeManagerScreen> {
 
   Future<void> _loadAttributes() async {
     setState(() { isLoading = true; });
-    final res = await http.get(Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/get_attributes.php'));
+    final res = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/get_attributes.php'));
     final data = json.decode(res.body);
     if (data['success'] == true) {
       setState(() {
@@ -39,7 +39,7 @@ class _AttributeManagerScreenState extends State<AttributeManagerScreen> {
 
   Future<void> _loadAttributeValues(int attributeId) async {
     setState(() { isLoading = true; });
-    final res = await http.get(Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/get_attribute_values.php?attribute_id=$attributeId'));
+    final res = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/get_attribute_values.php?attribute_id=$attributeId'));
     final data = json.decode(res.body);
     if (data['success'] == true) {
       setState(() {
@@ -54,12 +54,12 @@ class _AttributeManagerScreenState extends State<AttributeManagerScreen> {
   Future<void> _addAttribute() async {
     final name = attrController.text.trim();
     if (name.isEmpty) return;
-    final res = await http.post(
-      Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/add_attribute.php'),
+    final response = await http.post(
+      Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/add_attribute.php'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'name': name}),
     );
-    final data = json.decode(res.body);
+    final data = json.decode(response.body);
     if (data['success'] == true) {
       attrController.clear();
       _loadAttributes();
@@ -71,7 +71,7 @@ class _AttributeManagerScreenState extends State<AttributeManagerScreen> {
 
   Future<void> _deleteAttribute(int attributeId) async {
     final res = await http.delete(
-      Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/delete_attribute.php'),
+      Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/delete_attribute.php'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'attribute_id': attributeId}),
     );
@@ -92,7 +92,7 @@ class _AttributeManagerScreenState extends State<AttributeManagerScreen> {
     final value = valueController.text.trim();
     if (value.isEmpty || selectedAttributeId == null) return;
     final res = await http.post(
-      Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/add_attribute_value.php'),
+      Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/add_attribute_value.php'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'attribute_id': selectedAttributeId, 'value': value}),
     );
@@ -108,7 +108,7 @@ class _AttributeManagerScreenState extends State<AttributeManagerScreen> {
 
   Future<void> _deleteAttributeValue(int valueId) async {
     final res = await http.delete(
-      Uri.parse('http://localhost/EcommerceClothingApp/API/variants_attributes/delete_attribute_value.php'),
+      Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/delete_attribute_value.php'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({'value_id': valueId}),
     );

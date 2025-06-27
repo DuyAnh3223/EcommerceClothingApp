@@ -21,7 +21,7 @@ class Order {
     return Order(
       id: json['id'] ?? 0,
       userId: json['user_id'] ?? 0,
-      userName: json['user_name'],
+      userName: json['user_name'] ?? json['username'],
       addressId: json['address_id'] ?? 0,
       orderDate: json['order_date'] ?? '',
       totalAmount: double.tryParse(json['total_amount']?.toString() ?? '0.0') ?? 0.0,

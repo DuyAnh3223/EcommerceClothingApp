@@ -27,6 +27,7 @@ class Product {
   final String description;
   final String category;
   final String genderTarget;
+  final String? mainImage;
   final String createdAt;
   final String updatedAt;
   final List<ProductVariant> variants;
@@ -37,6 +38,7 @@ class Product {
     required this.description,
     required this.category,
     required this.genderTarget,
+    this.mainImage,
     required this.createdAt,
     required this.updatedAt,
     required this.variants,
@@ -56,6 +58,7 @@ class Product {
       description: json['description'] ?? '',
       category: json['category'] ?? '',
       genderTarget: json['gender_target'] ?? '',
+      mainImage: json['main_image'],
       createdAt: json['created_at'] ?? '',
       updatedAt: json['updated_at'] ?? '',
       variants: variantsList,
@@ -69,6 +72,7 @@ class Product {
       'description': description,
       'category': category,
       'gender_target': genderTarget,
+      'main_image': mainImage,
       'created_at': createdAt,
       'updated_at': updatedAt,
       'variants': variants.map((variant) => variant.toJson()).toList(),

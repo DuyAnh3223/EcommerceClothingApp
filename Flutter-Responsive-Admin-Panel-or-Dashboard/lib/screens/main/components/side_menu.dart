@@ -69,6 +69,15 @@ class SideMenu extends StatelessWidget {
             },
           ),
           DrawerListTile(
+            title: "Thông báo",
+            svgSrc: "assets/icons/thongbao.svg",
+            press: () {
+              if (onMenuSelected != null) {
+                onMenuSelected!("Thông báo");
+              }
+            },
+          ),
+          DrawerListTile(
             title: "Chi tiết đơn hàng",
             svgSrc: "assets/icons/chitietdonhang.svg",
             press: () {

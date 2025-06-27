@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://localhost/EcommerceClothingApp/API';
+  static const String baseUrl = 'http://127.0.0.1/EcommerceClothingApp/API';
   static const String _userKey = 'user_data';
   static const String _roleKey = 'user_role';
 
@@ -366,7 +366,198 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': 'Lỗi kết nối server: \\${response.statusCode}',
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Lỗi kết nối: $e',
+      };
+    }
+  }
+
+  // Profile Management Methods
+  static Future<Map<String, dynamic>> updateUserProfile({
+    required int userId,
+    String? username,
+    String? email,
+    String? phone,
+    String? gender,
+    String? dob,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {'user_id': userId};
+      if (username != null) body['username'] = username;
+      if (email != null) body['email'] = email;
+      if (phone != null) body['phone'] = phone;
+      if (gender != null) body['gender'] = gender;
+      if (dob != null) body['dob'] = dob;
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/update_user.php'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final result = json.decode(response.body);
+        
+        // Update local user data if successful
+        if (result['success'] == true && result['data'] != null) {
+          await _saveUserData(result['data']);
+        }
+        
+        return result;
+      } else {
+        return {
+          'success': false,
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Lỗi kết nối: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> addAddress({
+    required int userId,
+    required String addressLine,
+    required String city,
+    required String province,
+    String? postalCode,
+    bool isDefault = false,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/add_address.php'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'user_id': userId,
+          'address_line': addressLine,
+          'city': city,
+          'province': province,
+          'postal_code': postalCode,
+          'is_default': isDefault,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Lỗi kết nối: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateAddress({
+    required int userId,
+    required int addressId,
+    String? addressLine,
+    String? city,
+    String? province,
+    String? postalCode,
+    bool? isDefault,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {
+        'user_id': userId,
+        'address_id': addressId,
+      };
+      if (addressLine != null) body['address_line'] = addressLine;
+      if (city != null) body['city'] = city;
+      if (province != null) body['province'] = province;
+      if (postalCode != null) body['postal_code'] = postalCode;
+      if (isDefault != null) body['is_default'] = isDefault;
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/update_address.php'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Lỗi kết nối: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> deleteAddress({
+    required int userId,
+    required int addressId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/delete_address.php'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'user_id': userId,
+          'address_id': addressId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Lỗi kết nối: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> getUser({
+    required int userId,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/users/get_user.php?user_id=$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
         };
       }
     } catch (e) {

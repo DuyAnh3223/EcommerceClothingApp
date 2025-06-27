@@ -34,6 +34,7 @@ $name = trim($data['name']);
 $description = isset($data['description']) ? trim($data['description']) : null;
 $category = trim($data['category']);
 $gender_target = trim($data['gender_target']);
+$main_image = isset($data['main_image']) ? trim($data['main_image']) : null;
 
 // Kiểm tra trùng sản phẩm
 $check_stmt = $conn->prepare("SELECT id FROM products WHERE name = ? AND category = ? AND gender_target = ?");
@@ -49,8 +50,8 @@ if ($check_stmt->num_rows > 0) {
 $check_stmt->close();
 
 // Insert product
-$stmt = $conn->prepare("INSERT INTO products (name, description, category, gender_target) VALUES (?, ?, ?, ?)");
-$stmt->bind_param("ssss", $name, $description, $category, $gender_target);
+$stmt = $conn->prepare("INSERT INTO products (name, description, category, gender_target, main_image) VALUES (?, ?, ?, ?, ?)");
+$stmt->bind_param("sssss", $name, $description, $category, $gender_target, $main_image);
 
 if ($stmt->execute()) {
     http_response_code(200);

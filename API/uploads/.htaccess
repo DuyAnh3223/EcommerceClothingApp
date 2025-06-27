@@ -1,0 +1,6 @@
+RewriteEngine On
+
+# Redirect tất cả request hình ảnh qua serve_image.php?file=...
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_URI} \/uploads\/(.+)\.(jpg|jpeg|png|gif|webp)$ [NC]
+RewriteRule ^uploads\/(.+)$ uploads/serve_image.php?file=$1 [L,QSA] 

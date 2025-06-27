@@ -21,7 +21,7 @@ if (!$user_id) {
     exit();
 }
 
-$sql = "SELECT ci.id AS cart_item_id, ci.product_id, p.name as product_name, ci.variant_id, pv.price, pv.stock, pv.image_url, ci.quantity, (pv.price * ci.quantity) AS total_price
+$sql = "SELECT ci.id AS cart_item_id, ci.product_id, p.name as product_name, p.main_image as product_image, ci.variant_id, pv.price, pv.stock, pv.image_url as variant_image, ci.quantity, (pv.price * ci.quantity) AS total_price
         FROM cart_items ci
         JOIN products p ON ci.product_id = p.id
         JOIN product_variant pv ON ci.product_id = pv.product_id AND ci.variant_id = pv.variant_id
@@ -51,9 +51,11 @@ while ($row = $result->fetch_assoc()) {
         'cart_item_id' => (int)$row['cart_item_id'],
         'product_id' => (int)$row['product_id'],
         'product_name' => $row['product_name'],
+        'product_image' => $row['product_image'],
         'variant_id' => (int)$row['variant_id'],
         'attributes' => $attributes,
-        'image_url' => $row['image_url'],
+        'variant_image' => $row['variant_image'],
+        'image_url' => !empty($row['variant_image']) ? $row['variant_image'] : $row['product_image'],
         'price' => (float)$row['price'],
         'quantity' => (int)$row['quantity'],
         'total_price' => (float)$row['total_price'],

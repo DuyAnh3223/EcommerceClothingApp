@@ -26,12 +26,12 @@ try {
     while ($row = $result->fetch_assoc()) {
         // Get order items for each order
         $order_id = (int)$row['id'];
-        $items_sql = "SELECT oi.id, oi.quantity, oi.price,
-                             pv.color, pv.size, pv.material,
+        $items_sql = "SELECT oi.id, oi.product_id, oi.variant_id, oi.quantity, oi.price,
+                             pv.image_url,
                              p.name as product_name
                       FROM order_items oi
-                      JOIN product_variants pv ON oi.product_variant_id = pv.id
-                      JOIN products p ON pv.product_id = p.id
+                      JOIN product_variant pv ON oi.product_id = pv.product_id AND oi.variant_id = pv.variant_id
+                      JOIN products p ON oi.product_id = p.id
                       WHERE oi.order_id = ?";
         
         $stmt = $conn->prepare($items_sql);
@@ -41,14 +41,32 @@ try {
         
         $items = [];
         while ($item = $items_result->fetch_assoc()) {
+            // Lấy thuộc tính variant
+            $variant_attrs = [];
+            $sql_attr = "SELECT av.value, a.name
+                         FROM variant_attribute_values vav
+                         JOIN attribute_values av ON vav.attribute_value_id = av.id
+                         JOIN attributes a ON av.attribute_id = a.id
+                         WHERE vav.variant_id = ?";
+            $stmt_attr = $conn->prepare($sql_attr);
+            $stmt_attr->bind_param("i", $item['variant_id']);
+            $stmt_attr->execute();
+            $result_attr = $stmt_attr->get_result();
+            while ($attr = $result_attr->fetch_assoc()) {
+                $variant_attrs[] = $attr['name'] . ': ' . $attr['value'];
+            }
+            $stmt_attr->close();
+            $variant_str = implode(', ', $variant_attrs);
+
             $items[] = [
                 'id' => (int)$item['id'],
+                'product_id' => (int)$item['product_id'],
+                'variant_id' => (int)$item['variant_id'],
                 'quantity' => (int)$item['quantity'],
                 'price' => (float)$item['price'],
-                'color' => $item['color'],
-                'size' => $item['size'],
-                'material' => $item['material'],
-                'product_name' => $item['product_name']
+                'image_url' => $item['image_url'],
+                'product_name' => $item['product_name'],
+                'variant' => $variant_str
             ];
         }
         $stmt->close();

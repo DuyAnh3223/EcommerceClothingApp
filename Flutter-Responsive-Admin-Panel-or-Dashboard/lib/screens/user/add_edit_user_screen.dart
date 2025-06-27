@@ -62,9 +62,11 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
         dob: dobController.text,
       );
       String url;
+      String method;
       Map<String, dynamic> body;
       if (widget.user == null) {
-        url = 'http://localhost/EcommerceClothingApp/API/users/add_user.php';
+        url = 'http://127.0.0.1/EcommerceClothingApp/API/users/add_user.php';
+        method = 'POST';
         body = {
           'username': newUser.username,
           'password': newUser.password,
@@ -75,9 +77,10 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
           'dob': newUser.dob,
         };
       } else {
-        url = 'http://localhost/EcommerceClothingApp/API/users/update_user.php';
+        url = 'http://127.0.0.1/EcommerceClothingApp/API/users/update_user.php';
+        method = 'POST';
         body = {
-          'id': newUser.id,
+          'id': newUser.id.toString(),
           'username': newUser.username,
           'phone': newUser.phone,
           'email': newUser.email,

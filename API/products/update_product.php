@@ -1,6 +1,6 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: PUT, OPTIONS");
+header("Access-Control-Allow-Methods: PUT, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header('Content-Type: application/json');
 
@@ -27,6 +27,7 @@ $name = isset($data['name']) ? trim($data['name']) : null;
 $description = isset($data['description']) ? trim($data['description']) : null;
 $category = isset($data['category']) ? trim($data['category']) : null;
 $gender_target = isset($data['gender_target']) ? trim($data['gender_target']) : null;
+$main_image = isset($data['main_image']) ? trim($data['main_image']) : null;
 
 // Check if product exists
 $check_stmt = $conn->prepare("SELECT id FROM products WHERE id = ?");
@@ -66,6 +67,11 @@ if ($category !== null) {
 if ($gender_target !== null) {
     $fields[] = 'gender_target = ?';
     $params[] = $gender_target;
+    $types .= 's';
+}
+if ($main_image !== null) {
+    $fields[] = 'main_image = ?';
+    $params[] = $main_image;
     $types .= 's';
 }
 if (empty($fields)) {

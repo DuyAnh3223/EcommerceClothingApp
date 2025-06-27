@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Notification API</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Test Notification API</h1>
+    
+    <div class="form-group">
+        <label for="userId">User ID:</label>
+        <input type="number" id="userId" value="4">
+    </div>
+    
+    <div class="form-group">
+        <label for="title">Title:</label>
+        <input type="text" id="title" value="Test Notification">
+    </div>
+    
+    <div class="form-group">
+        <label for="content">Content:</label>
+        <textarea id="content" rows="3">This is a test notification from the browser.</textarea>
+    </div>
+    
+    <div class="form-group">
+        <label for="type">Type:</label>
+        <select id="type">
+            <option value="other">Other</option>
+            <option value="order_status">Order Status</option>
+            <option value="sale">Sale</option>
+            <option value="voucher">Voucher</option>
+        </select>
+    </div>
+    
+    <button onclick="sendNotification()">Send Notification</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function sendNotification() {
+            const userId = document.getElementById('userId').value;
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const type = document.getElementById('type').value;
+            
+            const data = {
+                user_id: parseInt(userId),
+                title: title,
+                content: content,
+                type: type
+            };
+            
+            try {
+                const response = await fetch('http://localhost/EcommerceClothingApp/API/notifications/add_notification.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                const resultDiv = document.getElementById('result');
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<strong>Success!</strong> ${result.message}<br>Notification ID: ${result.data.id}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<strong>Error!</strong> ${result.message}`;
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('result');
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<strong>Error!</strong> ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html> 

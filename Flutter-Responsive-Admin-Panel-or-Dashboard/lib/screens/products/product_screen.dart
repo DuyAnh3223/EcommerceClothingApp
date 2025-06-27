@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../../models/product_model.dart';
 import 'add_edit_product_screen.dart';
@@ -25,13 +24,17 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   void _loadProducts() async {
+    if (!mounted) return;
+    
     setState(() {
       isLoading = true;
       errorMessage = null;
     });
 
     try {
-      final response = await http.get(Uri.parse('http://localhost/EcommerceClothingApp/API/products/get_products.php'));
+      final response = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/products/get_products.php'));
+      
+      if (!mounted) return;
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -39,27 +42,35 @@ class _ProductScreenState extends State<ProductScreen> {
           final List<Product> loadedProducts = (data['data'] as List)
               .map((item) => Product.fromJson(item))
               .toList();
-          setState(() {
-            products = loadedProducts;
-            isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              products = loadedProducts;
+              isLoading = false;
+            });
+          }
         } else {
+          if (mounted) {
+            setState(() {
+              errorMessage = data['message'] ?? 'Lỗi không xác định';
+              isLoading = false;
+            });
+          }
+        }
+      } else {
+        if (mounted) {
           setState(() {
-            errorMessage = data['message'] ?? 'Lỗi không xác định';
+            errorMessage = 'Lỗi kết nối API: ${response.statusCode}';
             isLoading = false;
           });
         }
-      } else {
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          errorMessage = 'Lỗi kết nối API: ${response.statusCode}';
+          errorMessage = 'Lỗi tải sản phẩm: ${e.toString()}';
           isLoading = false;
         });
       }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Lỗi tải sản phẩm: ${e.toString()}';
-        isLoading = false;
-      });
     }
   }
 
@@ -107,7 +118,7 @@ class _ProductScreenState extends State<ProductScreen> {
     if (confirmed == true) {
       try {
         final response = await http.post(
-          Uri.parse('http://localhost/EcommerceClothingApp/API/products/delete_product.php'),
+          Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/products/delete_product.php'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'id': productId}),
         );

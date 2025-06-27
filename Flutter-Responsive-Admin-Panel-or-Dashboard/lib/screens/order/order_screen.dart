@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../models/order_model.dart';
 import 'order_detail_screen.dart';
+import 'add_edit_order_screen.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);
@@ -31,7 +32,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://localhost/EcommerceClothingApp/API/orders/get_orders.php'),
+        Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/orders/get_orders.php'),
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -72,6 +73,61 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
+  void _addOrder() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AddEditOrderScreen()),
+    );
+    if (result != null) {
+      _loadOrders();
+    }
+  }
+
+  void _editOrder(Order order) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => AddEditOrderScreen(order: order)),
+    );
+    if (result != null) {
+      _loadOrders();
+    }
+  }
+
+  void _deleteOrder(Order order) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xác nhận'),
+        content: Text('Bạn có chắc chắn muốn xóa đơn hàng #${order.id}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Hủy')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Xóa')),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      try {
+        final response = await http.post(
+          Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/orders/delete_order.php'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'id': order.id}),
+        );
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          _loadOrders();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Lỗi: ${data['message']}')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi xóa: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,6 +147,11 @@ class _OrderScreenState extends State<OrderScreen> {
                   icon: const Icon(Icons.refresh),
                   onPressed: _loadOrders,
                 ),
+                // ElevatedButton.icon(
+                //   icon: const Icon(Icons.add),
+                //   label: const Text('Thêm đơn hàng'),
+                //   onPressed: _addOrder,
+                // ),
               ],
             ),
             const SizedBox(height: 20),
@@ -108,7 +169,22 @@ class _OrderScreenState extends State<OrderScreen> {
                       child: ListTile(
                         title: Text('Đơn hàng #${order.id} - ${order.status}'),
                         subtitle: Text('Khách: ${order.userName ?? ''} - Tổng: ${order.totalAmount} VNĐ'),
-                        trailing: const Icon(Icons.arrow_forward_ios),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              tooltip: 'Sửa',
+                              onPressed: () => _editOrder(order),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              tooltip: 'Xóa',
+                              onPressed: () => _deleteOrder(order),
+                            ),
+                            const Icon(Icons.arrow_forward_ios),
+                          ],
+                        ),
                         onTap: () => _viewOrderDetail(order),
                       ),
                     );

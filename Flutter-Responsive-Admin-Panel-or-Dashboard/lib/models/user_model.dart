@@ -53,3 +53,49 @@ class User {
     };
   }
 }
+
+class UserAddress {
+  final int id;
+  final int userId;
+  final String addressLine;
+  final String city;
+  final String province;
+  final String? postalCode;
+  final bool isDefault;
+  final String createdAt;
+
+  UserAddress({
+    required this.id,
+    required this.userId,
+    required this.addressLine,
+    required this.city,
+    required this.province,
+    this.postalCode,
+    required this.isDefault,
+    required this.createdAt,
+  });
+
+  factory UserAddress.fromJson(Map<String, dynamic> json) {
+    return UserAddress(
+      id: json['id'],
+      userId: json['user_id'],
+      addressLine: json['address_line'],
+      city: json['city'],
+      province: json['province'],
+      postalCode: json['postal_code'],
+      isDefault: json['is_default'] == 1 || json['is_default'] == true,
+      createdAt: json['created_at'],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'user_id': userId,
+    'address_line': addressLine,
+    'city': city,
+    'province': province,
+    'postal_code': postalCode,
+    'is_default': isDefault ? 1 : 0,
+    'created_at': createdAt,
+  };
+}

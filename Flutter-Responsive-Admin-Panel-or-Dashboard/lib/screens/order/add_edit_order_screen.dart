@@ -14,51 +14,67 @@ class AddEditOrderScreen extends StatefulWidget {
 
 class _AddEditOrderScreenState extends State<AddEditOrderScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController maDHController;
-  late TextEditingController maNDController;
-  late TextEditingController ngayDatHangController;
-  late TextEditingController tongGiaTriController;
-  late TextEditingController trangThaiController;
+  late TextEditingController idController;
+  late TextEditingController userIdController;
+  late TextEditingController userNameController;
+  late TextEditingController addressIdController;
+  late TextEditingController orderDateController;
+  late TextEditingController totalAmountController;
+  late TextEditingController statusController;
+  late String statusValue;
 
   @override
   void initState() {
     super.initState();
-    maDHController = TextEditingController(text: widget.order?.maDH ?? '');
-    maNDController = TextEditingController(text: widget.order?.maND ?? '');
-    ngayDatHangController = TextEditingController(text: widget.order?.ngayDatHang ?? '');
-    tongGiaTriController = TextEditingController(text: widget.order?.tongGiaTri.toString() ?? '');
-    trangThaiController = TextEditingController(text: widget.order?.trangThaiDonHang ?? '');
+    idController = TextEditingController(text: widget.order?.id.toString() ?? '');
+    userIdController = TextEditingController(text: widget.order?.userId.toString() ?? '');
+    userNameController = TextEditingController(text: widget.order?.userName ?? '');
+    addressIdController = TextEditingController(text: widget.order?.addressId.toString() ?? '');
+    orderDateController = TextEditingController(text: widget.order?.orderDate ?? '');
+    totalAmountController = TextEditingController(text: widget.order?.totalAmount.toString() ?? '');
+    statusValue = widget.order?.status ?? 'pending';
+    statusController = TextEditingController(text: statusValue);
   }
 
   @override
   void dispose() {
-    maDHController.dispose();
-    maNDController.dispose();
-    ngayDatHangController.dispose();
-    tongGiaTriController.dispose();
-    trangThaiController.dispose();
+    idController.dispose();
+    userIdController.dispose();
+    userNameController.dispose();
+    addressIdController.dispose();
+    orderDateController.dispose();
+    totalAmountController.dispose();
+    statusController.dispose();
     super.dispose();
   }
 
-  void _save() async {
+  void _saveOrder() async {
     if (_formKey.currentState!.validate()) {
       final newOrder = Order(
-        maDH: widget.order?.maDH ?? '',
-        maND: maNDController.text,
-        ngayDatHang: ngayDatHangController.text,
-        tongGiaTri: double.tryParse(tongGiaTriController.text) ?? 0.0,
-        trangThaiDonHang: trangThaiController.text,
+        id: int.tryParse(idController.text) ?? 0,
+        userId: int.tryParse(userIdController.text) ?? 0,
+        userName: userNameController.text,
+        addressId: int.tryParse(addressIdController.text) ?? 0,
+        orderDate: orderDateController.text,
+        totalAmount: double.tryParse(totalAmountController.text) ?? 0.0,
+        status: statusValue,
       );
 
       String url;
+      String method;
       Map<String, dynamic> body;
 
       if (widget.order == null) {
-        url = 'http://localhost/EcommerceClothingApp/API/orders/add_order.php';
+        url = 'http://127.0.0.1/EcommerceClothingApp/API/orders/add_order.php';
+        method = 'POST';
         body = newOrder.toJson();
       } else {
-        url = 'http://localhost/EcommerceClothingApp/API/orders/update_order.php';
-        body = newOrder.toJson();
+        url = 'http://127.0.0.1/EcommerceClothingApp/API/orders/update_order.php';
+        method = 'POST';
+        body = {
+          'order_id': widget.order!.id,
+          'status': statusValue,
+        };
       }
 
       try {
@@ -108,13 +124,31 @@ class _AddEditOrderScreenState extends State<AddEditOrderScreen> {
           child: Column(
             children: [
               if (widget.order != null)
-                _buildField(maDHController, "Mã đơn hàng", enabled: false),
-              _buildField(maNDController, "Mã người dùng", keyboardType: TextInputType.number),
-              _buildField(ngayDatHangController, "Ngày đặt hàng (yyyy-mm-dd)"),
-              _buildField(tongGiaTriController, "Tổng giá trị", keyboardType: TextInputType.number),
-              _buildField(trangThaiController, "Trạng thái đơn hàng"),
+                _buildField(idController, "Mã đơn hàng", enabled: false),
+              _buildField(userIdController, "Mã người dùng", keyboardType: TextInputType.number),
+              _buildField(userNameController, "Tên người dùng"),
+              _buildField(addressIdController, "Mã địa chỉ", keyboardType: TextInputType.number),
+              _buildField(totalAmountController, "Tổng giá trị", keyboardType: TextInputType.number),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: DropdownButtonFormField<String>(
+                  value: statusValue,
+                  decoration: const InputDecoration(labelText: "Trạng thái đơn hàng"),
+                  items: const [
+                    DropdownMenuItem(value: 'pending', child: Text('Chờ xác nhận')),
+                    DropdownMenuItem(value: 'confirmed', child: Text('Đã xác nhận')),
+                    DropdownMenuItem(value: 'shipping', child: Text('Đang giao hàng')),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      statusValue = value ?? 'pending';
+                    });
+                  },
+                  validator: (value) => value == null || value.isEmpty ? "Không được để trống" : null,
+                ),
+              ),
               const SizedBox(height: 20),
-              ElevatedButton(onPressed: _save, child: const Text("Lưu")),
+              ElevatedButton(onPressed: _saveOrder, child: const Text("Lưu")),
             ],
           ),
         ),

@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import '../../../models/user_model.dart';
 import '../add_edit_user_screen.dart';
+import '../user_address_screen.dart';
 
 class UserTable extends StatefulWidget {
   final List<User> users;
@@ -38,9 +39,9 @@ class _UserTableState extends State<UserTable> {
     if (confirm == true) {
       try {
         final response = await http.post(
-          Uri.parse("http://localhost/EcommerceClothingApp/API/users/delete_user.php"),
+          Uri.parse("http://127.0.0.1/EcommerceClothingApp/API/users/delete_user.php"),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'MaND': userId}),
+          body: json.encode({'id': userId}),
         );
 
         if (response.statusCode == 200) {
@@ -141,6 +142,17 @@ class _UserTableState extends State<UserTable> {
                     if (widget.onDelete != null) {
                       widget.onDelete!(user.id);
                     }
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.location_on, color: Colors.blue),
+                  tooltip: 'Quản lý địa chỉ',
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => UserAddressScreen(userId: user.id, username: user.username),
+                      ),
+                    );
                   },
                 ),
               ],

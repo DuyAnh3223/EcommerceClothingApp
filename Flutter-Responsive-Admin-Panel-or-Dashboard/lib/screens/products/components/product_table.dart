@@ -22,6 +22,7 @@ class ProductTable extends StatelessWidget {
     return DataTable(
       columns: const [
         DataColumn(label: Text('ID')),
+        DataColumn(label: Text('Hình ảnh')),
         DataColumn(label: Text('Tên sản phẩm')),
         DataColumn(label: Text('Danh mục')),
         DataColumn(label: Text('Đối tượng')),
@@ -33,6 +34,107 @@ class ProductTable extends StatelessWidget {
       rows: products.map((product) {
         return DataRow(cells: [
           DataCell(Text(product.id.toString())), // Cột ID
+          DataCell( // Cột hình ảnh
+            GestureDetector(
+              onTap: () {
+                if (product.mainImage != null && product.mainImage!.isNotEmpty) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => Dialog(
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.8,
+                          maxHeight: MediaQuery.of(context).size.height * 0.8,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AppBar(
+                              title: Text('Hình ảnh: ${product.name}'),
+                              backgroundColor: Colors.transparent,
+                              elevation: 0,
+                              actions: [
+                                IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                            Expanded(
+                              child: Image.network(
+                                'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product.mainImage!}',
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.error, size: 64, color: Colors.red),
+                                      SizedBox(height: 8),
+                                      Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Stack(
+                  children: [
+                    (product.mainImage != null && product.mainImage!.isNotEmpty)
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product.mainImage!}',
+                              fit: BoxFit.cover,
+                              width: 60,
+                              height: 60,
+                              errorBuilder: (context, error, stackTrace) => const Icon(
+                                Icons.image,
+                                size: 30,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.image,
+                            size: 30,
+                            color: Colors.grey,
+                          ),
+                    // Icon zoom khi có hình ảnh
+                    if (product.mainImage != null && product.mainImage!.isNotEmpty)
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                          child: const Icon(
+                            Icons.zoom_in,
+                            color: Colors.white,
+                            size: 12,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           DataCell( // Cột tên
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
