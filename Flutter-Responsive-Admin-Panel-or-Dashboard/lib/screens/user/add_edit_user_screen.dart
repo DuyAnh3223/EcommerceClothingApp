@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'user_address_screen.dart';
 
 class AddEditUserScreen extends StatefulWidget {
   final User? user;
@@ -212,6 +213,24 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
               _buildGenderDropdown(),
               _buildRoleDropdown(),
               _buildDobField(),
+              if (widget.user != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.location_on),
+                    label: const Text('Quản lý địa chỉ'),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => UserAddressScreen(
+                            userId: widget.user!.id,
+                            username: widget.user!.username,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               const SizedBox(height: 20),
               ElevatedButton(onPressed: _saveUser, child: const Text("Lưu")),
             ],

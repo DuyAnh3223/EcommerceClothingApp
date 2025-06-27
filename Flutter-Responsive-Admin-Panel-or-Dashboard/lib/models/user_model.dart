@@ -76,20 +76,26 @@ class UserAddress {
   });
 
   factory UserAddress.fromJson(Map<String, dynamic> json) {
+    int parseInt(dynamic v) {
+      if (v == null) return 0;
+      if (v is int) return v;
+      if (v is String && v.isNotEmpty) return int.tryParse(v) ?? 0;
+      return 0;
+    }
     return UserAddress(
-      id: json['id'],
-      userId: json['user_id'],
-      addressLine: json['address_line'],
-      city: json['city'],
-      province: json['province'],
+      id: parseInt(json['id']),
+      userId: parseInt(json['user_id']),
+      addressLine: json['address_line'] ?? '',
+      city: json['city'] ?? '',
+      province: json['province'] ?? '',
       postalCode: json['postal_code'],
       isDefault: json['is_default'] == 1 || json['is_default'] == true,
-      createdAt: json['created_at'],
+      createdAt: json['created_at'] ?? '',
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
+  Map<String, dynamic> toJson({bool forUpdate = false}) => {
+    if (forUpdate) 'address_id': id else 'id': id,
     'user_id': userId,
     'address_line': addressLine,
     'city': city,
@@ -98,4 +104,26 @@ class UserAddress {
     'is_default': isDefault ? 1 : 0,
     'created_at': createdAt,
   };
+
+  UserAddress copyWith({
+    int? id,
+    int? userId,
+    String? addressLine,
+    String? city,
+    String? province,
+    String? postalCode,
+    bool? isDefault,
+    String? createdAt,
+  }) {
+    return UserAddress(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      addressLine: addressLine ?? this.addressLine,
+      city: city ?? this.city,
+      province: province ?? this.province,
+      postalCode: postalCode ?? this.postalCode,
+      isDefault: isDefault ?? this.isDefault,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

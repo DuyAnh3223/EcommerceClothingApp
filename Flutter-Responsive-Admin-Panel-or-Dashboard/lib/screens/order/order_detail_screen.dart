@@ -122,7 +122,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       ...items.map((item) => ListTile(
                             leading: item.imageUrl != null && item.imageUrl!.isNotEmpty
                                 ? Image.network(
-                                    'http://127.0.0.1/EcommerceClothingApp/API/uploads/${item.imageUrl}',
+                                    'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${item.imageUrl}',
                                     width: 56,
                                     height: 56,
                                     fit: BoxFit.cover,

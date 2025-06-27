@@ -104,21 +104,12 @@ class SideMenu extends StatelessWidget {
               }
             },
           ),
-          DrawerListTile(
-            title: "Địa chỉ",
-            svgSrc: "assets/icons/diachi.svg",
-            press: () {
-              if (onMenuSelected != null) {
-                onMenuSelected!("Địa chỉ");
-              }
-            },
-          ),
           // DrawerListTile(
-          //   title: "Danh sách yêu thích",
-          //   svgSrc: "assets/icons/danhsachyeuthich.svg",
+          //   title: "Địa chỉ",
+          //   svgSrc: "assets/icons/diachi.svg",
           //   press: () {
           //     if (onMenuSelected != null) {
-          //       onMenuSelected!("Danh sách yêu thích");
+          //       onMenuSelected!("Địa chỉ");
           //     }
           //   },
           // ),

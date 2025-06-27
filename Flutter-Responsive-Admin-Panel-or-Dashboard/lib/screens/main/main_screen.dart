@@ -49,9 +49,6 @@ class _MainScreenState extends State<MainScreen> {
         case "Thanh toán":
           _selectedScreen = const Center(child: Text("Trang 'Thanh toán' đang cập nhật"));
           break;
-        case "Địa chỉ":
-          _selectedScreen = const AllUserAddressesScreen();
-          break;
         case "Quản lý thuộc tính":
           _selectedScreen = const AttributeManagerScreen();
           break;

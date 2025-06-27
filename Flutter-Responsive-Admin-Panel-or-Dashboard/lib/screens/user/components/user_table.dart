@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../../../models/user_model.dart';
 import '../add_edit_user_screen.dart';
 import '../user_address_screen.dart';
+import '../all_user_addresses_screen.dart';
 
 class UserTable extends StatefulWidget {
   final List<User> users;
@@ -150,7 +151,7 @@ class _UserTableState extends State<UserTable> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => UserAddressScreen(userId: user.id, username: user.username),
+                        builder: (_) => AllUserAddressesScreen(userId: user.id, username: user.username),
                       ),
                     );
                   },

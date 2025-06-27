@@ -28,7 +28,7 @@ class UserService {
     final response = await http.post(
       Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/users/update_address.php'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode(address.toJson()),
+      body: json.encode(address.toJson(forUpdate: true)),
     );
     final data = json.decode(response.body);
     return data['success'] == true;
@@ -38,7 +38,7 @@ class UserService {
     final response = await http.post(
       Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/users/delete_address.php'),
       headers: {'Content-Type': 'application/json'},
-      body: json.encode({'id': addressId}),
+      body: json.encode({'address_id': addressId}),
     );
     final data = json.decode(response.body);
     return data['success'] == true;
