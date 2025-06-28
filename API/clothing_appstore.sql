@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th6 28, 2025 lúc 04:37 AM
+-- Thời gian đã tạo: Th6 28, 2025 lúc 01:32 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -58,12 +58,13 @@ CREATE TABLE `attribute_values` (
 --
 
 INSERT INTO `attribute_values` (`id`, `attribute_id`, `value`) VALUES
-(9, 1, 'pink'),
-(10, 1, 'black'),
 (12, 2, 'X'),
 (13, 2, 'XL'),
 (14, 3, 'Nike'),
-(15, 3, 'Adidas');
+(15, 3, 'Adidas'),
+(16, 1, 'black'),
+(17, 1, 'while'),
+(18, 1, 'yellow');
 
 -- --------------------------------------------------------
 
@@ -85,7 +86,7 @@ CREATE TABLE `cart_items` (
 --
 
 INSERT INTO `cart_items` (`id`, `user_id`, `product_id`, `variant_id`, `quantity`, `added_at`) VALUES
-(37, 4, 4, 7, 1, '2025-06-28 08:49:59');
+(44, 4, 3, 4, 1, '2025-06-28 17:42:25');
 
 -- --------------------------------------------------------
 
@@ -126,11 +127,25 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `type`, `is_re
 (30, 4, 'Đơn hàng đang được giao', 'Đơn hàng #10 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 1, '2025-06-27 17:44:55'),
 (31, 4, 'Cập nhật trạng thái đơn hàng', 'Đơn hàng #19 đã được cập nhật trạng thái thành: pending', 'order_status', 1, '2025-06-27 18:29:33'),
 (32, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #21 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 560,000 VNĐ', 'order_status', 1, '2025-06-28 07:50:37'),
-(33, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 0, '2025-06-28 08:15:26'),
-(34, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #3 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 1,302 VNĐ', 'order_status', 0, '2025-06-28 08:39:21'),
-(35, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #21 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 560,000 VNĐ', 'order_status', 0, '2025-06-28 08:48:32'),
-(36, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 0, '2025-06-28 09:26:40'),
-(37, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 0, '2025-06-28 09:35:30');
+(33, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 1, '2025-06-28 08:15:26'),
+(34, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #3 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 1,302 VNĐ', 'order_status', 1, '2025-06-28 08:39:21'),
+(35, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #21 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 560,000 VNĐ', 'order_status', 1, '2025-06-28 08:48:32'),
+(36, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 1, '2025-06-28 09:26:40'),
+(37, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 1, '2025-06-28 09:35:30'),
+(38, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #22 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 500,000 VNĐ', 'order_status', 0, '2025-06-28 12:48:44'),
+(39, 4, 'Đơn hàng đã được giao thành công', 'Đơn hàng #22 đã được giao thành công. Cảm ơn bạn đã mua hàng!', 'order_status', 0, '2025-06-28 12:50:54'),
+(40, 4, 'Cập nhật trạng thái đơn hàng', 'Đơn hàng #21 đã được cập nhật trạng thái thành: pending', 'order_status', 0, '2025-06-28 12:52:21'),
+(41, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #21 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 560,000 VNĐ', 'order_status', 0, '2025-06-28 12:52:23'),
+(42, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #23 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 60,000 VNĐ', 'order_status', 0, '2025-06-28 12:53:54'),
+(43, 4, 'Đơn hàng đã được giao thành công', 'Đơn hàng #23 đã được giao thành công. Cảm ơn bạn đã mua hàng!', 'order_status', 0, '2025-06-28 12:54:28'),
+(44, 4, 'Đơn hàng đã bị hủy', 'Đơn hàng #23 đã bị hủy. Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.', 'order_status', 0, '2025-06-28 12:54:39'),
+(45, 4, 'Đơn hàng đang được giao', 'Đơn hàng #23 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 0, '2025-06-28 12:55:13'),
+(46, 4, 'Đơn hàng đang được giao', 'Đơn hàng #23 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 0, '2025-06-28 12:55:52'),
+(47, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #23 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 60,000 VNĐ', 'order_status', 0, '2025-06-28 12:56:42'),
+(48, 4, 'Cập nhật trạng thái đơn hàng', 'Đơn hàng #23 đã được cập nhật trạng thái thành: pending', 'order_status', 0, '2025-06-28 12:59:23'),
+(49, 4, 'Cập nhật trạng thái đơn hàng', 'Đơn hàng #22 đã được cập nhật trạng thái thành: pending', 'order_status', 0, '2025-06-28 13:00:07'),
+(50, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #39 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 180,000 VNĐ', 'order_status', 0, '2025-06-28 15:02:47'),
+(51, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #40 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 60,000 VNĐ', 'order_status', 0, '2025-06-28 15:03:18');
 
 -- --------------------------------------------------------
 
@@ -155,7 +170,8 @@ CREATE TABLE `orders` (
 
 INSERT INTO `orders` (`id`, `user_id`, `address_id`, `order_date`, `total_amount`, `status`, `created_at`, `updated_at`) VALUES
 (3, 4, 3, '2025-06-27 12:07:25', 1302.00, 'confirmed', '2025-06-27 12:07:25', '2025-06-28 08:39:21'),
-(21, 4, 3, '2025-06-28 07:12:20', 560000.00, 'shipping', '2025-06-28 07:12:20', '2025-06-28 09:26:40');
+(21, 4, 3, '2025-06-28 07:12:20', 560000.00, 'confirmed', '2025-06-28 07:12:20', '2025-06-28 12:52:23'),
+(22, 4, 3, '2025-06-28 12:48:14', 500000.00, 'pending', '2025-06-28 12:48:14', '2025-06-28 13:00:07');
 
 -- --------------------------------------------------------
 
@@ -179,7 +195,8 @@ CREATE TABLE `order_items` (
 INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `variant_id`, `quantity`, `price`) VALUES
 (4, 3, 3, 4, 3, 434.00),
 (24, 21, 3, 4, 1, 500000.00),
-(25, 21, 4, 6, 1, 60000.00);
+(25, 21, 4, 6, 1, 60000.00),
+(26, 22, 3, 4, 1, 500000.00);
 
 -- --------------------------------------------------------
 
@@ -203,7 +220,8 @@ CREATE TABLE `payments` (
 
 INSERT INTO `payments` (`id`, `order_id`, `payment_method`, `amount`, `status`, `transaction_code`, `paid_at`) VALUES
 (3, 3, 'COD', 1302.00, 'paid', 'COD2025062803392190298469', '2025-06-28 03:39:21'),
-(21, 21, 'COD', 560000.00, 'paid', 'COD2025062804353028874599', '2025-06-28 04:35:30');
+(21, 21, 'COD', 560000.00, 'paid', 'COD2025062807522380328235', '2025-06-28 07:52:23'),
+(22, 22, 'COD', 500000.00, 'pending', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -227,8 +245,9 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `description`, `category`, `gender_target`, `main_image`, `created_at`, `updated_at`) VALUES
-(3, 'Áo thun', 'Thoáng mát , thoải mái', 'Shirts', 'female', '685e1164e82d0_1750995300.jpg', '2025-06-27 10:35:00', '2025-06-28 09:25:49'),
-(4, 'Áo đi biển', 'SIêu đẹp', 'T-Shirts', 'unisex', '685f326785fe7_1751069287.jpg', '2025-06-28 07:08:07', '2025-06-28 07:08:07');
+(3, 'Áo thun', 'Thoáng mát , thoải mái', 'T-Shirts', 'unisex', '685fc2a4bf938_1751106212.jpg', '2025-06-27 10:35:00', '2025-06-28 17:23:32'),
+(4, 'Áo đi biển', 'SIêu đẹp , năng động', 'T-Shirts', 'unisex', '685fc2bef398e_1751106238.jpg', '2025-06-28 07:08:07', '2025-06-28 17:23:59'),
+(6, 'Áo khoác', 'Ấm áp , thời trang', 'T-Shirts', 'unisex', '685fc2de852d4_1751106270.jpg', '2025-06-28 17:24:30', '2025-06-28 17:24:50');
 
 -- --------------------------------------------------------
 
@@ -268,10 +287,15 @@ CREATE TABLE `product_variant` (
 --
 
 INSERT INTO `product_variant` (`product_id`, `variant_id`, `price`, `stock`, `image_url`, `status`) VALUES
-(3, 4, 500000.00, 99, '685e760a34307_1751021066.jpg', 'active'),
-(3, 5, 200000.00, 50, '685e15344721c_1750996276.jpg', 'active'),
-(4, 6, 60000.00, 199, '685f327d5f0a4_1751069309.jpg', 'active'),
-(4, 7, 70000.00, 30, '685f329b90032_1751069339.jpg', 'active');
+(3, 4, 10000.00, 200, '685fc3208d62a_1751106336.jpg', 'active'),
+(3, 5, 110000.00, 123, '685fc347a1b41_1751106375.jpg', 'active'),
+(3, 6, 120000.00, 200, '685fc3698f547_1751106409.jpg', 'active'),
+(4, 6, 200000.00, 157, '685fc4426c6ca_1751106626.jpg', 'active'),
+(4, 7, 190000.00, 97, '685fc44a1726b_1751106634.jpg', 'active'),
+(4, 9, 210000.00, 99, '685fc4571983c_1751106647.jpg', 'active'),
+(6, 7, 320000.00, 97, '685fc63e59b33_1751107134.jpg', 'active'),
+(6, 10, 300000.00, 207, '685fc65061fbc_1751107152.jpg', 'active'),
+(6, 11, 350000.00, 200, '685fc4b6e7c7f_1751106742.jpg', 'active');
 
 -- --------------------------------------------------------
 
@@ -341,11 +365,14 @@ CREATE TABLE `variants` (
 --
 
 INSERT INTO `variants` (`id`, `sku`) VALUES
+(10, '24'),
 (4, '43'),
 (5, '52'),
 (6, '54'),
 (8, '543'),
+(9, '56'),
 (7, '65'),
+(11, '87'),
 (3, 'JEANS-BLUE-XL-NIKE');
 
 -- --------------------------------------------------------
@@ -364,21 +391,29 @@ CREATE TABLE `variant_attribute_values` (
 --
 
 INSERT INTO `variant_attribute_values` (`variant_id`, `attribute_value_id`) VALUES
-(4, 9),
 (4, 12),
 (4, 15),
-(5, 9),
+(4, 16),
 (5, 13),
 (5, 15),
-(6, 9),
-(6, 13),
-(6, 15),
-(7, 10),
+(5, 17),
+(6, 12),
+(6, 14),
+(6, 18),
 (7, 12),
-(7, 14),
-(8, 10),
+(7, 15),
+(7, 16),
 (8, 13),
-(8, 15);
+(8, 15),
+(9, 12),
+(9, 14),
+(9, 18),
+(10, 13),
+(10, 15),
+(10, 17),
+(11, 12),
+(11, 14),
+(11, 18);
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -502,43 +537,43 @@ ALTER TABLE `attributes`
 -- AUTO_INCREMENT cho bảng `attribute_values`
 --
 ALTER TABLE `attribute_values`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT cho bảng `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT cho bảng `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
 
 --
 -- AUTO_INCREMENT cho bảng `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT cho bảng `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT cho bảng `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT cho bảng `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT cho bảng `product_reviews`
@@ -562,7 +597,7 @@ ALTER TABLE `user_addresses`
 -- AUTO_INCREMENT cho bảng `variants`
 --
 ALTER TABLE `variants`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
