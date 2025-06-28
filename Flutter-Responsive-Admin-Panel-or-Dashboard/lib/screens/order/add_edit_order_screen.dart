@@ -86,15 +86,38 @@ class _AddEditOrderScreenState extends State<AddEditOrderScreen> {
 
         final data = json.decode(response.body);
         if (data['success'] == true) {
+          String message = data['message'] ?? 'Cập nhật thành công';
+          if (data['order_status'] != null && data['payment_status'] != null) {
+            message = '✅ ${message}\n📦 Trạng thái đơn hàng: ${data['order_status']}\n💳 Trạng thái thanh toán: ${data['payment_status']}';
+            
+            if (data['transaction_code'] != null) {
+              message += '\n🔢 Mã giao dịch: ${data['transaction_code']}';
+            }
+          }
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+          
           Navigator.pop(context, newOrder);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lỗi: ${data['message']}')),
+            SnackBar(
+              content: Text('❌ Lỗi: ${data['message']}'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi kết nối: $e')),
+          SnackBar(
+            content: Text('❌ Lỗi kết nối: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

@@ -215,7 +215,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': 'Lỗi kết nối server: \\${response.statusCode}',
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
         };
       }
     } catch (e) {
@@ -241,7 +241,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': 'Lỗi kết nối server: \\${response.statusCode}',
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
         };
       }
     } catch (e) {
@@ -272,7 +272,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': 'Lỗi kết nối server: \\${response.statusCode}',
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
         };
       }
     } catch (e) {
@@ -301,7 +301,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': 'Lỗi kết nối server: \\${response.statusCode}',
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
         };
       }
     } catch (e) {
@@ -327,7 +327,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': 'Lỗi kết nối server: \\${response.statusCode}',
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
         };
       }
     } catch (e) {
@@ -367,6 +367,39 @@ class AuthService {
         return {
           'success': false,
           'message': 'Lỗi kết nối server: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Lỗi kết nối: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> placeOrderMulti({
+    required int userId,
+    required int addressId,
+    required String paymentMethod,
+    required List<Map<String, dynamic>> items,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/orders/place_order.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'user_id': userId,
+          'address_id': addressId,
+          'payment_method': paymentMethod,
+          'items': items,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Lỗi kết nối server: 24{response.statusCode}',
         };
       }
     } catch (e) {

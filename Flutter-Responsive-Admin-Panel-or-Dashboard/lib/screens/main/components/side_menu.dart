@@ -77,24 +77,24 @@ class SideMenu extends StatelessWidget {
               }
             },
           ),
-          DrawerListTile(
-            title: "Chi tiết đơn hàng",
-            svgSrc: "assets/icons/chitietdonhang.svg",
-            press: () {
-              if (onMenuSelected != null) {
-                onMenuSelected!("Chi tiết đơn hàng");
-              }
-            },
-          ),
-          DrawerListTile(
-            title: "Giỏ hàng",
-            svgSrc: "assets/icons/giohang.svg",
-            press: () {
-              if (onMenuSelected != null) {
-                onMenuSelected!("Giỏ hàng");
-              }
-            },
-          ),
+          // DrawerListTile(
+          //   title: "Chi tiết đơn hàng",
+          //   svgSrc: "assets/icons/chitietdonhang.svg",
+          //   press: () {
+          //     if (onMenuSelected != null) {
+          //       onMenuSelected!("Chi tiết đơn hàng");
+          //     }
+          //   },
+          // ),
+          // DrawerListTile(
+          //   title: "Giỏ hàng",
+          //   svgSrc: "assets/icons/giohang.svg",
+          //   press: () {
+          //     if (onMenuSelected != null) {
+          //       onMenuSelected!("Giỏ hàng");
+          //     }
+          //   },
+          // ),
           DrawerListTile(
             title: "Người dùng",
             svgSrc: "assets/icons/nguoidung.svg",

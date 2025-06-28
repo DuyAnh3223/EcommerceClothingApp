@@ -40,9 +40,9 @@ class _MainScreenState extends State<MainScreen> {
         case "Thông báo":
           _selectedScreen = const NotificationManagementScreen();
           break;
-        case "Chi tiết đơn hàng":
-          _selectedScreen = const Center(child: Text("Trang 'Chi tiết đơn hàng' đang cập nhật"));
-          break;
+        // case "Chi tiết đơn hàng":
+        //   _selectedScreen = const Center(child: Text("Trang 'Chi tiết đơn hàng' đang cập nhật"));
+        //   break;
         case "Đánh giá":
           _selectedScreen = const Center(child: Text("Trang 'Đánh giá' đang cập nhật"));
           break;

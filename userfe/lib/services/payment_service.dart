@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class PaymentService {
-  static const String baseUrl = 'http://localhost/EcommerceClothingApp/API';
+  static const String baseUrl = 'http://127.0.0.1/EcommerceClothingApp/API';
 
   static Future<Map<String, dynamic>> getPayments({
     required int userId,

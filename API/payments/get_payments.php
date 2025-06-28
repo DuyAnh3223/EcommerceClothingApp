@@ -84,7 +84,7 @@ while ($row = $result->fetch_assoc()) {
         // Ưu tiên ảnh variant, nếu không có thì lấy ảnh sản phẩm
         $image_url = $item['variant_image'] ? $item['variant_image'] : $item['main_image'];
         if ($image_url) {
-            $image_url = 'http://yourdomain.com/API/uploads/' . $image_url; // Sửa lại domain cho đúng
+            $image_url = 'http://127.0.0.1/EcommerceClothingApp/API/uploads/' . $image_url;
         } else {
             $image_url = '';
         }

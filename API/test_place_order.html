@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Place Order API</title>
+</head>
+<body>
+    <h1>Test Place Order API</h1>
+    <button onclick="testPlaceOrder()">Test Place Order</button>
+    <div id="result"></div>
+
+    <script>
+        async function testPlaceOrder() {
+            try {
+                const response = await fetch('http://127.0.0.1/EcommerceClothingApp/API/orders/place_order.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: 4,
+                        product_id: 1,
+                        variant_id: 1,
+                        quantity: 1,
+                        address_id: 3,
+                        payment_method: 'COD'
+                    })
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<pre>Error: ' + error.message + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html> 

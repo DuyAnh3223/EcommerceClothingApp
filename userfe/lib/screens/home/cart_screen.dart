@@ -3,7 +3,8 @@ import 'package:userfe/services/auth_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class CartScreen extends StatefulWidget {
-  const CartScreen({Key? key}) : super(key: key);
+  final VoidCallback? onCartUpdated;
+  const CartScreen({Key? key, this.onCartUpdated}) : super(key: key);
 
   @override
   State<CartScreen> createState() => _CartScreenState();
@@ -63,9 +64,13 @@ class _CartScreenState extends State<CartScreen> {
   double get totalPrice => cartItems.fold<double>(0, (sum, item) => sum + (item['total_price'] ?? 0));
 
   Future<void> _updateQuantity(int cartItemId, int newQuantity) async {
+    print('=== DEBUG: Updating cart quantity ===');
     final result = await AuthService.updateCart(cartItemId: cartItemId, quantity: newQuantity);
     if (result['success'] == true) {
       await _loadCart();
+      // Notify parent screen to update cart count
+      print('DEBUG: Calling onCartUpdated callback after quantity update');
+      widget.onCartUpdated?.call();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result['message'] ?? 'Lỗi cập nhật số lượng'), backgroundColor: Colors.red),
@@ -74,9 +79,13 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> _deleteItem(int cartItemId) async {
+    print('=== DEBUG: Deleting cart item ===');
     final result = await AuthService.deleteCartItem(cartItemId: cartItemId);
     if (result['success'] == true) {
       await _loadCart();
+      // Notify parent screen to update cart count
+      print('DEBUG: Calling onCartUpdated callback after item deletion');
+      widget.onCartUpdated?.call();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(result['message'] ?? 'Lỗi xóa sản phẩm'), backgroundColor: Colors.red),
@@ -93,8 +102,12 @@ class _CartScreenState extends State<CartScreen> {
         cartItems: cartItems,
         totalPrice: totalPrice,
         onOrderPlaced: () {
+          print('=== DEBUG: Order placed, updating cart ===');
           Navigator.of(context).pop(); // Close dialog
           _loadCart(); // Reload cart to clear it
+          // Notify parent screen to update cart count
+          print('DEBUG: Calling onCartUpdated callback after order placement');
+          widget.onCartUpdated?.call();
         },
       ),
     );
@@ -362,32 +375,24 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
     final userData = await AuthService.getUserData();
     final userId = userData?['id'];
     if (userId == null || selectedAddressId == null) return;
-    
     setState(() { isLoading = true; });
-    
     try {
-      // Place orders for each cart item
-      List<Map<String, dynamic>> results = [];
-      for (var item in widget.cartItems) {
-        final result = await AuthService.placeOrder(
-          userId: userId,
-          productId: item['product_id'],
-          variantId: item['variant_id'],
-          quantity: item['quantity'],
-          addressId: selectedAddressId!,
-          paymentMethod: paymentMethod,
-        );
-        results.add(result);
-      }
-      
-      // Clear cart after successful orders
-      for (var item in widget.cartItems) {
-        await AuthService.deleteCartItem(cartItemId: item['cart_item_id']);
-      }
-      
-      setState(() { isLoading = false; });
-      
-      if (results.every((result) => result['success'] == true)) {
+      final items = widget.cartItems.map((item) => {
+        'product_id': item['product_id'],
+        'variant_id': item['variant_id'],
+        'quantity': item['quantity'],
+      }).toList();
+      final result = await AuthService.placeOrderMulti(
+        userId: userId,
+        addressId: selectedAddressId!,
+        paymentMethod: paymentMethod,
+        items: items,
+      );
+      if (result['success'] == true) {
+        for (var item in widget.cartItems) {
+          await AuthService.deleteCartItem(cartItemId: item['cart_item_id']);
+        }
+        setState(() { isLoading = false; });
         widget.onOrderPlaced();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -398,9 +403,7 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
                 const Text('🎉 Đặt hàng thành công!'),
                 const Spacer(),
                 TextButton(
-                  onPressed: () {
-                    // TODO: Xem đơn hàng
-                  },
+                  onPressed: () {},
                   child: const Text('Xem đơn hàng', style: TextStyle(color: Colors.white)),
                 ),
               ],
@@ -410,6 +413,7 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
           ),
         );
       } else {
+        setState(() { isLoading = false; });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('❌ Có lỗi xảy ra khi đặt hàng.'),
