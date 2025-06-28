@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Payment Dashboard API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 3px; white-space: pre-wrap; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Test Payment Dashboard API</h1>
+    
+    <div class="test-section">
+        <h3>Test Order Detail API</h3>
+        <button onclick="testOrderDetail()">Test Order Detail (ID: 21)</button>
+        <div id="orderDetailResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Orders List API</h3>
+        <button onclick="testOrdersList()">Test Orders List</button>
+        <div id="ordersListResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Payment Dashboard Logic</h3>
+        <button onclick="testPaymentLogic()">Test Payment Section Logic</button>
+        <div id="paymentLogicResult" class="result"></div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://127.0.0.1/EcommerceClothingApp/API';
+
+        async function testOrderDetail() {
+            const resultDiv = document.getElementById('orderDetailResult');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(`${baseUrl}/orders/get_order_detail.php?order_id=21`);
+                const data = await response.json();
+                
+                resultDiv.className = data.success ? 'result success' : 'result error';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testOrdersList() {
+            const resultDiv = document.getElementById('ordersListResult');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(`${baseUrl}/orders/get_orders.php`);
+                const data = await response.json();
+                
+                resultDiv.className = data.success ? 'result success' : 'result error';
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testPaymentLogic() {
+            const resultDiv = document.getElementById('paymentLogicResult');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Testing payment section logic...';
+            
+            try {
+                // Test with different order statuses
+                const testCases = [
+                    { status: 'pending', shouldShow: false },
+                    { status: 'confirmed', shouldShow: true },
+                    { status: 'shipping', shouldShow: true },
+                    { status: 'delivered', shouldShow: true },
+                    { status: 'cancelled', shouldShow: false }
+                ];
+
+                let result = 'Payment Section Logic Test:\n\n';
+                
+                testCases.forEach(testCase => {
+                    const showPaymentSection = testCase.status === 'confirmed' || 
+                                             testCase.status === 'shipping' || 
+                                             testCase.status === 'delivered';
+                    
+                    const passed = showPaymentSection === testCase.shouldShow;
+                    result += `Status: ${testCase.status} | Should Show: ${testCase.shouldShow} | Actual: ${showPaymentSection} | ${passed ? '✅ PASS' : '❌ FAIL'}\n`;
+                });
+
+                resultDiv.className = 'result success';
+                resultDiv.textContent = result;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html> 

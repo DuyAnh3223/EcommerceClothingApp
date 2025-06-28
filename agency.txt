@@ -9,22 +9,14 @@ Khi sản phẩm được bán, hệ thống cộng thêm phí sàn (ví dụ 20
 1. ✅ Cập nhật bảng users để thêm agency
 Hiện tại
 
-sql
-Copy
-Edit
+
 `role` enum('user','admin') DEFAULT 'user'
 👉 Sửa thành
 
-sql
-Copy
-Edit
 `role` enum('user','admin','agency') DEFAULT 'user'
 2. ✅ Thêm trường created_by và approval_status vào bảng products
 Để biết sản phẩm nào là của agency, và có được admin duyệt hay chưa.
 
-sql
-Copy
-Edit
 ALTER TABLE products
 ADD COLUMN created_by INT DEFAULT NULL, -- id của agency tạo sản phẩm
 ADD COLUMN approval_status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
@@ -32,16 +24,10 @@ ADD FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
 3. ✅ Thêm trường platform_fee_percent vào product_variant
 Để tính giá bán có cộng phí sàn (ví dụ 20%)
 
-sql
-Copy
-Edit
 ALTER TABLE product_variant
 ADD COLUMN platform_fee_percent DECIMAL(5,2) DEFAULT 0.00;
 💡 Nếu giá gốc là 5000, platform_fee_percent = 20.00, thì giá bán trên app là
 
-sql
-Copy
-Edit
 final_price = price  (1 + platform_fee_percent  100)
 🔄 LUỒNG CHỨC NĂNG (QUY TRÌNH)
 ✅ 1. Đăng ký tài khoản
@@ -64,9 +50,6 @@ VD price = 5000, platform_fee_percent = 20.00
 ✅ 4. Khi hiển thị sản phẩm trên app
 App lấy giá bán tính theo công thức
 
-sql
-Copy
-Edit
 SELECT 
   pv.price,
   pv.platform_fee_percent,
