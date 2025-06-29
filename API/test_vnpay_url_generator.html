@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test VNPAY URL Generator - Updated Config</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .url-display {
+            word-break: break-all;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .config-info {
+            background-color: #e7f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test VNPAY URL Generator - Updated Configuration</h1>
+    
+    <div class="config-info">
+        <h3>📋 Current VNPAY Configuration</h3>
+        <p><strong>Terminal ID:</strong> F283H148</p>
+        <p><strong>Environment:</strong> Sandbox (Test)</p>
+        <p><strong>URL:</strong> https://sandbox.vnpayment.vn/paymentv2/vpcpay.html</p>
+    </div>
+    
+    <div class="test-section info">
+        <h3>1. Test Configuration</h3>
+        <button onclick="testConfig()">Test VNPAY Config</button>
+        <div id="config-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>2. Generate Payment URL</h3>
+        <div class="form-group">
+            <label>Order ID:</label>
+            <input type="number" id="orderId" value="1" min="1">
+        </div>
+        <div class="form-group">
+            <label>Amount (VNĐ):</label>
+            <input type="number" id="amount" value="100000" min="1000">
+        </div>
+        <div class="form-group">
+            <label>User ID:</label>
+            <input type="number" id="userId" value="4" min="1">
+        </div>
+        <div class="form-group">
+            <label>Order Info:</label>
+            <input type="text" id="orderInfo" value="Test payment with real config">
+        </div>
+        <div class="form-group">
+            <label>Customer Name:</label>
+            <input type="text" id="customerName" value="Test User">
+        </div>
+        <div class="form-group">
+            <label>Customer Phone:</label>
+            <input type="text" id="customerPhone" value="0123456789">
+        </div>
+        <div class="form-group">
+            <label>Customer Email:</label>
+            <input type="email" id="customerEmail" value="test@example.com">
+        </div>
+        <button onclick="generatePaymentUrl()">Generate Payment URL</button>
+        <div id="payment-result"></div>
+    </div>
+
+    <div class="test-section warning">
+        <h3>3. Test Generated URL</h3>
+        <p><strong>⚠️ Lưu ý:</strong> URL thanh toán chỉ có hiệu lực trong 15 phút. Test ngay sau khi tạo!</p>
+        <button onclick="testPaymentUrl()">Test Payment URL</button>
+        <button onclick="copyPaymentUrl()">Copy URL</button>
+        <div id="url-test-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>4. Debug Information</h3>
+        <p>Kiểm tra console của trình duyệt để xem thông tin debug chi tiết.</p>
+        <button onclick="showDebugInfo()">Show Debug Info</button>
+        <div id="debug-result"></div>
+    </div>
+
+    <script>
+        let generatedUrl = '';
+
+        async function testConfig() {
+            const resultDiv = document.getElementById('config-result');
+            resultDiv.innerHTML = '<p>Testing configuration...</p>';
+            
+            try {
+                const response = await fetch('vnpay_php/test_vnpay_api.php', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.text();
+                console.log('Config response:', data);
+                
+                try {
+                    const jsonData = JSON.parse(data);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Configuration Test</h4>
+                            <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                        </div>
+                    `;
+                } catch (jsonError) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ JSON Parse Error</h4>
+                            <p>Error: ${jsonError.message}</p>
+                            <p>Raw response:</p>
+                            <pre>${data}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function generatePaymentUrl() {
+            const resultDiv = document.getElementById('payment-result');
+            resultDiv.innerHTML = '<p>Generating payment URL...</p>';
+            
+            const orderId = document.getElementById('orderId').value;
+            const amount = document.getElementById('amount').value;
+            const userId = document.getElementById('userId').value;
+            const orderInfo = document.getElementById('orderInfo').value;
+            const customerName = document.getElementById('customerName').value;
+            const customerPhone = document.getElementById('customerPhone').value;
+            const customerEmail = document.getElementById('customerEmail').value;
+            
+            try {
+                const response = await fetch('vnpay_php/create_vnpay_payment.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: parseInt(orderId),
+                        amount: parseFloat(amount),
+                        user_id: parseInt(userId),
+                        order_info: orderInfo,
+                        customer_name: customerName,
+                        customer_phone: customerPhone,
+                        customer_email: customerEmail
+                    })
+                });
+                
+                const data = await response.text();
+                console.log('Payment response:', data);
+                
+                try {
+                    const jsonData = JSON.parse(data);
+                    if (jsonData.success && jsonData.data.payment_url) {
+                        generatedUrl = jsonData.data.payment_url;
+                        resultDiv.innerHTML = `
+                            <div class="success">
+                                <h4>✅ Payment URL Generated Successfully</h4>
+                                <p><strong>Order ID:</strong> ${jsonData.data.order_id}</p>
+                                <p><strong>Amount:</strong> ${jsonData.data.amount} VNĐ</p>
+                                <p><strong>Create Date:</strong> ${jsonData.data.create_date}</p>
+                                <p><strong>Expire Date:</strong> ${jsonData.data.expire_date}</p>
+                                <p><strong>Payment URL:</strong></p>
+                                <div class="url-display">${generatedUrl}</div>
+                                <details>
+                                    <summary>Debug Information</summary>
+                                    <pre>${JSON.stringify(jsonData.data.debug, null, 2)}</pre>
+                                </details>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="error">
+                                <h4>❌ Failed to Generate URL</h4>
+                                <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                            </div>
+                        `;
+                    }
+                } catch (jsonError) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ JSON Parse Error</h4>
+                            <p>Error: ${jsonError.message}</p>
+                            <p>Raw response:</p>
+                            <pre>${data}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function testPaymentUrl() {
+            if (!generatedUrl) {
+                alert('Please generate a payment URL first!');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('url-test-result');
+            resultDiv.innerHTML = `
+                <div class="info">
+                    <h4>🔗 Opening Payment URL</h4>
+                    <p>URL: ${generatedUrl}</p>
+                    <p>This will open in a new tab...</p>
+                    <p><strong>Note:</strong> You should be redirected to VNPAY payment page, not error page.</p>
+                </div>
+            `;
+            
+            // Mở URL trong tab mới
+            window.open(generatedUrl, '_blank');
+        }
+
+        function copyPaymentUrl() {
+            if (!generatedUrl) {
+                alert('Please generate a payment URL first!');
+                return;
+            }
+            
+            navigator.clipboard.writeText(generatedUrl).then(() => {
+                alert('Payment URL copied to clipboard!');
+            }).catch(() => {
+                // Fallback cho trình duyệt cũ
+                const textArea = document.createElement('textarea');
+                textArea.value = generatedUrl;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Payment URL copied to clipboard!');
+            });
+        }
+
+        function showDebugInfo() {
+            const resultDiv = document.getElementById('debug-result');
+            resultDiv.innerHTML = `
+                <div class="info">
+                    <h4>🔍 Debug Information</h4>
+                    <p><strong>Current Time:</strong> ${new Date().toLocaleString('vi-VN')}</p>
+                    <p><strong>Timezone:</strong> ${Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+                    <p><strong>User Agent:</strong> ${navigator.userAgent}</p>
+                    <p><strong>Generated URL:</strong> ${generatedUrl || 'Not generated yet'}</p>
+                    <p>Check browser console for more detailed logs.</p>
+                </div>
+            `;
+        }
+
+        // Auto test config khi load trang
+        window.onload = function() {
+            testConfig();
+        };
+    </script>
+</body>
+</html> 

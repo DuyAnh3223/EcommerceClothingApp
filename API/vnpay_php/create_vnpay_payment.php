@@ -86,6 +86,7 @@ try {
     $vnp_Amount = $amount * 100; // VNPAY yêu cầu nhân 100
     $vnp_Locale = 'vn';
     $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
+    $vnp_CreateDate = date('YmdHis');
     $vnp_ExpireDate = date('YmdHis', strtotime('+15 minutes'));
 
     // Tách tên khách hàng
@@ -101,13 +102,13 @@ try {
         }
     }
 
-    // Tạo input data cho VNPAY
+    // Tạo input data cho VNPAY - theo đúng thứ tự yêu cầu
     $inputData = array(
         "vnp_Version" => "2.1.0",
         "vnp_TmnCode" => $vnp_TmnCode,
         "vnp_Amount" => $vnp_Amount,
         "vnp_Command" => "pay",
-        "vnp_CreateDate" => date('YmdHis'),
+        "vnp_CreateDate" => $vnp_CreateDate,
         "vnp_CurrCode" => "VND",
         "vnp_IpAddr" => $vnp_IpAddr,
         "vnp_Locale" => $vnp_Locale,
@@ -135,10 +136,10 @@ try {
     // Sắp xếp theo key
     ksort($inputData);
 
-    // Tạo query string
+    // Tạo query string và hash data
     $query = "";
-    $i = 0;
     $hashdata = "";
+    $i = 0;
     foreach ($inputData as $key => $value) {
         if ($i == 1) {
             $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
@@ -149,14 +150,17 @@ try {
         $query .= urlencode($key) . "=" . urlencode($value) . '&';
     }
 
-    // Tạo URL thanh toán
-    $vnp_Url = $vnp_Url . "?" . $query;
-
     // Tạo secure hash
-    if (isset($vnp_HashSecret)) {
-        $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
-        $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
-    }
+    $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+    
+    // Tạo URL thanh toán cuối cùng
+    $vnp_Url = $vnp_Url . "?" . $query . "vnp_SecureHash=" . $vnpSecureHash;
+
+    // Debug log
+    error_log("VNPAY Debug - Order ID: $orderId, Amount: $amount, CreateDate: $vnp_CreateDate, ExpireDate: $vnp_ExpireDate");
+    error_log("VNPAY Debug - Hash Data: $hashdata");
+    error_log("VNPAY Debug - Secure Hash: $vnpSecureHash");
+    error_log("VNPAY Debug - Final URL: $vnp_Url");
 
     // Trả về kết quả
     $returnData = array(
@@ -167,8 +171,13 @@ try {
             'payment_url' => $vnp_Url,
             'order_id' => $orderId,
             'amount' => $amount,
+            'create_date' => $vnp_CreateDate,
             'expire_date' => $vnp_ExpireDate,
-            'order_info' => $orderInfo
+            'order_info' => $orderInfo,
+            'debug' => array(
+                'hash_data' => $hashdata,
+                'secure_hash' => $vnpSecureHash
+            )
         )
     );
 
@@ -177,6 +186,6 @@ try {
 } catch (Exception $e) {
     error_log("VNPAY Payment Error: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'Internal server error']);
+    echo json_encode(['error' => 'Internal server error: ' . $e->getMessage()]);
 }
 ?> 

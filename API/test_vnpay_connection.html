@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test VNPAY Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test VNPAY Connection</h1>
+    
+    <div class="test-section info">
+        <h3>1. Test Database Connection</h3>
+        <button onclick="testConnection()">Test Connection</button>
+        <div id="connection-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>2. Test Create Payment</h3>
+        <button onclick="testCreatePayment()">Test Create Payment</button>
+        <div id="payment-result"></div>
+    </div>
+
+    <script>
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await fetch('vnpay_php/test_vnpay_api.php', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.text();
+                console.log('Raw response:', data);
+                
+                try {
+                    const jsonData = JSON.parse(data);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Connection Successful</h4>
+                            <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                        </div>
+                    `;
+                } catch (jsonError) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ JSON Parse Error</h4>
+                            <p>Error: ${jsonError.message}</p>
+                            <p>Raw response:</p>
+                            <pre>${data}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testCreatePayment() {
+            const resultDiv = document.getElementById('payment-result');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                const response = await fetch('vnpay_php/create_vnpay_payment.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: 1,
+                        amount: 100000,
+                        user_id: 4,
+                        order_info: 'Test payment',
+                        customer_name: 'Test User',
+                        customer_phone: '0123456789',
+                        customer_email: 'test@example.com'
+                    })
+                });
+                
+                const data = await response.text();
+                console.log('Raw response:', data);
+                
+                try {
+                    const jsonData = JSON.parse(data);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Payment Created</h4>
+                            <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                        </div>
+                    `;
+                } catch (jsonError) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ JSON Parse Error</h4>
+                            <p>Error: ${jsonError.message}</p>
+                            <p>Raw response:</p>
+                            <pre>${data}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 

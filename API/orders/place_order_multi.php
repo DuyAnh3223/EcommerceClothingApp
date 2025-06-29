@@ -1,4 +1,8 @@
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
@@ -105,20 +109,31 @@ if ($payment_method === 'VNPAY') {
     $user_data = $user_result->fetch_assoc();
     $user_stmt->close();
 
-    // Tạo URL thanh toán VNPAY
-    $vnpay_url = createVNPayPaymentUrl($order_id, $total_amount, $user_data);
+    // Tạo URL thanh toán VNPAY sử dụng function đã fix
+    $vnpay_result = createVNPayPaymentUrlFixed($order_id, $total_amount, $user_data);
     
     $conn->close();
     
-    http_response_code(200);
-    echo json_encode([
-        "success" => true,
-        "message" => "Đặt hàng thành công! Vui lòng thanh toán qua VNPAY.",
-        "order_id" => $order_id,
-        "payment_method" => "VNPAY",
-        "payment_url" => $vnpay_url,
-        "requires_payment" => true
-    ]);
+    if ($vnpay_result['success']) {
+        http_response_code(200);
+        echo json_encode([
+            "success" => true,
+            "message" => "Đặt hàng thành công! Vui lòng thanh toán qua VNPAY.",
+            "order_id" => $order_id,
+            "payment_method" => "VNPAY",
+            "payment_url" => $vnpay_result['payment_url'],
+            "requires_payment" => true
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Đặt hàng thành công nhưng có lỗi khi tạo URL thanh toán VNPAY: " . $vnpay_result['message'],
+            "order_id" => $order_id,
+            "payment_method" => "VNPAY",
+            "requires_payment" => false
+        ]);
+    }
 } else {
     $conn->close();
     
@@ -132,7 +147,86 @@ if ($payment_method === 'VNPAY') {
     ]);
 }
 
-// Function tạo URL thanh toán VNPAY
+// Function tạo URL thanh toán VNPAY sử dụng API đã fix (simplified version)
+function createVNPayPaymentUrlFixed($orderId, $amount, $userData) {
+    try {
+        // Include VNPAY config
+        require_once '../vnpay_php/config.php';
+        
+        // Sử dụng thời gian hiện tại chính xác
+        $currentTime = new DateTime('now', new DateTimeZone('Asia/Ho_Chi_Minh'));
+        $vnp_CreateDate = $currentTime->format('YmdHis');
+        
+        // Thời gian hết hạn: 15 phút từ hiện tại
+        $expireTime = clone $currentTime;
+        $expireTime->add(new DateInterval('PT15M'));
+        $vnp_ExpireDate = $expireTime->format('YmdHis');
+
+        // Tạo input data cho VNPAY
+        $inputData = array(
+            "vnp_Version" => "2.1.0",
+            "vnp_TmnCode" => $vnp_TmnCode,
+            "vnp_Amount" => $amount * 100, // VNPAY yêu cầu nhân 100
+            "vnp_Command" => "pay",
+            "vnp_CreateDate" => $vnp_CreateDate,
+            "vnp_CurrCode" => "VND",
+            "vnp_IpAddr" => $_SERVER['REMOTE_ADDR'],
+            "vnp_Locale" => "vn",
+            "vnp_OrderInfo" => "Thanh toán đơn hàng #$orderId",
+            "vnp_OrderType" => "other",
+            "vnp_ReturnUrl" => $vnp_Returnurl,
+            "vnp_TxnRef" => $orderId,
+            "vnp_ExpireDate" => $vnp_ExpireDate
+        );
+
+        // Thêm thông tin khách hàng nếu có
+        if (!empty($userData['phone'])) {
+            $inputData['vnp_Bill_Mobile'] = $userData['phone'];
+        }
+        if (!empty($userData['email'])) {
+            $inputData['vnp_Bill_Email'] = $userData['email'];
+        }
+        if (!empty($userData['username'])) {
+            $inputData['vnp_Bill_FirstName'] = $userData['username'];
+        }
+
+        // Sắp xếp theo key
+        ksort($inputData);
+
+        // Tạo query string và hash data
+        $query = "";
+        $hashdata = "";
+        $i = 0;
+        foreach ($inputData as $key => $value) {
+            if ($i == 1) {
+                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+            } else {
+                $hashdata .= urlencode($key) . "=" . urlencode($value);
+                $i = 1;
+            }
+            $query .= urlencode($key) . "=" . urlencode($value) . '&';
+        }
+
+        // Tạo secure hash
+        $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+        
+        // Tạo URL thanh toán cuối cùng
+        $vnp_Url = $vnp_Url . "?" . $query . "vnp_SecureHash=" . $vnpSecureHash;
+
+        return [
+            'success' => true,
+            'payment_url' => $vnp_Url,
+            'message' => 'Payment URL created successfully'
+        ];
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Exception: ' . $e->getMessage()
+        ];
+    }
+}
+
+// Function tạo URL thanh toán VNPAY cũ (backup)
 function createVNPayPaymentUrl($orderId, $amount, $userData) {
     require_once '../vnpay_php/config.php';
     

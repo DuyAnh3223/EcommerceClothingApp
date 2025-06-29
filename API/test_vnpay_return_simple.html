@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNPAY Return Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input[type="text"], input[type="number"] {
+            width: 200px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 12px 20px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #28a745; }
+        .status-error { background-color: #dc3545; }
+        .status-pending { background-color: #ffc107; }
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .preset-btn {
+            background-color: #6c757d;
+            padding: 8px 15px;
+            font-size: 12px;
+        }
+        .preset-btn:hover {
+            background-color: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 VNPAY Return Handler Test</h1>
+        
+        <div class="test-section">
+            <h3>📋 Test VNPAY Return Response</h3>
+            <p>Simulate different VNPAY return scenarios to test the return handler.</p>
+            
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="loadPreset('success')">✅ Success Payment</button>
+                <button class="preset-btn" onclick="loadPreset('cancelled')">❌ Cancelled Payment</button>
+                <button class="preset-btn" onclick="loadPreset('failed')">💥 Failed Payment</button>
+                <button class="preset-btn" onclick="loadPreset('invalid_hash')">🔒 Invalid Hash</button>
+                <button class="preset-btn" onclick="loadPreset('empty')">📝 Empty Data</button>
+            </div>
+            
+            <div>
+                <label>Response Code:</label>
+                <input type="text" id="responseCode" value="00" placeholder="00 = success, 24 = cancelled, etc.">
+            </div>
+            
+            <div>
+                <label>Order ID:</label>
+                <input type="text" id="orderId" value="TEST_ORDER_001" placeholder="Order ID">
+            </div>
+            
+            <div>
+                <label>Amount (VND):</label>
+                <input type="number" id="amount" value="100000" placeholder="Amount in VND">
+            </div>
+            
+            <div>
+                <label>Order Info:</label>
+                <input type="text" id="orderInfo" value="Test payment for clothing items" placeholder="Order description">
+            </div>
+            
+            <div>
+                <label>Transaction No:</label>
+                <input type="text" id="transactionNo" value="VNPAY123456789" placeholder="VNPAY transaction number">
+            </div>
+            
+            <div>
+                <label>Bank Code:</label>
+                <input type="text" id="bankCode" value="NCB" placeholder="Bank code">
+            </div>
+            
+            <div>
+                <label>Pay Date:</label>
+                <input type="text" id="payDate" value="20250128143000" placeholder="YYYYMMDDHHMMSS">
+            </div>
+            
+            <div>
+                <label>Secure Hash:</label>
+                <input type="text" id="secureHash" value="" placeholder="Will be calculated automatically">
+            </div>
+            
+            <button onclick="testReturn()">Test Return Handler</button>
+            <button onclick="calculateHash()">Calculate Hash</button>
+            <button onclick="clearForm()">Clear Form</button>
+            
+            <div id="returnResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Response Code Reference</h3>
+            <div style="font-size: 12px; line-height: 1.6;">
+                <strong>Success:</strong> 00 - Giao dịch thành công<br>
+                <strong>Cancelled:</strong> 24 - Khách hàng hủy giao dịch<br>
+                <strong>Failed:</strong> 07 - Số tiền không hợp lệ<br>
+                <strong>Failed:</strong> 09 - Thông tin đơn hàng không hợp lệ<br>
+                <strong>Failed:</strong> 11 - Loại đơn hàng không hợp lệ<br>
+                <strong>Failed:</strong> 12 - Loại tiền tệ không hợp lệ<br>
+                <strong>Failed:</strong> 13 - Địa chỉ IP không hợp lệ<br>
+                <strong>Failed:</strong> 51 - Tài khoản không đủ số dư<br>
+                <strong>Failed:</strong> 65 - Tài khoản vượt quá hạn mức cho phép<br>
+                <strong>Failed:</strong> 75 - Ngân hàng thanh toán đang bảo trì<br>
+                <strong>Failed:</strong> 79 - Thông tin khách hàng không hợp lệ<br>
+                <strong>Failed:</strong> 99 - Lỗi không xác định
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const presets = {
+            success: {
+                responseCode: '00',
+                orderId: 'TEST_ORDER_001',
+                amount: 100000,
+                orderInfo: 'Test successful payment',
+                transactionNo: 'VNPAY123456789',
+                bankCode: 'NCB',
+                payDate: '20250128143000'
+            },
+            cancelled: {
+                responseCode: '24',
+                orderId: 'TEST_ORDER_002',
+                amount: 50000,
+                orderInfo: 'Test cancelled payment',
+                transactionNo: '',
+                bankCode: '',
+                payDate: '20250128143000'
+            },
+            failed: {
+                responseCode: '07',
+                orderId: 'TEST_ORDER_003',
+                amount: 0,
+                orderInfo: 'Test failed payment - invalid amount',
+                transactionNo: '',
+                bankCode: '',
+                payDate: '20250128143000'
+            },
+            invalid_hash: {
+                responseCode: '00',
+                orderId: 'TEST_ORDER_004',
+                amount: 75000,
+                orderInfo: 'Test with invalid hash',
+                transactionNo: 'VNPAY987654321',
+                bankCode: 'VCB',
+                payDate: '20250128143000'
+            },
+            empty: {
+                responseCode: '',
+                orderId: '',
+                amount: '',
+                orderInfo: '',
+                transactionNo: '',
+                bankCode: '',
+                payDate: ''
+            }
+        };
+
+        function loadPreset(presetName) {
+            const preset = presets[presetName];
+            if (preset) {
+                document.getElementById('responseCode').value = preset.responseCode;
+                document.getElementById('orderId').value = preset.orderId;
+                document.getElementById('amount').value = preset.amount;
+                document.getElementById('orderInfo').value = preset.orderInfo;
+                document.getElementById('transactionNo').value = preset.transactionNo;
+                document.getElementById('bankCode').value = preset.bankCode;
+                document.getElementById('payDate').value = preset.payDate;
+                
+                if (presetName === 'invalid_hash') {
+                    document.getElementById('secureHash').value = 'INVALID_HASH_VALUE';
+                } else {
+                    calculateHash();
+                }
+            }
+        }
+
+        function calculateHash() {
+            const inputData = {
+                'vnp_ResponseCode': document.getElementById('responseCode').value,
+                'vnp_OrderInfo': document.getElementById('orderInfo').value,
+                'vnp_TxnRef': document.getElementById('orderId').value,
+                'vnp_Amount': document.getElementById('amount').value * 100, // VNPAY format
+                'vnp_TransactionNo': document.getElementById('transactionNo').value,
+                'vnp_BankCode': document.getElementById('bankCode').value,
+                'vnp_PayDate': document.getElementById('payDate').value
+            };
+
+            // Remove empty values
+            Object.keys(inputData).forEach(key => {
+                if (inputData[key] === '' || inputData[key] === 0) {
+                    delete inputData[key];
+                }
+            });
+
+            // Sort by key
+            const sortedKeys = Object.keys(inputData).sort();
+            let hashData = '';
+            
+            sortedKeys.forEach((key, index) => {
+                if (index === 0) {
+                    hashData += encodeURIComponent(key) + '=' + encodeURIComponent(inputData[key]);
+                } else {
+                    hashData += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(inputData[key]);
+                }
+            });
+
+            // For testing, we'll use a simple hash (in real implementation, this would use the secret key)
+            const testHash = btoa(hashData).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+            document.getElementById('secureHash').value = testHash;
+        }
+
+        function clearForm() {
+            document.getElementById('responseCode').value = '';
+            document.getElementById('orderId').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('orderInfo').value = '';
+            document.getElementById('transactionNo').value = '';
+            document.getElementById('bankCode').value = '';
+            document.getElementById('payDate').value = '';
+            document.getElementById('secureHash').value = '';
+            document.getElementById('returnResult').textContent = '';
+        }
+
+        async function testReturn() {
+            const resultDiv = document.getElementById('returnResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Testing return handler...';
+            
+            const params = new URLSearchParams({
+                'vnp_ResponseCode': document.getElementById('responseCode').value,
+                'vnp_OrderInfo': document.getElementById('orderInfo').value,
+                'vnp_TxnRef': document.getElementById('orderId').value,
+                'vnp_Amount': document.getElementById('amount').value * 100,
+                'vnp_TransactionNo': document.getElementById('transactionNo').value,
+                'vnp_BankCode': document.getElementById('bankCode').value,
+                'vnp_PayDate': document.getElementById('payDate').value,
+                'vnp_SecureHash': document.getElementById('secureHash').value
+            });
+
+            try {
+                const response = await fetch('vnpay_php/vnpay_return.php?' + params.toString(), {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<span class="status-indicator status-success"></span>✅ Return handler processed successfully!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Return handler error!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Error testing return handler!\n\nError: ${error.message}\n\nMake sure:\n1. XAMPP Apache server is running\n2. You're accessing this page via http://localhost/...\n3. The return handler file exists`;
+            }
+        }
+
+        // Auto-calculate hash when form changes
+        document.addEventListener('input', function(e) {
+            if (e.target.id !== 'secureHash') {
+                setTimeout(calculateHash, 500);
+            }
+        });
+
+        // Load success preset by default
+        window.onload = function() {
+            loadPreset('success');
+        };
+    </script>
+</body>
+</html> 
