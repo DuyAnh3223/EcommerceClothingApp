@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Thanh toán VNPAY</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .btn {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+        .payment-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .payment-info h3 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Test Thanh toán VNPAY</h1>
+        
+        <div class="payment-info">
+            <h3>📋 Thông tin đơn hàng</h3>
+            <p><strong>Mã đơn hàng:</strong> <span id="orderId">22</span></p>
+            <p><strong>Tổng tiền:</strong> <span id="amount">500,000 VNĐ</span></p>
+            <p><strong>Phương thức:</strong> VNPAY</p>
+        </div>
+
+        <form id="paymentForm">
+            <div class="form-group">
+                <label for="customerName">Họ tên khách hàng:</label>
+                <input type="text" id="customerName" value="Nguyễn Văn A" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="customerPhone">Số điện thoại:</label>
+                <input type="tel" id="customerPhone" value="0967586754" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="customerEmail">Email:</label>
+                <input type="email" id="customerEmail" value="user@gmail.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="orderInfo">Nội dung thanh toán:</label>
+                <input type="text" id="orderInfo" value="Thanh toán đơn hàng quần áo" required>
+            </div>
+            
+            <button type="submit" class="btn">
+                💳 Thanh toán qua VNPAY
+            </button>
+        </form>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost/EcommerceClothingApp/API/vnpay_php';
+        
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = '🔄 Đang tạo thanh toán...';
+            
+            try {
+                const response = await fetch(`${baseUrl}/create_vnpay_payment.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        order_id: 22,
+                        amount: 500000,
+                        user_id: 4,
+                        order_info: document.getElementById('orderInfo').value,
+                        customer_name: document.getElementById('customerName').value,
+                        customer_phone: document.getElementById('customerPhone').value,
+                        customer_email: document.getElementById('customerEmail').value,
+                    }),
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Tạo thanh toán thành công!</h3>
+                        <p><strong>Mã đơn hàng:</strong> ${result.data.order_id}</p>
+                        <p><strong>Số tiền:</strong> ${result.data.amount.toLocaleString()} VNĐ</p>
+                        <p><strong>Thời gian hết hạn:</strong> ${result.data.expire_date}</p>
+                        <br>
+                        <button onclick="openPayment('${result.data.payment_url}')" class="btn">
+                            🔗 Mở trang thanh toán VNPAY
+                        </button>
+                    `;
+                    
+                    // Tự động mở trang thanh toán sau 2 giây
+                    setTimeout(() => {
+                        openPayment(result.data.payment_url);
+                    }, 2000);
+                    
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ Lỗi tạo thanh toán</h3>
+                        <p>${result.error || result.message}</p>
+                        <button onclick="location.reload()" class="btn">🔄 Thử lại</button>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Lỗi kết nối</h3>
+                    <p>Không thể kết nối đến server: ${error.message}</p>
+                    <p><strong>Kiểm tra:</strong></p>
+                    <ul>
+                        <li>XAMPP Apache đã khởi động chưa?</li>
+                        <li>URL: ${baseUrl}/create_vnpay_payment.php</li>
+                        <li>Database có hoạt động không?</li>
+                    </ul>
+                    <button onclick="location.reload()" class="btn">🔄 Thử lại</button>
+                `;
+            }
+        });
+
+        function openPayment(url) {
+            // Mở trang thanh toán VNPAY trong tab mới
+            window.open(url, '_blank', 'width=800,height=600');
+            
+            // Hiển thị thông báo
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML += `
+                <div style="margin-top: 15px; padding: 10px; background: #e7f3ff; border-radius: 5px;">
+                    <p><strong>📱 Hướng dẫn:</strong></p>
+                    <p>1. Trang thanh toán VNPAY đã được mở</p>
+                    <p>2. Nhập thông tin thẻ hoặc chọn phương thức thanh toán</p>
+                    <p>3. Sau khi thanh toán xong, bạn sẽ được chuyển về trang kết quả</p>
+                    <p>4. Hệ thống sẽ tự động cập nhật trạng thái đơn hàng</p>
+                </div>
+            `;
+        }
+
+        // Auto-fill form với dữ liệu test
+        window.addEventListener('load', () => {
+            console.log('🚀 Test thanh toán VNPAY đã sẵn sàng!');
+            console.log('📋 API URL:', baseUrl);
+        });
+    </script>
+</body>
+</html> 

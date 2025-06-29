@@ -385,7 +385,7 @@ class AuthService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/orders/place_order.php'),
+        Uri.parse('$baseUrl/orders/place_order_multi.php'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'user_id': userId,
@@ -399,7 +399,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': 'Lỗi kết nối server: 24{response.statusCode}',
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
         };
       }
     } catch (e) {

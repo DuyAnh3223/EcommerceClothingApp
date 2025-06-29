@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:userfe/services/auth_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../services/vnpay_service.dart';
 
 class CartScreen extends StatefulWidget {
   final VoidCallback? onCartUpdated;
@@ -376,6 +377,7 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
     final userId = userData?['id'];
     if (userId == null || selectedAddressId == null) return;
     setState(() { isLoading = true; });
+    
     try {
       final items = widget.cartItems.map((item) => {
         'product_id': item['product_id'],
@@ -388,35 +390,45 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
         paymentMethod: paymentMethod,
         items: items,
       );
+      
       if (result['success'] == true) {
+        // Xóa items khỏi giỏ hàng
         for (var item in widget.cartItems) {
           await AuthService.deleteCartItem(cartItemId: item['cart_item_id']);
         }
         setState(() { isLoading = false; });
         widget.onOrderPlaced();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 8),
-                const Text('🎉 Đặt hàng thành công!'),
-                const Spacer(),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text('Xem đơn hàng', style: TextStyle(color: Colors.white)),
-                ),
-              ],
+        
+        // Kiểm tra nếu cần thanh toán VNPAY
+        if (result['requires_payment'] == true && result['payment_method'] == 'VNPAY') {
+          // Hiển thị dialog thanh toán VNPAY
+          _showVNPayPaymentDialog(result['payment_url'], result['order_id']);
+        } else {
+          // Thanh toán thường (COD, etc.)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 8),
+                  const Text('🎉 Đặt hàng thành công!'),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {},
+                    child: const Text('Xem đơn hàng', style: TextStyle(color: Colors.white)),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
             ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+          );
+        }
       } else {
         setState(() { isLoading = false; });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Có lỗi xảy ra khi đặt hàng.'),
+          SnackBar(
+            content: Text(result['message'] ?? '❌ Có lỗi xảy ra khi đặt hàng.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -430,6 +442,81 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
         ),
       );
     }
+  }
+
+  void _showVNPayPaymentDialog(String paymentUrl, int orderId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.payment, color: Colors.blue.shade700),
+            const SizedBox(width: 8),
+            const Text('Thanh toán VNPAY'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Đơn hàng đã được tạo thành công!',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Mã đơn hàng: #$orderId',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Bạn sẽ được chuyển đến trang thanh toán VNPAY để hoàn tất giao dịch.',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Bạn có thể thanh toán sau trong phần đơn hàng'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            },
+            child: const Text('Thanh toán sau'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await VNPayService.openPaymentUrl(paymentUrl);
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Đã mở trang thanh toán VNPAY'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Lỗi mở trang thanh toán: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade700,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('💳 Thanh toán ngay'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

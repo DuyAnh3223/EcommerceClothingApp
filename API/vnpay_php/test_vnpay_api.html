@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test VNPAY API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test VNPAY API Integration</h1>
+    
+    <div class="section">
+        <h2>1. Tạo thanh toán VNPAY</h2>
+        <form id="createPaymentForm">
+            <div class="form-group">
+                <label for="orderId">Order ID:</label>
+                <input type="number" id="orderId" value="22" required>
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount (VNĐ):</label>
+                <input type="number" id="amount" value="500000" required>
+            </div>
+            <div class="form-group">
+                <label for="userId">User ID:</label>
+                <input type="number" id="userId" value="4" required>
+            </div>
+            <div class="form-group">
+                <label for="orderInfo">Order Info:</label>
+                <textarea id="orderInfo" rows="3">Thanh toán đơn hàng quần áo</textarea>
+            </div>
+            <div class="form-group">
+                <label for="customerName">Customer Name:</label>
+                <input type="text" id="customerName" value="Nguyễn Văn A">
+            </div>
+            <div class="form-group">
+                <label for="customerPhone">Customer Phone:</label>
+                <input type="text" id="customerPhone" value="0967586754">
+            </div>
+            <div class="form-group">
+                <label for="customerEmail">Customer Email:</label>
+                <input type="email" id="customerEmail" value="user@gmail.com">
+            </div>
+            <button type="submit">Tạo thanh toán</button>
+        </form>
+        <div id="createPaymentResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Kiểm tra trạng thái thanh toán</h2>
+        <form id="checkStatusForm">
+            <div class="form-group">
+                <label for="checkOrderId">Order ID:</label>
+                <input type="number" id="checkOrderId" value="22" required>
+            </div>
+            <div class="form-group">
+                <label for="checkUserId">User ID:</label>
+                <input type="number" id="checkUserId" value="4" required>
+            </div>
+            <button type="submit">Kiểm tra trạng thái</button>
+        </form>
+        <div id="checkStatusResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Mở thanh toán VNPAY</h2>
+        <div class="form-group">
+            <label for="paymentUrl">Payment URL:</label>
+            <input type="text" id="paymentUrl" placeholder="Nhập URL thanh toán từ bước 1">
+        </div>
+        <button onclick="openPayment()">Mở thanh toán</button>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost/EcommerceClothingApp/API/vnpay_php';
+
+        // Tạo thanh toán
+        document.getElementById('createPaymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const resultDiv = document.getElementById('createPaymentResult');
+            resultDiv.textContent = 'Đang xử lý...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${baseUrl}/create_vnpay_payment.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        order_id: parseInt(document.getElementById('orderId').value),
+                        amount: parseInt(document.getElementById('amount').value),
+                        user_id: parseInt(document.getElementById('userId').value),
+                        order_info: document.getElementById('orderInfo').value,
+                        customer_name: document.getElementById('customerName').value,
+                        customer_phone: document.getElementById('customerPhone').value,
+                        customer_email: document.getElementById('customerEmail').value,
+                    }),
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.textContent = JSON.stringify(result, null, 2);
+                    resultDiv.className = 'result success';
+                    
+                    // Tự động điền URL thanh toán
+                    document.getElementById('paymentUrl').value = result.data.payment_url;
+                } else {
+                    resultDiv.textContent = `Lỗi: ${result.error || result.message}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `Lỗi kết nối: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        });
+
+        // Kiểm tra trạng thái
+        document.getElementById('checkStatusForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const resultDiv = document.getElementById('checkStatusResult');
+            resultDiv.textContent = 'Đang kiểm tra...';
+            resultDiv.className = 'result';
+
+            try {
+                const response = await fetch(`${baseUrl}/check_payment_status.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        order_id: parseInt(document.getElementById('checkOrderId').value),
+                        user_id: parseInt(document.getElementById('checkUserId').value),
+                    }),
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.textContent = JSON.stringify(result, null, 2);
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `Lỗi: ${result.error || result.message}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `Lỗi kết nối: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        });
+
+        // Mở thanh toán
+        function openPayment() {
+            const url = document.getElementById('paymentUrl').value;
+            if (url) {
+                window.open(url, '_blank');
+            } else {
+                alert('Vui lòng nhập URL thanh toán');
+            }
+        }
+
+        // Auto-fill form với dữ liệu test
+        window.addEventListener('load', () => {
+            // Có thể thêm auto-fill logic ở đây
+        });
+    </script>
+</body>
+</html> 
