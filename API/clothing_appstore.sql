@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th6 28, 2025 lúc 04:37 AM
+-- Thời gian đã tạo: Th6 29, 2025 lúc 10:02 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -58,12 +58,13 @@ CREATE TABLE `attribute_values` (
 --
 
 INSERT INTO `attribute_values` (`id`, `attribute_id`, `value`) VALUES
-(9, 1, 'pink'),
-(10, 1, 'black'),
 (12, 2, 'X'),
 (13, 2, 'XL'),
 (14, 3, 'Nike'),
-(15, 3, 'Adidas');
+(15, 3, 'Adidas'),
+(16, 1, 'black'),
+(17, 1, 'while'),
+(18, 1, 'yellow');
 
 -- --------------------------------------------------------
 
@@ -79,13 +80,6 @@ CREATE TABLE `cart_items` (
   `quantity` int(11) NOT NULL DEFAULT 1,
   `added_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Đang đổ dữ liệu cho bảng `cart_items`
---
-
-INSERT INTO `cart_items` (`id`, `user_id`, `product_id`, `variant_id`, `quantity`, `added_at`) VALUES
-(37, 4, 4, 7, 1, '2025-06-28 08:49:59');
 
 -- --------------------------------------------------------
 
@@ -126,11 +120,35 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `type`, `is_re
 (30, 4, 'Đơn hàng đang được giao', 'Đơn hàng #10 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 1, '2025-06-27 17:44:55'),
 (31, 4, 'Cập nhật trạng thái đơn hàng', 'Đơn hàng #19 đã được cập nhật trạng thái thành: pending', 'order_status', 1, '2025-06-27 18:29:33'),
 (32, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #21 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 560,000 VNĐ', 'order_status', 1, '2025-06-28 07:50:37'),
-(33, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 0, '2025-06-28 08:15:26'),
-(34, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #3 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 1,302 VNĐ', 'order_status', 0, '2025-06-28 08:39:21'),
-(35, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #21 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 560,000 VNĐ', 'order_status', 0, '2025-06-28 08:48:32'),
-(36, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 0, '2025-06-28 09:26:40'),
-(37, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 0, '2025-06-28 09:35:30');
+(33, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 1, '2025-06-28 08:15:26'),
+(34, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #3 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 1,302 VNĐ', 'order_status', 1, '2025-06-28 08:39:21'),
+(35, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #21 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 560,000 VNĐ', 'order_status', 1, '2025-06-28 08:48:32'),
+(36, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 1, '2025-06-28 09:26:40'),
+(37, 4, 'Đơn hàng đang được giao', 'Đơn hàng #21 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 1, '2025-06-28 09:35:30'),
+(38, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #22 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 500,000 VNĐ', 'order_status', 0, '2025-06-28 12:48:44'),
+(39, 4, 'Đơn hàng đã được giao thành công', 'Đơn hàng #22 đã được giao thành công. Cảm ơn bạn đã mua hàng!', 'order_status', 0, '2025-06-28 12:50:54'),
+(40, 4, 'Cập nhật trạng thái đơn hàng', 'Đơn hàng #21 đã được cập nhật trạng thái thành: pending', 'order_status', 0, '2025-06-28 12:52:21'),
+(41, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #21 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 560,000 VNĐ', 'order_status', 0, '2025-06-28 12:52:23'),
+(42, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #23 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 60,000 VNĐ', 'order_status', 0, '2025-06-28 12:53:54'),
+(43, 4, 'Đơn hàng đã được giao thành công', 'Đơn hàng #23 đã được giao thành công. Cảm ơn bạn đã mua hàng!', 'order_status', 0, '2025-06-28 12:54:28'),
+(44, 4, 'Đơn hàng đã bị hủy', 'Đơn hàng #23 đã bị hủy. Nếu có thắc mắc, vui lòng liên hệ với chúng tôi.', 'order_status', 0, '2025-06-28 12:54:39'),
+(45, 4, 'Đơn hàng đang được giao', 'Đơn hàng #23 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 0, '2025-06-28 12:55:13'),
+(46, 4, 'Đơn hàng đang được giao', 'Đơn hàng #23 của bạn đang được giao đến địa chỉ của bạn. Dự kiến giao trong 1-3 ngày.', 'order_status', 0, '2025-06-28 12:55:52'),
+(47, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #23 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 60,000 VNĐ', 'order_status', 0, '2025-06-28 12:56:42'),
+(48, 4, 'Cập nhật trạng thái đơn hàng', 'Đơn hàng #23 đã được cập nhật trạng thái thành: pending', 'order_status', 0, '2025-06-28 12:59:23'),
+(49, 4, 'Cập nhật trạng thái đơn hàng', 'Đơn hàng #22 đã được cập nhật trạng thái thành: pending', 'order_status', 0, '2025-06-28 13:00:07'),
+(50, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #39 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 180,000 VNĐ', 'order_status', 0, '2025-06-28 15:02:47'),
+(51, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #40 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 60,000 VNĐ', 'order_status', 0, '2025-06-28 15:03:18'),
+(52, 4, 'Thanh toán thành công', 'Đơn hàng #60 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045443', 'order_status', 0, '2025-06-29 13:54:53'),
+(53, 4, 'Thanh toán thành công', 'Đơn hàng #61 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045453', 'order_status', 0, '2025-06-29 14:01:24'),
+(54, 4, 'Thanh toán thành công', 'Đơn hàng #62 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045468', 'order_status', 0, '2025-06-29 14:10:54'),
+(55, 4, 'Thanh toán thành công', 'Đơn hàng #63 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045476', 'order_status', 0, '2025-06-29 14:16:09'),
+(56, 4, 'Thanh toán thành công', 'Đơn hàng #64 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045482', 'order_status', 0, '2025-06-29 14:19:37'),
+(57, 4, 'Thanh toán thành công', 'Đơn hàng #65 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045487', 'order_status', 0, '2025-06-29 14:24:11'),
+(58, 4, 'Thanh toán thành công', 'Đơn hàng #67 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045522', 'order_status', 0, '2025-06-29 14:45:47'),
+(59, 4, 'Thanh toán thành công', 'Đơn hàng #69 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045528', 'order_status', 0, '2025-06-29 14:54:06'),
+(60, 4, 'Thanh toán thành công', 'Đơn hàng #70 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045532', 'order_status', 0, '2025-06-29 14:57:57'),
+(61, 4, 'Thanh toán thành công', 'Đơn hàng #71 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045538', 'order_status', 0, '2025-06-29 15:00:50');
 
 -- --------------------------------------------------------
 
@@ -155,7 +173,39 @@ CREATE TABLE `orders` (
 
 INSERT INTO `orders` (`id`, `user_id`, `address_id`, `order_date`, `total_amount`, `status`, `created_at`, `updated_at`) VALUES
 (3, 4, 3, '2025-06-27 12:07:25', 1302.00, 'confirmed', '2025-06-27 12:07:25', '2025-06-28 08:39:21'),
-(21, 4, 3, '2025-06-28 07:12:20', 560000.00, 'shipping', '2025-06-28 07:12:20', '2025-06-28 09:26:40');
+(21, 4, 3, '2025-06-28 07:12:20', 560000.00, 'confirmed', '2025-06-28 07:12:20', '2025-06-28 12:52:23'),
+(22, 4, 3, '2025-06-28 12:48:14', 500000.00, 'pending', '2025-06-28 12:48:14', '2025-06-28 13:00:07'),
+(41, 4, 3, '2025-06-29 12:49:40', 210000.00, 'pending', '2025-06-29 12:49:40', '2025-06-29 12:49:40'),
+(42, 4, 3, '2025-06-29 12:49:41', 210000.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
+(43, 4, 3, '2025-06-29 12:49:41', 210000.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
+(44, 4, 3, '2025-06-29 12:49:41', 210000.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
+(45, 4, 3, '2025-06-29 12:49:41', 210000.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
+(46, 4, 3, '2025-06-29 12:57:59', 210000.00, 'pending', '2025-06-29 12:57:59', '2025-06-29 12:57:59'),
+(47, 4, 3, '2025-06-29 12:58:04', 210000.00, 'pending', '2025-06-29 12:58:04', '2025-06-29 12:58:04'),
+(48, 4, 3, '2025-06-29 13:03:17', 210000.00, 'pending', '2025-06-29 13:03:17', '2025-06-29 13:03:17'),
+(49, 4, 3, '2025-06-29 13:03:41', 200000.00, 'pending', '2025-06-29 13:03:41', '2025-06-29 13:03:41'),
+(50, 4, 3, '2025-06-29 13:03:52', 200000.00, 'pending', '2025-06-29 13:03:52', '2025-06-29 13:03:52'),
+(51, 4, 3, '2025-06-29 13:11:25', 190000.00, 'pending', '2025-06-29 13:11:25', '2025-06-29 13:11:25'),
+(52, 4, 3, '2025-06-29 13:21:04', 200000.00, 'pending', '2025-06-29 13:21:04', '2025-06-29 13:21:04'),
+(53, 4, 3, '2025-06-29 13:29:21', 440000.00, 'pending', '2025-06-29 13:29:21', '2025-06-29 13:29:21'),
+(54, 4, 3, '2025-06-29 13:36:56', 320000.00, 'pending', '2025-06-29 13:36:56', '2025-06-29 13:36:56'),
+(55, 4, 3, '2025-06-29 13:48:57', 10000.00, 'pending', '2025-06-29 13:48:57', '2025-06-29 13:48:57'),
+(56, 4, 3, '2025-06-29 13:49:08', 10000.00, 'pending', '2025-06-29 13:49:08', '2025-06-29 13:49:08'),
+(57, 4, 3, '2025-06-29 13:49:23', 10000.00, 'pending', '2025-06-29 13:49:23', '2025-06-29 13:49:23'),
+(58, 4, 3, '2025-06-29 13:50:20', 200000.00, 'pending', '2025-06-29 13:50:20', '2025-06-29 13:50:20'),
+(59, 4, 3, '2025-06-29 13:50:25', 10000.00, 'pending', '2025-06-29 13:50:25', '2025-06-29 13:50:25'),
+(60, 4, 3, '2025-06-29 13:54:15', 10000.00, 'confirmed', '2025-06-29 13:54:15', '2025-06-29 13:54:53'),
+(61, 4, 3, '2025-06-29 14:00:54', 200000.00, 'confirmed', '2025-06-29 14:00:54', '2025-06-29 14:01:24'),
+(62, 4, 3, '2025-06-29 14:09:15', 200000.00, 'confirmed', '2025-06-29 14:09:15', '2025-06-29 14:10:54'),
+(63, 4, 3, '2025-06-29 14:15:40', 200000.00, 'confirmed', '2025-06-29 14:15:40', '2025-06-29 14:16:09'),
+(64, 4, 3, '2025-06-29 14:19:09', 320000.00, 'confirmed', '2025-06-29 14:19:09', '2025-06-29 14:19:37'),
+(65, 4, 3, '2025-06-29 14:20:39', 320000.00, 'confirmed', '2025-06-29 14:20:39', '2025-06-29 14:24:11'),
+(66, 4, 3, '2025-06-29 14:29:53', 320000.00, 'pending', '2025-06-29 14:29:53', '2025-06-29 14:29:53'),
+(67, 4, 3, '2025-06-29 14:43:43', 200000.00, 'confirmed', '2025-06-29 14:43:43', '2025-06-29 14:45:47'),
+(68, 4, 3, '2025-06-29 14:53:24', 200000.00, 'pending', '2025-06-29 14:53:24', '2025-06-29 14:53:24'),
+(69, 4, 3, '2025-06-29 14:53:35', 200000.00, 'confirmed', '2025-06-29 14:53:35', '2025-06-29 14:54:06'),
+(70, 4, 3, '2025-06-29 14:57:33', 200000.00, 'confirmed', '2025-06-29 14:57:33', '2025-06-29 14:57:57'),
+(71, 4, 3, '2025-06-29 15:00:05', 200000.00, 'confirmed', '2025-06-29 15:00:05', '2025-06-29 15:00:50');
 
 -- --------------------------------------------------------
 
@@ -179,7 +229,47 @@ CREATE TABLE `order_items` (
 INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `variant_id`, `quantity`, `price`) VALUES
 (4, 3, 3, 4, 3, 434.00),
 (24, 21, 3, 4, 1, 500000.00),
-(25, 21, 4, 6, 1, 60000.00);
+(25, 21, 4, 6, 1, 60000.00),
+(26, 22, 3, 4, 1, 500000.00),
+(45, 41, 3, 4, 1, 10000.00),
+(46, 41, 4, 6, 1, 200000.00),
+(47, 42, 3, 4, 1, 10000.00),
+(48, 42, 4, 6, 1, 200000.00),
+(49, 43, 3, 4, 1, 10000.00),
+(50, 43, 4, 6, 1, 200000.00),
+(51, 44, 3, 4, 1, 10000.00),
+(52, 44, 4, 6, 1, 200000.00),
+(53, 45, 3, 4, 1, 10000.00),
+(54, 45, 4, 6, 1, 200000.00),
+(55, 46, 3, 4, 1, 10000.00),
+(56, 46, 4, 6, 1, 200000.00),
+(57, 47, 3, 4, 1, 10000.00),
+(58, 47, 4, 6, 1, 200000.00),
+(59, 48, 3, 4, 1, 10000.00),
+(60, 48, 4, 6, 1, 200000.00),
+(61, 49, 4, 6, 1, 200000.00),
+(62, 50, 4, 6, 1, 200000.00),
+(63, 51, 4, 7, 1, 190000.00),
+(64, 52, 4, 6, 1, 200000.00),
+(65, 53, 3, 5, 4, 110000.00),
+(66, 54, 6, 7, 1, 320000.00),
+(67, 55, 3, 4, 1, 10000.00),
+(68, 56, 3, 4, 1, 10000.00),
+(69, 57, 3, 4, 1, 10000.00),
+(70, 58, 4, 6, 1, 200000.00),
+(71, 59, 3, 4, 1, 10000.00),
+(72, 60, 3, 4, 1, 10000.00),
+(73, 61, 4, 6, 1, 200000.00),
+(74, 62, 4, 6, 1, 200000.00),
+(75, 63, 4, 6, 1, 200000.00),
+(76, 64, 6, 7, 1, 320000.00),
+(77, 65, 6, 7, 1, 320000.00),
+(78, 66, 6, 7, 1, 320000.00),
+(79, 67, 4, 6, 1, 200000.00),
+(80, 68, 4, 6, 1, 200000.00),
+(81, 69, 4, 6, 1, 200000.00),
+(82, 70, 4, 6, 1, 200000.00),
+(83, 71, 4, 6, 1, 200000.00);
 
 -- --------------------------------------------------------
 
@@ -203,7 +293,39 @@ CREATE TABLE `payments` (
 
 INSERT INTO `payments` (`id`, `order_id`, `payment_method`, `amount`, `status`, `transaction_code`, `paid_at`) VALUES
 (3, 3, 'COD', 1302.00, 'paid', 'COD2025062803392190298469', '2025-06-28 03:39:21'),
-(21, 21, 'COD', 560000.00, 'paid', 'COD2025062804353028874599', '2025-06-28 04:35:30');
+(21, 21, 'COD', 560000.00, 'paid', 'COD2025062807522380328235', '2025-06-28 07:52:23'),
+(22, 22, 'COD', 500000.00, 'pending', NULL, NULL),
+(42, 41, 'VNPAY', 210000.00, 'pending', NULL, NULL),
+(43, 42, 'VNPAY', 210000.00, 'pending', NULL, NULL),
+(44, 43, 'VNPAY', 210000.00, 'pending', NULL, NULL),
+(45, 44, 'VNPAY', 210000.00, 'pending', NULL, NULL),
+(46, 45, 'VNPAY', 210000.00, 'pending', NULL, NULL),
+(47, 46, 'VNPAY', 210000.00, 'pending', NULL, NULL),
+(48, 47, 'VNPAY', 210000.00, 'pending', NULL, NULL),
+(49, 48, 'VNPAY', 210000.00, 'pending', NULL, NULL),
+(50, 49, 'COD', 200000.00, 'pending', NULL, NULL),
+(51, 50, 'VNPAY', 200000.00, 'pending', NULL, NULL),
+(52, 51, 'VNPAY', 190000.00, 'pending', NULL, NULL),
+(53, 52, 'VNPAY', 200000.00, 'pending', NULL, NULL),
+(54, 53, 'VNPAY', 440000.00, 'pending', NULL, NULL),
+(55, 54, 'VNPAY', 320000.00, 'pending', NULL, NULL),
+(56, 55, 'VNPAY', 10000.00, 'pending', NULL, NULL),
+(57, 56, 'VNPAY', 10000.00, 'pending', NULL, NULL),
+(58, 57, 'VNPAY', 10000.00, 'pending', NULL, NULL),
+(59, 58, 'VNPAY', 200000.00, 'pending', NULL, NULL),
+(60, 59, 'VNPAY', 10000.00, 'pending', NULL, NULL),
+(61, 60, 'VNPAY', 10000.00, 'paid', '15045443', '2025-06-29 13:54:53'),
+(62, 61, 'VNPAY', 200000.00, 'paid', '15045453', '2025-06-29 14:01:24'),
+(63, 62, 'VNPAY', 200000.00, 'paid', '15045468', '2025-06-29 14:10:54'),
+(64, 63, 'VNPAY', 200000.00, 'paid', '15045476', '2025-06-29 14:16:09'),
+(65, 64, 'VNPAY', 320000.00, 'paid', '15045482', '2025-06-29 14:19:37'),
+(66, 65, 'VNPAY', 320000.00, 'paid', '15045487', '2025-06-29 14:24:11'),
+(67, 66, 'VNPAY', 320000.00, 'pending', NULL, NULL),
+(68, 67, 'VNPAY', 200000.00, 'paid', '15045522', '2025-06-29 14:45:47'),
+(69, 68, 'COD', 200000.00, 'pending', NULL, NULL),
+(70, 69, 'VNPAY', 200000.00, 'paid', '15045528', '2025-06-29 14:54:06'),
+(71, 70, 'VNPAY', 200000.00, 'paid', '15045532', '2025-06-29 14:57:57'),
+(72, 71, 'VNPAY', 200000.00, 'paid', '15045538', '2025-06-29 15:00:50');
 
 -- --------------------------------------------------------
 
@@ -227,8 +349,9 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `description`, `category`, `gender_target`, `main_image`, `created_at`, `updated_at`) VALUES
-(3, 'Áo thun', 'Thoáng mát , thoải mái', 'Shirts', 'female', '685e1164e82d0_1750995300.jpg', '2025-06-27 10:35:00', '2025-06-28 09:25:49'),
-(4, 'Áo đi biển', 'SIêu đẹp', 'T-Shirts', 'unisex', '685f326785fe7_1751069287.jpg', '2025-06-28 07:08:07', '2025-06-28 07:08:07');
+(3, 'Áo thun', 'Thoáng mát , thoải mái', 'T-Shirts', 'unisex', '685fc2a4bf938_1751106212.jpg', '2025-06-27 10:35:00', '2025-06-28 17:23:32'),
+(4, 'Áo đi biển', 'SIêu đẹp , năng động', 'T-Shirts', 'unisex', '685fc2bef398e_1751106238.jpg', '2025-06-28 07:08:07', '2025-06-28 17:23:59'),
+(6, 'Áo khoác', 'Ấm áp , thời trang', 'T-Shirts', 'unisex', '685fc2de852d4_1751106270.jpg', '2025-06-28 17:24:30', '2025-06-28 17:24:50');
 
 -- --------------------------------------------------------
 
@@ -268,10 +391,15 @@ CREATE TABLE `product_variant` (
 --
 
 INSERT INTO `product_variant` (`product_id`, `variant_id`, `price`, `stock`, `image_url`, `status`) VALUES
-(3, 4, 500000.00, 99, '685e760a34307_1751021066.jpg', 'active'),
-(3, 5, 200000.00, 50, '685e15344721c_1750996276.jpg', 'active'),
-(4, 6, 60000.00, 199, '685f327d5f0a4_1751069309.jpg', 'active'),
-(4, 7, 70000.00, 30, '685f329b90032_1751069339.jpg', 'active');
+(3, 4, 10000.00, 187, '685fc3208d62a_1751106336.jpg', 'active'),
+(3, 5, 110000.00, 119, '685fc347a1b41_1751106375.jpg', 'active'),
+(3, 6, 120000.00, 200, '685fc3698f547_1751106409.jpg', 'active'),
+(4, 6, 200000.00, 137, '685fc4426c6ca_1751106626.jpg', 'active'),
+(4, 7, 190000.00, 96, '685fc44a1726b_1751106634.jpg', 'active'),
+(4, 9, 210000.00, 99, '685fc4571983c_1751106647.jpg', 'active'),
+(6, 7, 320000.00, 93, '685fc63e59b33_1751107134.jpg', 'active'),
+(6, 10, 300000.00, 207, '685fc65061fbc_1751107152.jpg', 'active'),
+(6, 11, 350000.00, 200, '685fc4b6e7c7f_1751106742.jpg', 'active');
 
 -- --------------------------------------------------------
 
@@ -341,11 +469,14 @@ CREATE TABLE `variants` (
 --
 
 INSERT INTO `variants` (`id`, `sku`) VALUES
+(10, '24'),
 (4, '43'),
 (5, '52'),
 (6, '54'),
 (8, '543'),
+(9, '56'),
 (7, '65'),
+(11, '87'),
 (3, 'JEANS-BLUE-XL-NIKE');
 
 -- --------------------------------------------------------
@@ -364,21 +495,29 @@ CREATE TABLE `variant_attribute_values` (
 --
 
 INSERT INTO `variant_attribute_values` (`variant_id`, `attribute_value_id`) VALUES
-(4, 9),
 (4, 12),
 (4, 15),
-(5, 9),
+(4, 16),
 (5, 13),
 (5, 15),
-(6, 9),
-(6, 13),
-(6, 15),
-(7, 10),
+(5, 17),
+(6, 12),
+(6, 14),
+(6, 18),
 (7, 12),
-(7, 14),
-(8, 10),
+(7, 15),
+(7, 16),
 (8, 13),
-(8, 15);
+(8, 15),
+(9, 12),
+(9, 14),
+(9, 18),
+(10, 13),
+(10, 15),
+(10, 17),
+(11, 12),
+(11, 14),
+(11, 18);
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -502,43 +641,43 @@ ALTER TABLE `attributes`
 -- AUTO_INCREMENT cho bảng `attribute_values`
 --
 ALTER TABLE `attribute_values`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT cho bảng `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT cho bảng `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT cho bảng `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
 -- AUTO_INCREMENT cho bảng `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
 
 --
 -- AUTO_INCREMENT cho bảng `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 
 --
 -- AUTO_INCREMENT cho bảng `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT cho bảng `product_reviews`
@@ -562,7 +701,7 @@ ALTER TABLE `user_addresses`
 -- AUTO_INCREMENT cho bảng `variants`
 --
 ALTER TABLE `variants`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- Các ràng buộc cho các bảng đã đổ

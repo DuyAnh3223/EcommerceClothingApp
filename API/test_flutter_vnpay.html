@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flutter VNPAY Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input[type="number"] {
+            width: 150px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 12px 20px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #28a745; }
+        .status-error { background-color: #dc3545; }
+        .status-pending { background-color: #ffc107; }
+        .step {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .step h4 {
+            margin-top: 0;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Flutter VNPAY Integration Test</h1>
+        
+        <div class="step">
+            <h4>🔍 Test Flow</h4>
+            <p>This page simulates the exact flow that Flutter app uses to create orders and VNPAY payments.</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🛒 Step 1: Place Order with VNPAY</h3>
+            <p>Simulate placing an order with VNPAY payment method (like Flutter app does).</p>
+            
+            <div>
+                <label>User ID:</label>
+                <input type="number" id="userId" value="4" placeholder="User ID">
+            </div>
+            
+            <div>
+                <label>Address ID:</label>
+                <input type="number" id="addressId" value="3" placeholder="Address ID">
+            </div>
+            
+            <div>
+                <label>Payment Method:</label>
+                <select id="paymentMethod">
+                    <option value="COD">COD</option>
+                    <option value="VNPAY" selected>VNPAY</option>
+                    <option value="Bank">Bank</option>
+                    <option value="Momo">Momo</option>
+                </select>
+            </div>
+            
+            <div>
+                <label>Product ID:</label>
+                <input type="number" id="productId" value="3" placeholder="Product ID">
+            </div>
+            
+            <div>
+                <label>Variant ID:</label>
+                <input type="number" id="variantId" value="4" placeholder="Variant ID">
+            </div>
+            
+            <div>
+                <label>Quantity:</label>
+                <input type="number" id="quantity" value="1" placeholder="Quantity">
+            </div>
+            
+            <button onclick="placeOrder()">Place Order</button>
+            <div id="orderResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>💳 Step 2: Test Direct VNPAY API</h3>
+            <p>Test the VNPAY API directly (like VNPayService.createPayment does).</p>
+            
+            <div>
+                <label>Order ID:</label>
+                <input type="number" id="directOrderId" value="1" placeholder="Order ID">
+            </div>
+            
+            <div>
+                <label>Amount:</label>
+                <input type="number" id="directAmount" value="100000" placeholder="Amount">
+            </div>
+            
+            <div>
+                <label>User ID:</label>
+                <input type="number" id="directUserId" value="4" placeholder="User ID">
+            </div>
+            
+            <button onclick="testDirectVNPAY()">Test Direct VNPAY API</button>
+            <div id="directResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Step 3: Test VNPAY Service Methods</h3>
+            <p>Test individual VNPAY service methods.</p>
+            
+            <button onclick="testConnection()">Test Connection</button>
+            <button onclick="getServerInfo()">Get Server Info</button>
+            <button onclick="testCreatePayment()">Test Create Payment</button>
+            
+            <div id="serviceResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Debug Information</h3>
+            <p>Current configuration and status.</p>
+            <div id="debugInfo" class="result info">
+                Loading debug information...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        
+        // Simulate Flutter app's place order flow
+        async function placeOrder() {
+            const resultDiv = document.getElementById('orderResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Placing order...';
+            
+            const orderData = {
+                user_id: parseInt(document.getElementById('userId').value),
+                address_id: parseInt(document.getElementById('addressId').value),
+                payment_method: document.getElementById('paymentMethod').value,
+                items: [{
+                    product_id: parseInt(document.getElementById('productId').value),
+                    variant_id: parseInt(document.getElementById('variantId').value),
+                    quantity: parseInt(document.getElementById('quantity').value)
+                }]
+            };
+            
+            try {
+                const response = await fetch('orders/place_order_multi.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <span class="status-indicator status-success"></span>✅ Order placed successfully!
+                        
+                        <strong>Order ID:</strong> ${data.order_id}
+                        <strong>Payment Method:</strong> ${data.payment_method}
+                        <strong>Requires Payment:</strong> ${data.requires_payment}
+                        
+                        ${data.payment_url ? `<strong>Payment URL:</strong>
+                        <div style="word-break: break-all; background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                            ${data.payment_url}
+                        </div>
+                        
+                        <button onclick="window.open('${data.payment_url}', '_blank')" style="margin-top: 10px;">
+                            🔗 Open Payment Page
+                        </button>` : ''}
+                        
+                        <strong>Full Response:</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Order failed!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Error placing order!\n\nError: ${error.message}`;
+            }
+        }
+        
+        // Test direct VNPAY API (like VNPayService.createPayment)
+        async function testDirectVNPAY() {
+            const resultDiv = document.getElementById('directResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Testing direct VNPAY API...';
+            
+            const paymentData = {
+                order_id: parseInt(document.getElementById('directOrderId').value),
+                amount: parseFloat(document.getElementById('directAmount').value),
+                user_id: parseInt(document.getElementById('directUserId').value),
+                order_info: 'Test payment from Flutter app',
+                customer_name: 'Test User',
+                customer_phone: '0123456789',
+                customer_email: 'test@example.com'
+            };
+            
+            try {
+                const response = await fetch('vnpay_php/create_vnpay_payment_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <span class="status-indicator status-success"></span>✅ Direct VNPAY API successful!
+                        
+                        <strong>Payment URL:</strong>
+                        <div style="word-break: break-all; background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                            ${data.paymentUrl}
+                        </div>
+                        
+                        <strong>Transaction Ref:</strong> ${data.transactionRef}
+                        
+                        <button onclick="window.open('${data.paymentUrl}', '_blank')" style="margin-top: 10px;">
+                            🔗 Open Payment Page
+                        </button>
+                        
+                        <strong>Full Response:</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Direct VNPAY API failed!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Error testing direct VNPAY API!\n\nError: ${error.message}`;
+            }
+        }
+        
+        // Test VNPAY service methods
+        async function testConnection() {
+            const resultDiv = document.getElementById('serviceResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Testing VNPAY connection...';
+            
+            try {
+                const response = await fetch('vnpay_php/create_vnpay_payment_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'test',
+                        orderId: 'TEST_CONNECTION',
+                        amount: 1000,
+                        orderDesc: 'Connection test'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<span class="status-indicator status-success"></span>✅ Connection test successful!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Connection test failed!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Connection test error!\n\nError: ${error.message}`;
+            }
+        }
+        
+        async function getServerInfo() {
+            const resultDiv = document.getElementById('serviceResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Getting server information...';
+            
+            try {
+                const response = await fetch('vnpay_php/create_vnpay_payment_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'server_info'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<span class="status-indicator status-success"></span>✅ Server info retrieved!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Server info failed!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Server info error!\n\nError: ${error.message}`;
+            }
+        }
+        
+        async function testCreatePayment() {
+            const resultDiv = document.getElementById('serviceResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Testing create payment...';
+            
+            try {
+                const response = await fetch('vnpay_php/create_vnpay_payment_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        orderId: 'TEST_FLUTTER_001',
+                        amount: 50000,
+                        orderDesc: 'Test payment from Flutter app',
+                        returnUrl: 'http://localhost/EcommerceClothingApp/API/vnpay_php/vnpay_return.php'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <span class="status-indicator status-success"></span>✅ Create payment successful!
+                        
+                        <strong>Payment URL:</strong>
+                        <div style="word-break: break-all; background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                            ${data.paymentUrl}
+                        </div>
+                        
+                        <button onclick="window.open('${data.paymentUrl}', '_blank')" style="margin-top: 10px;">
+                            🔗 Open Payment Page
+                        </button>
+                        
+                        <strong>Full Response:</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Create payment failed!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Create payment error!\n\nError: ${error.message}`;
+            }
+        }
+        
+        // Load debug information
+        async function loadDebugInfo() {
+            const debugDiv = document.getElementById('debugInfo');
+            
+            try {
+                const response = await fetch('vnpay_php/create_vnpay_payment_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'server_info'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    debugDiv.innerHTML = `
+                        <strong>✅ Server Configuration:</strong>
+                        - Timezone: ${data.server_info.timezone}
+                        - Current Time: ${data.server_info.current_time}
+                        - PHP Version: ${data.server_info.php_version}
+                        
+                        <strong>VNPAY Configuration:</strong>
+                        - Terminal Code: ${data.server_info.vnpay_config.tmn_code}
+                        - Return URL: ${data.server_info.vnpay_config.return_url}
+                        - VNPAY URL: ${data.server_info.vnpay_config.url}
+                        
+                        <strong>Test URLs:</strong>
+                        - Main Test: http://localhost/EcommerceClothingApp/API/test_vnpay_server.html
+                        - Flutter Test: http://localhost/EcommerceClothingApp/API/test_flutter_vnpay.html
+                        - Return Test: http://localhost/EcommerceClothingApp/API/test_vnpay_return_simple.html
+                    `;
+                } else {
+                    debugDiv.textContent = 'Failed to load debug information';
+                }
+            } catch (error) {
+                debugDiv.textContent = `Error loading debug info: ${error.message}`;
+            }
+        }
+        
+        // Auto-load debug info on page load
+        window.onload = function() {
+            loadDebugInfo();
+        };
+    </script>
+</body>
+</html> 

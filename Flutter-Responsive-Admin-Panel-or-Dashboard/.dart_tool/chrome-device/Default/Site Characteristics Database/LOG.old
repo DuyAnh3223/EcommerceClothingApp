@@ -1,11 +1,28 @@
-2025/06/28-09:29:39.355 6238 Reusing MANIFEST C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.af8ab2d\flutter_tools_chrome_device.c114ce05\Default\Site Characteristics Database/MANIFEST-000001
-2025/06/28-09:29:39.356 6238 Recovering log #19
-2025/06/28-09:29:39.356 6238 Reusing old log C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.af8ab2d\flutter_tools_chrome_device.c114ce05\Default\Site Characteristics Database/000019.log 
-2025/06/28-09:29:39.357 6238 Delete type=0 #3
-2025/06/28-09:29:39.357 6238 Delete type=2 #4
-2025/06/28-09:29:39.357 6238 Delete type=2 #6
-2025/06/28-09:29:39.357 6238 Delete type=0 #6
-2025/06/28-09:29:39.358 6238 Delete type=0 #10
-2025/06/28-09:29:39.358 6238 Delete type=2 #11
-2025/06/28-09:29:39.358 6238 Delete type=2 #13
-2025/06/28-09:29:39.358 6238 Delete type=2 #14
+2025/06/29-15:02:09.821 4a94 Log #3: 22 ops saved to Table #38 OK
+2025/06/29-15:02:09.825 4a94 Archiving C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.8a32d0ca\flutter_tools_chrome_device.9d84a8d5\Default\Site Characteristics Database/000003.log: OK
+2025/06/29-15:02:09.827 4a94 Log #6: 4 ops saved to Table #39 OK
+2025/06/29-15:02:09.829 4a94 Archiving C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.8a32d0ca\flutter_tools_chrome_device.9d84a8d5\Default\Site Characteristics Database/000006.log: OK
+2025/06/29-15:02:09.831 4a94 Log #10: 319 ops saved to Table #40 OK
+2025/06/29-15:02:09.834 4a94 Archiving C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.8a32d0ca\flutter_tools_chrome_device.9d84a8d5\Default\Site Characteristics Database/000010.log: OK
+2025/06/29-15:02:09.835 4a94 Log #19: 80 ops saved to Table #41 OK
+2025/06/29-15:02:09.838 4a94 Archiving C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.8a32d0ca\flutter_tools_chrome_device.9d84a8d5\Default\Site Characteristics Database/000019.log: OK
+2025/06/29-15:02:09.839 4a94 Log #30: 7 ops saved to Table #42 OK
+2025/06/29-15:02:09.839 4a94 Archiving C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.8a32d0ca\flutter_tools_chrome_device.9d84a8d5\Default\Site Characteristics Database/000030.log: OK
+2025/06/29-15:02:09.840 4a94 Table #4: 22 entries OK
+2025/06/29-15:02:09.840 4a94 Table #6: 22 entries OK
+2025/06/29-15:02:09.840 4a94 Table #11: 4 entries OK
+2025/06/29-15:02:09.841 4a94 Table #13: 22 entries OK
+2025/06/29-15:02:09.841 4a94 Table #14: 4 entries OK
+2025/06/29-15:02:09.841 4a94 Table #20: 4 entries OK
+2025/06/29-15:02:09.841 4a94 Table #22: 22 entries OK
+2025/06/29-15:02:09.841 4a94 Table #23: 4 entries OK
+2025/06/29-15:02:09.842 4a94 Table #24: 319 entries OK
+2025/06/29-15:02:09.842 4a94 Table #31: 4 entries OK
+2025/06/29-15:02:09.842 4a94 Table #37: 4 entries OK
+2025/06/29-15:02:09.842 4a94 Table #38: 22 entries OK
+2025/06/29-15:02:09.842 4a94 Table #39: 4 entries OK
+2025/06/29-15:02:09.842 4a94 Table #40: 319 entries OK
+2025/06/29-15:02:09.843 4a94 Table #41: 80 entries OK
+2025/06/29-15:02:09.843 4a94 Table #42: 7 entries OK
+2025/06/29-15:02:09.846 4a94 Archiving C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.8a32d0ca\flutter_tools_chrome_device.9d84a8d5\Default\Site Characteristics Database/MANIFEST-000001: OK
+2025/06/29-15:02:09.849 4a94 **** Repaired leveldb C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.8a32d0ca\flutter_tools_chrome_device.9d84a8d5\Default\Site Characteristics Database; recovered 16 files; 32591 bytes. Some data may have been lost. ****

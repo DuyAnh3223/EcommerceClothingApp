@@ -6,6 +6,7 @@ import '../dashboard/dashboard_screen.dart';
 import '../products/product_screen.dart';
 import '../user/user_screen.dart'; // thêm dòng này
 import '../order/order_screen.dart'; // thêm dòng này
+import '../payment/payment_dashboard_screen.dart'; // thêm dòng này
 import '../products/attribute_manager_screen.dart';
 import '../notifications/notification_management_screen.dart';
 import '../user/all_user_addresses_screen.dart';
@@ -47,7 +48,7 @@ class _MainScreenState extends State<MainScreen> {
           _selectedScreen = const Center(child: Text("Trang 'Đánh giá' đang cập nhật"));
           break;
         case "Thanh toán":
-          _selectedScreen = const Center(child: Text("Trang 'Thanh toán' đang cập nhật"));
+          _selectedScreen = const PaymentDashboardScreen();
           break;
         case "Quản lý thuộc tính":
           _selectedScreen = const AttributeManagerScreen();

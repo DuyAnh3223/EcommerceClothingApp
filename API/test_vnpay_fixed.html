@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test VNPAY Fixed - Time Issue Resolution</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .critical { background-color: #f8d7da; border-color: #f5c6cb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button.danger { background-color: #dc3545; }
+        button.danger:hover { background-color: #c82333; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .url-display {
+            word-break: break-all;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .time-info {
+            background-color: #e7f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test VNPAY Fixed - Time Issue Resolution</h1>
+    
+    <div class="critical">
+        <h3>🚨 Vấn đề hiện tại</h3>
+        <p>Bạn đang gặp lỗi "Transaction time expired" (code=15) từ VNPAY. File test này sẽ giúp khắc phục vấn đề thời gian.</p>
+    </div>
+    
+    <div class="time-info">
+        <h3>⏰ Thông tin thời gian</h3>
+        <p><strong>Browser Time:</strong> <span id="browser-time"></span></p>
+        <p><strong>Timezone:</strong> <span id="browser-timezone"></span></p>
+        <p><strong>VNPAY Expected Format:</strong> YmdHis (ví dụ: 20250629131600)</p>
+    </div>
+
+    <div class="comparison">
+        <div class="test-section info">
+            <h3>1. Test API Cũ (có thể lỗi)</h3>
+            <button onclick="testOldAPI()">Test Old API</button>
+            <div id="old-api-result"></div>
+        </div>
+
+        <div class="test-section success">
+            <h3>2. Test API Mới (đã sửa)</h3>
+            <button onclick="testNewAPI()">Test New API</button>
+            <div id="new-api-result"></div>
+        </div>
+    </div>
+
+    <div class="test-section warning">
+        <h3>3. Generate Payment URL với API Mới</h3>
+        <div class="form-group">
+            <label>Order ID:</label>
+            <input type="number" id="orderId" value="1" min="1">
+        </div>
+        <div class="form-group">
+            <label>Amount (VNĐ):</label>
+            <input type="number" id="amount" value="100000" min="1000">
+        </div>
+        <div class="form-group">
+            <label>User ID:</label>
+            <input type="number" id="userId" value="4" min="1">
+        </div>
+        <div class="form-group">
+            <label>Order Info:</label>
+            <input type="text" id="orderInfo" value="Test payment with fixed time">
+        </div>
+        <div class="form-group">
+            <label>Customer Name:</label>
+            <input type="text" id="customerName" value="Test User">
+        </div>
+        <div class="form-group">
+            <label>Customer Phone:</label>
+            <input type="text" id="customerPhone" value="0123456789">
+        </div>
+        <div class="form-group">
+            <label>Customer Email:</label>
+            <input type="email" id="customerEmail" value="test@example.com">
+        </div>
+        <button onclick="generatePaymentUrlFixed()">Generate Payment URL (Fixed)</button>
+        <div id="payment-result"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>4. Test Generated URL</h3>
+        <p><strong>⚠️ Quan trọng:</strong> Test URL ngay lập tức sau khi tạo!</p>
+        <button onclick="testPaymentUrl()">Test Payment URL</button>
+        <button onclick="copyPaymentUrl()">Copy URL</button>
+        <div id="url-test-result"></div>
+    </div>
+
+    <script>
+        let generatedUrl = '';
+
+        // Cập nhật thời gian browser
+        function updateBrowserTime() {
+            const now = new Date();
+            document.getElementById('browser-time').textContent = now.toLocaleString('vi-VN');
+            document.getElementById('browser-timezone').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        }
+
+        // Cập nhật thời gian mỗi giây
+        setInterval(updateBrowserTime, 1000);
+        updateBrowserTime();
+
+        async function testOldAPI() {
+            const resultDiv = document.getElementById('old-api-result');
+            resultDiv.innerHTML = '<p>Testing old API...</p>';
+            
+            try {
+                const response = await fetch('vnpay_php/create_vnpay_payment.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: 999,
+                        amount: 100000,
+                        user_id: 4,
+                        order_info: 'Test old API'
+                    })
+                });
+                
+                const data = await response.text();
+                console.log('Old API response:', data);
+                
+                try {
+                    const jsonData = JSON.parse(data);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Old API Response</h4>
+                            <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                        </div>
+                    `;
+                } catch (jsonError) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ JSON Parse Error</h4>
+                            <p>Error: ${jsonError.message}</p>
+                            <pre>${data}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testNewAPI() {
+            const resultDiv = document.getElementById('new-api-result');
+            resultDiv.innerHTML = '<p>Testing new API...</p>';
+            
+            try {
+                const response = await fetch('vnpay_php/create_vnpay_payment_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: 999,
+                        amount: 100000,
+                        user_id: 4,
+                        order_info: 'Test new API'
+                    })
+                });
+                
+                const data = await response.text();
+                console.log('New API response:', data);
+                
+                try {
+                    const jsonData = JSON.parse(data);
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ New API Response</h4>
+                            <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                        </div>
+                    `;
+                } catch (jsonError) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ JSON Parse Error</h4>
+                            <p>Error: ${jsonError.message}</p>
+                            <pre>${data}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function generatePaymentUrlFixed() {
+            const resultDiv = document.getElementById('payment-result');
+            resultDiv.innerHTML = '<p>Generating payment URL with fixed time...</p>';
+            
+            const orderId = document.getElementById('orderId').value;
+            const amount = document.getElementById('amount').value;
+            const userId = document.getElementById('userId').value;
+            const orderInfo = document.getElementById('orderInfo').value;
+            const customerName = document.getElementById('customerName').value;
+            const customerPhone = document.getElementById('customerPhone').value;
+            const customerEmail = document.getElementById('customerEmail').value;
+            
+            try {
+                const response = await fetch('vnpay_php/create_vnpay_payment_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        order_id: parseInt(orderId),
+                        amount: parseFloat(amount),
+                        user_id: parseInt(userId),
+                        order_info: orderInfo,
+                        customer_name: customerName,
+                        customer_phone: customerPhone,
+                        customer_email: customerEmail
+                    })
+                });
+                
+                const data = await response.text();
+                console.log('Fixed API response:', data);
+                
+                try {
+                    const jsonData = JSON.parse(data);
+                    if (jsonData.success && jsonData.data.payment_url) {
+                        generatedUrl = jsonData.data.payment_url;
+                        resultDiv.innerHTML = `
+                            <div class="success">
+                                <h4>✅ Payment URL Generated Successfully (Fixed)</h4>
+                                <p><strong>Order ID:</strong> ${jsonData.data.order_id}</p>
+                                <p><strong>Amount:</strong> ${jsonData.data.amount} VNĐ</p>
+                                <p><strong>Create Date:</strong> ${jsonData.data.create_date}</p>
+                                <p><strong>Expire Date:</strong> ${jsonData.data.expire_date}</p>
+                                <p><strong>Current Time:</strong> ${jsonData.data.current_time}</p>
+                                <p><strong>Expire Time:</strong> ${jsonData.data.expire_time}</p>
+                                <p><strong>Payment URL:</strong></p>
+                                <div class="url-display">${generatedUrl}</div>
+                                <details>
+                                    <summary>Debug Information</summary>
+                                    <pre>${JSON.stringify(jsonData.data.debug, null, 2)}</pre>
+                                </details>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="error">
+                                <h4>❌ Failed to Generate URL</h4>
+                                <pre>${JSON.stringify(jsonData, null, 2)}</pre>
+                            </div>
+                        `;
+                    }
+                } catch (jsonError) {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ JSON Parse Error</h4>
+                            <p>Error: ${jsonError.message}</p>
+                            <p>Raw response:</p>
+                            <pre>${data}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Network Error</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function testPaymentUrl() {
+            if (!generatedUrl) {
+                alert('Please generate a payment URL first!');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('url-test-result');
+            resultDiv.innerHTML = `
+                <div class="info">
+                    <h4>🔗 Opening Payment URL (Fixed)</h4>
+                    <p>URL: ${generatedUrl}</p>
+                    <p>This will open in a new tab...</p>
+                    <p><strong>Expected:</strong> VNPAY payment page</p>
+                    <p><strong>Not Expected:</strong> Error page with code=15</p>
+                </div>
+            `;
+            
+            // Mở URL trong tab mới
+            window.open(generatedUrl, '_blank');
+        }
+
+        function copyPaymentUrl() {
+            if (!generatedUrl) {
+                alert('Please generate a payment URL first!');
+                return;
+            }
+            
+            navigator.clipboard.writeText(generatedUrl).then(() => {
+                alert('Payment URL copied to clipboard!');
+            }).catch(() => {
+                // Fallback cho trình duyệt cũ
+                const textArea = document.createElement('textarea');
+                textArea.value = generatedUrl;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Payment URL copied to clipboard!');
+            });
+        }
+
+        // Auto test khi load trang
+        window.onload = function() {
+            updateBrowserTime();
+        };
+    </script>
+</body>
+</html> 

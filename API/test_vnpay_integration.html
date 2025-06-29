@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test VNPAY Integration - Flutter App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2196F3;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #2196F3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #1976D2;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .payment-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test VNPAY Integration - Flutter App</h1>
+        
+        <div class="payment-info">
+            <h4>⚠️ Lưu ý bảo mật:</h4>
+            <p>Thông tin thẻ test VNPAY chỉ dành cho mục đích development và được lưu trong file <code>API/vnpay_php/taikhoantest.txt</code>. Không hiển thị thông tin này cho khách hàng cuối.</p>
+        </div>
+
+        <!-- Test 1: Place Order with VNPAY -->
+        <div class="test-section">
+            <h3>1. Test Đặt hàng với VNPAY (Single Product)</h3>
+            <form id="placeOrderForm">
+                <div class="form-group">
+                    <label for="userId">User ID:</label>
+                    <input type="number" id="userId" value="4" required>
+                </div>
+                <div class="form-group">
+                    <label for="productId">Product ID:</label>
+                    <input type="number" id="productId" value="3" required>
+                </div>
+                <div class="form-group">
+                    <label for="variantId">Variant ID:</label>
+                    <input type="number" id="variantId" value="4" required>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" value="1" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="addressId">Address ID:</label>
+                    <input type="number" id="addressId" value="3" required>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethod">Payment Method:</label>
+                    <select id="paymentMethod">
+                        <option value="COD">COD</option>
+                        <option value="VNPAY" selected>VNPAY</option>
+                        <option value="Bank">Bank</option>
+                        <option value="Momo">Momo</option>
+                    </select>
+                </div>
+                <button type="submit">🚀 Đặt hàng</button>
+                <button type="button" onclick="clearResult('placeOrderResult')">🗑️ Xóa kết quả</button>
+            </form>
+            <div id="placeOrderResult" class="result"></div>
+        </div>
+
+        <!-- Test 2: Place Order Multi with VNPAY -->
+        <div class="test-section">
+            <h3>2. Test Đặt hàng nhiều sản phẩm với VNPAY (Cart)</h3>
+            <form id="placeOrderMultiForm">
+                <div class="form-group">
+                    <label for="userIdMulti">User ID:</label>
+                    <input type="number" id="userIdMulti" value="4" required>
+                </div>
+                <div class="form-group">
+                    <label for="addressIdMulti">Address ID:</label>
+                    <input type="number" id="addressIdMulti" value="3" required>
+                </div>
+                <div class="form-group">
+                    <label for="paymentMethodMulti">Payment Method:</label>
+                    <select id="paymentMethodMulti">
+                        <option value="COD">COD</option>
+                        <option value="VNPAY" selected>VNPAY</option>
+                        <option value="Bank">Bank</option>
+                        <option value="Momo">Momo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="itemsJson">Items JSON:</label>
+                    <textarea id="itemsJson" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">[
+  {
+    "product_id": 3,
+    "variant_id": 4,
+    "quantity": 1
+  },
+  {
+    "product_id": 4,
+    "variant_id": 6,
+    "quantity": 2
+  }
+]</textarea>
+                </div>
+                <button type="submit">🛒 Đặt hàng nhiều sản phẩm</button>
+                <button type="button" onclick="clearResult('placeOrderMultiResult')">🗑️ Xóa kết quả</button>
+            </form>
+            <div id="placeOrderMultiResult" class="result"></div>
+        </div>
+
+        <!-- Test 3: Check Payment Status -->
+        <div class="test-section">
+            <h3>3. Test Kiểm tra trạng thái thanh toán</h3>
+            <form id="checkPaymentForm">
+                <div class="form-group">
+                    <label for="orderIdCheck">Order ID:</label>
+                    <input type="number" id="orderIdCheck" placeholder="Nhập Order ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="userIdCheck">User ID:</label>
+                    <input type="number" id="userIdCheck" value="4" required>
+                </div>
+                <button type="submit">🔍 Kiểm tra trạng thái</button>
+                <button type="button" onclick="clearResult('checkPaymentResult')">🗑️ Xóa kết quả</button>
+            </form>
+            <div id="checkPaymentResult" class="result"></div>
+        </div>
+
+        <!-- Test 4: Open VNPAY URL -->
+        <div class="test-section">
+            <h3>4. Test Mở URL thanh toán VNPAY</h3>
+            <form id="openPaymentForm">
+                <div class="form-group">
+                    <label for="paymentUrl">Payment URL:</label>
+                    <input type="text" id="paymentUrl" placeholder="Nhập URL thanh toán VNPAY" style="width: 100%;">
+                </div>
+                <button type="button" onclick="openPaymentUrl()">🌐 Mở trang thanh toán</button>
+                <button type="button" onclick="clearResult('openPaymentResult')">🗑️ Xóa kết quả</button>
+            </form>
+            <div id="openPaymentResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1/EcommerceClothingApp/API';
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+        }
+
+        function clearResult(elementId) {
+            const element = document.getElementById(elementId);
+            element.textContent = '';
+            element.className = 'result';
+        }
+
+        // Test 1: Place Order with VNPAY
+        document.getElementById('placeOrderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const resultDiv = document.getElementById('placeOrderResult');
+            
+            try {
+                const data = {
+                    user_id: parseInt(document.getElementById('userId').value),
+                    product_id: parseInt(document.getElementById('productId').value),
+                    variant_id: parseInt(document.getElementById('variantId').value),
+                    quantity: parseInt(document.getElementById('quantity').value),
+                    address_id: parseInt(document.getElementById('addressId').value),
+                    payment_method: document.getElementById('paymentMethod').value
+                };
+
+                showResult('placeOrderResult', 'Đang gửi yêu cầu...', 'info');
+
+                const response = await fetch(`${API_BASE}/orders/place_order.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    let message = `✅ Đặt hàng thành công!\n`;
+                    message += `Order ID: ${result.order_id}\n`;
+                    message += `Payment Method: ${result.payment_method}\n`;
+                    message += `Requires Payment: ${result.requires_payment}\n`;
+                    
+                    if (result.payment_url) {
+                        message += `\n🔗 Payment URL:\n${result.payment_url}\n`;
+                        document.getElementById('paymentUrl').value = result.payment_url;
+                    }
+                    
+                    showResult('placeOrderResult', message, 'success');
+                } else {
+                    showResult('placeOrderResult', `❌ Lỗi: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('placeOrderResult', `❌ Lỗi kết nối: ${error.message}`, 'error');
+            }
+        });
+
+        // Test 2: Place Order Multi with VNPAY
+        document.getElementById('placeOrderMultiForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const resultDiv = document.getElementById('placeOrderMultiResult');
+            
+            try {
+                const items = JSON.parse(document.getElementById('itemsJson').value);
+                const data = {
+                    user_id: parseInt(document.getElementById('userIdMulti').value),
+                    address_id: parseInt(document.getElementById('addressIdMulti').value),
+                    payment_method: document.getElementById('paymentMethodMulti').value,
+                    items: items
+                };
+
+                showResult('placeOrderMultiResult', 'Đang gửi yêu cầu...', 'info');
+
+                const response = await fetch(`${API_BASE}/orders/place_order_multi.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    let message = `✅ Đặt hàng thành công!\n`;
+                    message += `Order ID: ${result.order_id}\n`;
+                    message += `Payment Method: ${result.payment_method}\n`;
+                    message += `Requires Payment: ${result.requires_payment}\n`;
+                    
+                    if (result.payment_url) {
+                        message += `\n🔗 Payment URL:\n${result.payment_url}\n`;
+                        document.getElementById('paymentUrl').value = result.payment_url;
+                    }
+                    
+                    showResult('placeOrderMultiResult', message, 'success');
+                } else {
+                    showResult('placeOrderMultiResult', `❌ Lỗi: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('placeOrderMultiResult', `❌ Lỗi kết nối: ${error.message}`, 'error');
+            }
+        });
+
+        // Test 3: Check Payment Status
+        document.getElementById('checkPaymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                const data = {
+                    order_id: parseInt(document.getElementById('orderIdCheck').value),
+                    user_id: parseInt(document.getElementById('userIdCheck').value)
+                };
+
+                showResult('checkPaymentResult', 'Đang kiểm tra...', 'info');
+
+                const response = await fetch(`${API_BASE}/vnpay_php/check_payment_status.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    let message = `✅ Kết quả kiểm tra:\n`;
+                    message += `Order ID: ${result.order_id}\n`;
+                    message += `Payment Status: ${result.payment_status}\n`;
+                    message += `Order Status: ${result.order_status}\n`;
+                    message += `Amount: ${result.amount} VNĐ\n`;
+                    message += `Transaction Code: ${result.transaction_code || 'N/A'}\n`;
+                    
+                    showResult('checkPaymentResult', message, 'success');
+                } else {
+                    showResult('checkPaymentResult', `❌ Lỗi: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('checkPaymentResult', `❌ Lỗi kết nối: ${error.message}`, 'error');
+            }
+        });
+
+        // Test 4: Open Payment URL
+        function openPaymentUrl() {
+            const url = document.getElementById('paymentUrl').value;
+            if (url) {
+                window.open(url, '_blank');
+                showResult('openPaymentResult', `🌐 Đã mở URL thanh toán trong tab mới:\n${url}`, 'success');
+            } else {
+                showResult('openPaymentResult', '❌ Vui lòng nhập URL thanh toán', 'error');
+            }
+        }
+    </script>
+</body>
+</html> 

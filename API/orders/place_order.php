@@ -94,11 +94,127 @@ $pay_stmt->bind_param("isd", $order_id, $payment_method, $total_amount);
 $pay_stmt->execute();
 $pay_stmt->close();
 
-$conn->close();
+// Nếu là thanh toán VNPAY, tạo URL thanh toán
+if ($payment_method === 'VNPAY') {
+    // Lấy thông tin user
+    $user_sql = "SELECT username, email, phone FROM users WHERE id = ?";
+    $user_stmt = $conn->prepare($user_sql);
+    $user_stmt->bind_param("i", $user_id);
+    $user_stmt->execute();
+    $user_result = $user_stmt->get_result();
+    $user_data = $user_result->fetch_assoc();
+    $user_stmt->close();
 
-http_response_code(200);
-echo json_encode([
-    "success" => true,
-    "message" => "Đặt hàng thành công!",
-    "order_id" => $order_id
-]); 
+    // Tạo URL thanh toán VNPAY
+    $vnpay_url = createVNPayPaymentUrl($order_id, $total_amount, $user_data);
+    
+    $conn->close();
+    
+    http_response_code(200);
+    echo json_encode([
+        "success" => true,
+        "message" => "Đặt hàng thành công! Vui lòng thanh toán qua VNPAY.",
+        "order_id" => $order_id,
+        "payment_method" => "VNPAY",
+        "payment_url" => $vnpay_url,
+        "requires_payment" => true
+    ]);
+} else {
+    $conn->close();
+    
+    http_response_code(200);
+    echo json_encode([
+        "success" => true,
+        "message" => "Đặt hàng thành công!",
+        "order_id" => $order_id,
+        "payment_method" => $payment_method,
+        "requires_payment" => false
+    ]);
+}
+
+// Function tạo URL thanh toán VNPAY
+function createVNPayPaymentUrl($orderId, $amount, $userData) {
+    require_once '../vnpay_php/config.php';
+    
+    $vnp_TxnRef = $orderId;
+    $vnp_OrderInfo = "Thanh toán đơn hàng #$orderId";
+    $vnp_Amount = $amount * 100; // VNPAY yêu cầu nhân 100
+    $vnp_Locale = 'vn';
+    $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
+    $vnp_ExpireDate = date('YmdHis', strtotime('+15 minutes'));
+
+    // Thông tin khách hàng
+    $vnp_Bill_Mobile = $userData['phone'] ?? '';
+    $vnp_Bill_Email = $userData['email'] ?? '';
+    $vnp_Bill_FirstName = $userData['username'] ?? '';
+
+    // Tách tên thành first name và last name
+    $vnp_Bill_LastName = '';
+    if (!empty($vnp_Bill_FirstName)) {
+        $name = explode(' ', trim($vnp_Bill_FirstName));
+        if (count($name) > 1) {
+            $vnp_Bill_FirstName = array_shift($name);
+            $vnp_Bill_LastName = implode(' ', $name);
+        }
+    }
+
+    // Tạo input data cho VNPAY
+    $inputData = array(
+        "vnp_Version" => "2.1.0",
+        "vnp_TmnCode" => $vnp_TmnCode,
+        "vnp_Amount" => $vnp_Amount,
+        "vnp_Command" => "pay",
+        "vnp_CreateDate" => date('YmdHis'),
+        "vnp_CurrCode" => "VND",
+        "vnp_IpAddr" => $vnp_IpAddr,
+        "vnp_Locale" => $vnp_Locale,
+        "vnp_OrderInfo" => $vnp_OrderInfo,
+        "vnp_OrderType" => "other",
+        "vnp_ReturnUrl" => $vnp_Returnurl,
+        "vnp_TxnRef" => $vnp_TxnRef,
+        "vnp_ExpireDate" => $vnp_ExpireDate
+    );
+
+    // Thêm thông tin khách hàng nếu có
+    if (!empty($vnp_Bill_Mobile)) {
+        $inputData['vnp_Bill_Mobile'] = $vnp_Bill_Mobile;
+    }
+    if (!empty($vnp_Bill_Email)) {
+        $inputData['vnp_Bill_Email'] = $vnp_Bill_Email;
+    }
+    if (!empty($vnp_Bill_FirstName)) {
+        $inputData['vnp_Bill_FirstName'] = $vnp_Bill_FirstName;
+    }
+    if (!empty($vnp_Bill_LastName)) {
+        $inputData['vnp_Bill_LastName'] = $vnp_Bill_LastName;
+    }
+
+    // Sắp xếp theo key
+    ksort($inputData);
+
+    // Tạo query string
+    $query = "";
+    $i = 0;
+    $hashdata = "";
+    foreach ($inputData as $key => $value) {
+        if ($i == 1) {
+            $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+        } else {
+            $hashdata .= urlencode($key) . "=" . urlencode($value);
+            $i = 1;
+        }
+        $query .= urlencode($key) . "=" . urlencode($value) . '&';
+    }
+
+    // Tạo URL thanh toán
+    $vnp_Url = $vnp_Url . "?" . $query;
+
+    // Tạo secure hash
+    if (isset($vnp_HashSecret)) {
+        $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+        $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+    }
+
+    return $vnp_Url;
+}
+?> 

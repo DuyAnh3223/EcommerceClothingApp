@@ -1,11 +1,21 @@
-2025/06/28-09:41:53.637 56fc Reusing MANIFEST C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.bf6fffa7\flutter_tools_chrome_device.2fb5ad8a\Default\Site Characteristics Database/MANIFEST-000001
-2025/06/28-09:41:53.639 56fc Recovering log #19
-2025/06/28-09:41:53.640 56fc Reusing old log C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.bf6fffa7\flutter_tools_chrome_device.2fb5ad8a\Default\Site Characteristics Database/000019.log 
-2025/06/28-09:41:53.640 56fc Delete type=0 #3
-2025/06/28-09:41:53.641 56fc Delete type=2 #4
-2025/06/28-09:41:53.641 56fc Delete type=2 #6
-2025/06/28-09:41:53.641 56fc Delete type=0 #6
-2025/06/28-09:41:53.641 56fc Delete type=0 #10
-2025/06/28-09:41:53.641 56fc Delete type=2 #11
-2025/06/28-09:41:53.642 56fc Delete type=2 #13
-2025/06/28-09:41:53.642 56fc Delete type=2 #14
+2025/06/29-15:02:09.852 4a94 Reusing MANIFEST C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.8a32d0ca\flutter_tools_chrome_device.9d84a8d5\Default\Site Characteristics Database/MANIFEST-000001
+2025/06/29-15:02:09.853 4714 Compacting 16@0 + 0@1 files
+2025/06/29-15:02:09.856 4714 Generated table #45@0: 4 keys, 326 bytes
+2025/06/29-15:02:09.856 4714 Compacted 16@0 + 0@1 files => 326 bytes
+2025/06/29-15:02:09.856 4714 compacted to: files[ 0 1 0 0 0 0 0 ]
+2025/06/29-15:02:09.857 4714 Delete type=2 #4
+2025/06/29-15:02:09.857 4714 Delete type=2 #6
+2025/06/29-15:02:09.857 4714 Delete type=2 #11
+2025/06/29-15:02:09.857 4714 Delete type=2 #13
+2025/06/29-15:02:09.857 4714 Delete type=2 #14
+2025/06/29-15:02:09.857 4714 Delete type=2 #20
+2025/06/29-15:02:09.857 4714 Delete type=2 #22
+2025/06/29-15:02:09.857 4714 Delete type=2 #23
+2025/06/29-15:02:09.857 4714 Delete type=2 #24
+2025/06/29-15:02:09.857 4714 Delete type=2 #31
+2025/06/29-15:02:09.857 4714 Delete type=2 #37
+2025/06/29-15:02:09.857 4714 Delete type=2 #38
+2025/06/29-15:02:09.857 4714 Delete type=2 #39
+2025/06/29-15:02:09.857 4714 Delete type=2 #40
+2025/06/29-15:02:09.857 4714 Delete type=2 #41
+2025/06/29-15:02:09.857 4714 Delete type=2 #42

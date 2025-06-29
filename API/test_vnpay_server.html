@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNPAY Integration Test - Server Version</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        input, select, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input[type="number"] {
+            width: 150px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 12px 20px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .url-display {
+            word-break: break-all;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #28a745; }
+        .status-error { background-color: #dc3545; }
+        .status-pending { background-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 VNPAY Integration Test - Server Version</h1>
+        
+        <div class="test-section">
+            <h3>📡 API Connection Test</h3>
+            <p>Test if the VNPAY API endpoints are accessible and responding correctly.</p>
+            <button onclick="testConnection()">Test API Connection</button>
+            <div id="connectionResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>💰 Create VNPAY Payment</h3>
+            <p>Generate a VNPAY payment URL with the latest fixed configuration.</p>
+            
+            <div>
+                <label>Order ID:</label>
+                <input type="text" id="orderId" value="TEST_ORDER_001" placeholder="Order ID">
+            </div>
+            
+            <div>
+                <label>Amount (VND):</label>
+                <input type="number" id="amount" value="100000" placeholder="Amount in VND">
+            </div>
+            
+            <div>
+                <label>Order Description:</label>
+                <input type="text" id="orderDesc" value="Test payment for clothing items" placeholder="Order description">
+            </div>
+            
+            <div>
+                <label>Return URL:</label>
+                <input type="text" id="returnUrl" value="http://localhost/EcommerceClothingApp/API/vnpay_php/vnpay_return.php" placeholder="Return URL">
+            </div>
+            
+            <button onclick="createPayment()">Create VNPAY Payment</button>
+            <div id="paymentResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Payment Status Check</h3>
+            <p>Check the status of a payment using transaction reference.</p>
+            
+            <div>
+                <label>Transaction Reference:</label>
+                <input type="text" id="transactionRef" placeholder="Enter transaction reference">
+            </div>
+            
+            <button onclick="checkPaymentStatus()">Check Payment Status</button>
+            <div id="statusResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Server Information</h3>
+            <p>Display current server configuration and time settings.</p>
+            <button onclick="getServerInfo()">Get Server Info</button>
+            <div id="serverInfo" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'vnpay_php/';
+        
+        async function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Testing API connection...';
+            
+            try {
+                const response = await fetch(API_BASE + 'create_vnpay_payment_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'test',
+                        orderId: 'TEST_CONNECTION',
+                        amount: 1000,
+                        orderDesc: 'Connection test'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<span class="status-indicator status-success"></span>✅ Connection successful!\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Connection failed!\n\nError:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Connection error!\n\nError: ${error.message}\n\nMake sure:\n1. XAMPP Apache server is running\n2. You're accessing this page via http://localhost/...\n3. The API files are in the correct location`;
+            }
+        }
+        
+        async function createPayment() {
+            const resultDiv = document.getElementById('paymentResult');
+            const orderId = document.getElementById('orderId').value;
+            const amount = document.getElementById('amount').value;
+            const orderDesc = document.getElementById('orderDesc').value;
+            const returnUrl = document.getElementById('returnUrl').value;
+            
+            if (!orderId || !amount || !orderDesc) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please fill in all required fields.';
+                return;
+            }
+            
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Creating VNPAY payment...';
+            
+            try {
+                const response = await fetch(API_BASE + 'create_vnpay_payment_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        orderId: orderId,
+                        amount: parseInt(amount),
+                        orderDesc: orderDesc,
+                        returnUrl: returnUrl
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <span class="status-indicator status-success"></span>✅ Payment URL created successfully!
+                        
+                        <strong>Payment URL:</strong>
+                        <div class="url-display">${data.paymentUrl}</div>
+                        
+                        <strong>Transaction Reference:</strong>
+                        <div class="url-display">${data.transactionRef}</div>
+                        
+                        <strong>Full Response:</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                        
+                        <button onclick="window.open('${data.paymentUrl}', '_blank')" style="margin-top: 10px;">
+                            🔗 Open Payment Page
+                        </button>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Failed to create payment!\n\nError:\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Error creating payment!\n\nError: ${error.message}`;
+            }
+        }
+        
+        async function checkPaymentStatus() {
+            const resultDiv = document.getElementById('statusResult');
+            const transactionRef = document.getElementById('transactionRef').value;
+            
+            if (!transactionRef) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = 'Please enter a transaction reference.';
+                return;
+            }
+            
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Checking payment status...';
+            
+            try {
+                const response = await fetch(API_BASE + 'check_payment_status.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        transactionRef: transactionRef
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<span class="status-indicator status-success"></span>✅ Payment status retrieved!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Failed to check status!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Error checking status!\n\nError: ${error.message}`;
+            }
+        }
+        
+        async function getServerInfo() {
+            const resultDiv = document.getElementById('serverInfo');
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'Getting server information...';
+            
+            try {
+                const response = await fetch(API_BASE + 'create_vnpay_payment_fixed.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'server_info'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `<span class="status-indicator status-success"></span>✅ Server information retrieved!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Failed to get server info!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `<span class="status-indicator status-error"></span>❌ Error getting server info!\n\nError: ${error.message}`;
+            }
+        }
+        
+        // Auto-test connection on page load
+        window.onload = function() {
+            setTimeout(testConnection, 1000);
+        };
+    </script>
+</body>
+</html> 
