@@ -648,7 +648,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             const SizedBox(height: 4),
                                             Text(
                                               (firstVariant != null && firstVariant['price'] != null)
-                                                  ? 'Giá từ: ${firstVariant['price']} VNĐ'
+                                                  ? 'Giá từ: ${firstVariant['price'].toStringAsFixed(0)} VNĐ'
                                                   : '0 VNĐ',
                                               style: TextStyle(
                                                 color: Colors.orange.shade700,
@@ -656,6 +656,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 fontSize: 16,
                                               ),
                                             ),
+                                            // Hiển thị thông tin sản phẩm agency
+                                            if (product['is_agency_product'] == true) ...[
+                                              const SizedBox(height: 4),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.blue.withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                                                ),
+                                                child: Text(
+                                                  'Sản phẩm Agency',
+                                                  style: TextStyle(
+                                                    color: Colors.blue.shade700,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                             const SizedBox(height: 8),
                                             SizedBox(
                                               width: double.infinity,
@@ -1016,15 +1036,65 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
               const SizedBox(height: 12),
               // Giá và tồn kho
               if (selectedVariant != null)
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Giá: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('${selectedVariant!['price']} VNĐ', style: TextStyle(color: Colors.orange.shade700, fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 24),
-                    Text('Tồn kho: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('${selectedVariant!['stock']}', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                    Row(
+                      children: [
+                        Text('Giá: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('${selectedVariant!['price'].toStringAsFixed(0)} VNĐ', style: TextStyle(color: Colors.orange.shade700, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 24),
+                        Text('Tồn kho: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('${selectedVariant!['stock']}', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    // Hiển thị thông tin phí sàn cho sản phẩm agency
+                    if (widget.product['is_agency_product'] == true && selectedVariant!['platform_fee'] > 0) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.info_outline, size: 16, color: Colors.blue.shade700),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Thông tin phí sàn',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue.shade700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Giá gốc: ${selectedVariant!['base_price'].toStringAsFixed(0)} VNĐ',
+                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                            ),
+                            Text(
+                              'Phí sàn (${widget.product['platform_fee_rate']}%): +${selectedVariant!['platform_fee'].toStringAsFixed(0)} VNĐ',
+                              style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
+                            ),
+                            Text(
+                              'Giá cuối: ${selectedVariant!['price'].toStringAsFixed(0)} VNĐ',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.orange.shade700),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
+              const SizedBox(height: 16),
               if (selectedVariant == null)
                 const Text('Không có variant phù hợp', style: TextStyle(color: Colors.red)),
               const SizedBox(height: 16),

@@ -255,7 +255,14 @@ class _CartScreenState extends State<CartScreen> {
                                         Text(item['product_name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
                                         Text(attrs, style: const TextStyle(fontSize: 13, color: Colors.grey)),
                                         const SizedBox(height: 4),
-                                        Text('Giá: ${item['price']} VNĐ'),
+                                        // Hiển thị giá và thông tin phí sàn
+                                        if (item['is_agency_product'] == true && item['platform_fee'] > 0) ...[
+                                          Text('Giá gốc: ${item['base_price'].toStringAsFixed(0)} VNĐ', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                                          Text('Phí sàn (${item['platform_fee_rate']}%): +${item['platform_fee'].toStringAsFixed(0)} VNĐ', style: TextStyle(fontSize: 12, color: Colors.blue.shade700)),
+                                          Text('Giá cuối: ${item['price'].toStringAsFixed(0)} VNĐ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700)),
+                                        ] else ...[
+                                          Text('Giá: ${item['price'].toStringAsFixed(0)} VNĐ'),
+                                        ],
                                         Row(
                                           children: [
                                             IconButton(

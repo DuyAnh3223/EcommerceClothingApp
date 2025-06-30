@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:userfe/screens/home/home_screen.dart';
+import 'package:userfe/screens/agency/agency_dashboard.dart';
+import 'package:userfe/screens/agency/agency_product_screen.dart';
+import 'package:userfe/screens/agency/agency_attribute_manager_screen.dart';
+import 'package:userfe/screens/agency/agency_variant_screen.dart';
 import 'package:userfe/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -38,6 +42,10 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result['success'] == true) {
         if (!mounted) return;
 
+        // Lấy thông tin user từ kết quả
+        final userData = result['user'];
+        final userRole = userData?['role'] ?? 'user';
+
         // Hiển thị SnackBar
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -50,10 +58,33 @@ class _LoginScreenState extends State<LoginScreen> {
         // Chờ một chút để người dùng thấy thông báo
         await Future.delayed(const Duration(milliseconds: 500));
 
-        // Điều hướng đến Home Screen cho user
+        // Điều hướng dựa trên role
+        Widget targetScreen;
+        switch (userRole) {
+          case 'agency':
+            // Agency sẽ được chuyển hướng đến Agency Dashboard
+            targetScreen = const AgencyDashboard();
+            break;
+          case 'admin':
+            // Admin sẽ được chuyển hướng đến admin dashboard (có thể implement sau)
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Admin nên sử dụng admin dashboard'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          case 'user':
+          default:
+            // User thường sẽ được chuyển hướng đến home screen
+            targetScreen = const AgencyDashboard();
+            break;
+        }
+
+        // Chuyển hướng đến màn hình phù hợp
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => targetScreen),
         );
       } else {
         // Đăng nhập thất bại

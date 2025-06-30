@@ -21,7 +21,7 @@ if (!$user_id) {
     exit();
 }
 
-$sql = "SELECT ci.id AS cart_item_id, ci.product_id, p.name as product_name, p.main_image as product_image, ci.variant_id, pv.price, pv.stock, pv.image_url as variant_image, ci.quantity, (pv.price * ci.quantity) AS total_price
+$sql = "SELECT ci.id AS cart_item_id, ci.product_id, p.name as product_name, p.main_image as product_image, ci.variant_id, pv.price, pv.stock, pv.image_url as variant_image, ci.quantity, p.is_agency_product, p.platform_fee_rate
         FROM cart_items ci
         JOIN products p ON ci.product_id = p.id
         JOIN product_variant pv ON ci.product_id = pv.product_id AND ci.variant_id = pv.variant_id
@@ -32,6 +32,20 @@ $stmt->execute();
 $result = $stmt->get_result();
 $cart = [];
 while ($row = $result->fetch_assoc()) {
+    // Tính toán giá cuối cùng với phí sàn cho sản phẩm agency
+    $base_price = (float)$row['price'];
+    $is_agency_product = (bool)$row['is_agency_product'];
+    $platform_fee_rate = (float)$row['platform_fee_rate'];
+    
+    $final_price = $base_price;
+    $platform_fee = 0;
+    if ($is_agency_product) {
+        $platform_fee = $base_price * ($platform_fee_rate / 100);
+        $final_price = $base_price + $platform_fee;
+    }
+    
+    $total_price = $final_price * (int)$row['quantity'];
+    
     // Lấy thuộc tính của variant, trả về dạng object
     $attr_sql = "SELECT a.name as attribute_name, av.value
                  FROM variant_attribute_values vav
@@ -56,9 +70,13 @@ while ($row = $result->fetch_assoc()) {
         'attributes' => $attributes,
         'variant_image' => $row['variant_image'],
         'image_url' => !empty($row['variant_image']) ? $row['variant_image'] : $row['product_image'],
-        'price' => (float)$row['price'],
+        'price' => $final_price,
+        'base_price' => $base_price,
+        'platform_fee' => $platform_fee,
+        'is_agency_product' => $is_agency_product,
+        'platform_fee_rate' => $platform_fee_rate,
         'quantity' => (int)$row['quantity'],
-        'total_price' => (float)$row['total_price'],
+        'total_price' => $total_price,
         'stock' => (int)$row['stock']
     ];
 }

@@ -29,17 +29,19 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `attributes` (
   `id` int(11) NOT NULL,
-  `name` varchar(50) NOT NULL
+  `name` varchar(50) NOT NULL,
+  `created_by` int(11) DEFAULT NULL COMMENT 'user_id who created this attribute',
+  `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `attributes`
 --
 
-INSERT INTO `attributes` (`id`, `name`) VALUES
-(3, 'brand'),
-(1, 'color'),
-(2, 'size');
+INSERT INTO `attributes` (`id`, `name`, `created_by`, `created_at`) VALUES
+(3, 'brand', 6, '2025-06-27 10:35:00'),
+(1, 'color', 6, '2025-06-27 10:35:00'),
+(2, 'size', 6, '2025-06-27 10:35:00');
 
 -- --------------------------------------------------------
 
@@ -50,21 +52,22 @@ INSERT INTO `attributes` (`id`, `name`) VALUES
 CREATE TABLE `attribute_values` (
   `id` int(11) NOT NULL,
   `attribute_id` int(11) NOT NULL,
-  `value` varchar(50) NOT NULL
+  `value` varchar(50) NOT NULL,
+  `created_by` int(11) DEFAULT NULL COMMENT 'user_id who created this attribute value'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `attribute_values`
 --
 
-INSERT INTO `attribute_values` (`id`, `attribute_id`, `value`) VALUES
-(12, 2, 'X'),
-(13, 2, 'XL'),
-(14, 3, 'Nike'),
-(15, 3, 'Adidas'),
-(16, 1, 'black'),
-(17, 1, 'while'),
-(18, 1, 'yellow');
+INSERT INTO `attribute_values` (`id`, `attribute_id`, `value`, `created_by`) VALUES
+(12, 2, 'X', 6),
+(13, 2, 'XL', 6),
+(14, 3, 'Nike', 6),
+(15, 3, 'Adidas', 6),
+(16, 1, 'black', 6),
+(17, 1, 'while', 6),
+(18, 1, 'yellow', 6);
 
 -- --------------------------------------------------------
 
@@ -92,7 +95,7 @@ CREATE TABLE `notifications` (
   `user_id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `content` text DEFAULT NULL,
-  `type` enum('order_status','sale','voucher','other') DEFAULT 'other',
+  `type` enum('order_status','sale','voucher','other','product_approval') DEFAULT 'other',
   `is_read` tinyint(1) DEFAULT 0,
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -162,6 +165,7 @@ CREATE TABLE `orders` (
   `address_id` int(11) NOT NULL,
   `order_date` datetime DEFAULT current_timestamp(),
   `total_amount` decimal(15,2) NOT NULL,
+  `platform_fee` decimal(15,2) DEFAULT 0.00 COMMENT 'Platform fee for agency products',
   `status` enum('pending','confirmed','shipping','delivered','cancelled') DEFAULT 'pending',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -171,41 +175,41 @@ CREATE TABLE `orders` (
 -- Đang đổ dữ liệu cho bảng `orders`
 --
 
-INSERT INTO `orders` (`id`, `user_id`, `address_id`, `order_date`, `total_amount`, `status`, `created_at`, `updated_at`) VALUES
-(3, 4, 3, '2025-06-27 12:07:25', 1302.00, 'confirmed', '2025-06-27 12:07:25', '2025-06-28 08:39:21'),
-(21, 4, 3, '2025-06-28 07:12:20', 560000.00, 'confirmed', '2025-06-28 07:12:20', '2025-06-28 12:52:23'),
-(22, 4, 3, '2025-06-28 12:48:14', 500000.00, 'pending', '2025-06-28 12:48:14', '2025-06-28 13:00:07'),
-(41, 4, 3, '2025-06-29 12:49:40', 210000.00, 'pending', '2025-06-29 12:49:40', '2025-06-29 12:49:40'),
-(42, 4, 3, '2025-06-29 12:49:41', 210000.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
-(43, 4, 3, '2025-06-29 12:49:41', 210000.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
-(44, 4, 3, '2025-06-29 12:49:41', 210000.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
-(45, 4, 3, '2025-06-29 12:49:41', 210000.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
-(46, 4, 3, '2025-06-29 12:57:59', 210000.00, 'pending', '2025-06-29 12:57:59', '2025-06-29 12:57:59'),
-(47, 4, 3, '2025-06-29 12:58:04', 210000.00, 'pending', '2025-06-29 12:58:04', '2025-06-29 12:58:04'),
-(48, 4, 3, '2025-06-29 13:03:17', 210000.00, 'pending', '2025-06-29 13:03:17', '2025-06-29 13:03:17'),
-(49, 4, 3, '2025-06-29 13:03:41', 200000.00, 'pending', '2025-06-29 13:03:41', '2025-06-29 13:03:41'),
-(50, 4, 3, '2025-06-29 13:03:52', 200000.00, 'pending', '2025-06-29 13:03:52', '2025-06-29 13:03:52'),
-(51, 4, 3, '2025-06-29 13:11:25', 190000.00, 'pending', '2025-06-29 13:11:25', '2025-06-29 13:11:25'),
-(52, 4, 3, '2025-06-29 13:21:04', 200000.00, 'pending', '2025-06-29 13:21:04', '2025-06-29 13:21:04'),
-(53, 4, 3, '2025-06-29 13:29:21', 440000.00, 'pending', '2025-06-29 13:29:21', '2025-06-29 13:29:21'),
-(54, 4, 3, '2025-06-29 13:36:56', 320000.00, 'pending', '2025-06-29 13:36:56', '2025-06-29 13:36:56'),
-(55, 4, 3, '2025-06-29 13:48:57', 10000.00, 'pending', '2025-06-29 13:48:57', '2025-06-29 13:48:57'),
-(56, 4, 3, '2025-06-29 13:49:08', 10000.00, 'pending', '2025-06-29 13:49:08', '2025-06-29 13:49:08'),
-(57, 4, 3, '2025-06-29 13:49:23', 10000.00, 'pending', '2025-06-29 13:49:23', '2025-06-29 13:49:23'),
-(58, 4, 3, '2025-06-29 13:50:20', 200000.00, 'pending', '2025-06-29 13:50:20', '2025-06-29 13:50:20'),
-(59, 4, 3, '2025-06-29 13:50:25', 10000.00, 'pending', '2025-06-29 13:50:25', '2025-06-29 13:50:25'),
-(60, 4, 3, '2025-06-29 13:54:15', 10000.00, 'confirmed', '2025-06-29 13:54:15', '2025-06-29 13:54:53'),
-(61, 4, 3, '2025-06-29 14:00:54', 200000.00, 'confirmed', '2025-06-29 14:00:54', '2025-06-29 14:01:24'),
-(62, 4, 3, '2025-06-29 14:09:15', 200000.00, 'confirmed', '2025-06-29 14:09:15', '2025-06-29 14:10:54'),
-(63, 4, 3, '2025-06-29 14:15:40', 200000.00, 'confirmed', '2025-06-29 14:15:40', '2025-06-29 14:16:09'),
-(64, 4, 3, '2025-06-29 14:19:09', 320000.00, 'confirmed', '2025-06-29 14:19:09', '2025-06-29 14:19:37'),
-(65, 4, 3, '2025-06-29 14:20:39', 320000.00, 'confirmed', '2025-06-29 14:20:39', '2025-06-29 14:24:11'),
-(66, 4, 3, '2025-06-29 14:29:53', 320000.00, 'pending', '2025-06-29 14:29:53', '2025-06-29 14:29:53'),
-(67, 4, 3, '2025-06-29 14:43:43', 200000.00, 'confirmed', '2025-06-29 14:43:43', '2025-06-29 14:45:47'),
-(68, 4, 3, '2025-06-29 14:53:24', 200000.00, 'pending', '2025-06-29 14:53:24', '2025-06-29 14:53:24'),
-(69, 4, 3, '2025-06-29 14:53:35', 200000.00, 'confirmed', '2025-06-29 14:53:35', '2025-06-29 14:54:06'),
-(70, 4, 3, '2025-06-29 14:57:33', 200000.00, 'confirmed', '2025-06-29 14:57:33', '2025-06-29 14:57:57'),
-(71, 4, 3, '2025-06-29 15:00:05', 200000.00, 'confirmed', '2025-06-29 15:00:05', '2025-06-29 15:00:50');
+INSERT INTO `orders` (`id`, `user_id`, `address_id`, `order_date`, `total_amount`, `platform_fee`, `status`, `created_at`, `updated_at`) VALUES
+(3, 4, 3, '2025-06-27 12:07:25', 1302.00, 0.00, 'confirmed', '2025-06-27 12:07:25', '2025-06-28 08:39:21'),
+(21, 4, 3, '2025-06-28 07:12:20', 560000.00, 0.00, 'confirmed', '2025-06-28 07:12:20', '2025-06-28 12:52:23'),
+(22, 4, 3, '2025-06-28 12:48:14', 500000.00, 0.00, 'pending', '2025-06-28 12:48:14', '2025-06-28 13:00:07'),
+(41, 4, 3, '2025-06-29 12:49:40', 210000.00, 0.00, 'pending', '2025-06-29 12:49:40', '2025-06-29 12:49:40'),
+(42, 4, 3, '2025-06-29 12:49:41', 210000.00, 0.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
+(43, 4, 3, '2025-06-29 12:49:41', 210000.00, 0.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
+(44, 4, 3, '2025-06-29 12:49:41', 210000.00, 0.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
+(45, 4, 3, '2025-06-29 12:49:41', 210000.00, 0.00, 'pending', '2025-06-29 12:49:41', '2025-06-29 12:49:41'),
+(46, 4, 3, '2025-06-29 12:57:59', 210000.00, 0.00, 'pending', '2025-06-29 12:57:59', '2025-06-29 12:57:59'),
+(47, 4, 3, '2025-06-29 12:58:04', 210000.00, 0.00, 'pending', '2025-06-29 12:58:04', '2025-06-29 12:58:04'),
+(48, 4, 3, '2025-06-29 13:03:17', 210000.00, 0.00, 'pending', '2025-06-29 13:03:17', '2025-06-29 13:03:17'),
+(49, 4, 3, '2025-06-29 13:03:41', 200000.00, 0.00, 'pending', '2025-06-29 13:03:41', '2025-06-29 13:03:41'),
+(50, 4, 3, '2025-06-29 13:03:52', 200000.00, 0.00, 'pending', '2025-06-29 13:03:52', '2025-06-29 13:03:52'),
+(51, 4, 3, '2025-06-29 13:11:25', 190000.00, 0.00, 'pending', '2025-06-29 13:11:25', '2025-06-29 13:11:25'),
+(52, 4, 3, '2025-06-29 13:21:04', 200000.00, 0.00, 'pending', '2025-06-29 13:21:04', '2025-06-29 13:21:04'),
+(53, 4, 3, '2025-06-29 13:29:21', 440000.00, 0.00, 'pending', '2025-06-29 13:29:21', '2025-06-29 13:29:21'),
+(54, 4, 3, '2025-06-29 13:36:56', 320000.00, 0.00, 'pending', '2025-06-29 13:36:56', '2025-06-29 13:36:56'),
+(55, 4, 3, '2025-06-29 13:48:57', 10000.00, 0.00, 'pending', '2025-06-29 13:48:57', '2025-06-29 13:48:57'),
+(56, 4, 3, '2025-06-29 13:49:08', 10000.00, 0.00, 'pending', '2025-06-29 13:49:08', '2025-06-29 13:49:08'),
+(57, 4, 3, '2025-06-29 13:49:23', 10000.00, 0.00, 'pending', '2025-06-29 13:49:23', '2025-06-29 13:49:23'),
+(58, 4, 3, '2025-06-29 13:50:20', 200000.00, 0.00, 'pending', '2025-06-29 13:50:20', '2025-06-29 13:50:20'),
+(59, 4, 3, '2025-06-29 13:50:25', 10000.00, 0.00, 'pending', '2025-06-29 13:50:25', '2025-06-29 13:50:25'),
+(60, 4, 3, '2025-06-29 13:54:15', 10000.00, 0.00, 'confirmed', '2025-06-29 13:54:15', '2025-06-29 13:54:53'),
+(61, 4, 3, '2025-06-29 14:00:54', 200000.00, 0.00, 'confirmed', '2025-06-29 14:00:54', '2025-06-29 14:01:24'),
+(62, 4, 3, '2025-06-29 14:09:15', 200000.00, 0.00, 'confirmed', '2025-06-29 14:09:15', '2025-06-29 14:10:54'),
+(63, 4, 3, '2025-06-29 14:15:40', 200000.00, 0.00, 'confirmed', '2025-06-29 14:15:40', '2025-06-29 14:16:09'),
+(64, 4, 3, '2025-06-29 14:19:09', 320000.00, 0.00, 'confirmed', '2025-06-29 14:19:09', '2025-06-29 14:19:37'),
+(65, 4, 3, '2025-06-29 14:20:39', 320000.00, 0.00, 'confirmed', '2025-06-29 14:20:39', '2025-06-29 14:24:11'),
+(66, 4, 3, '2025-06-29 14:29:53', 320000.00, 0.00, 'pending', '2025-06-29 14:29:53', '2025-06-29 14:29:53'),
+(67, 4, 3, '2025-06-29 14:43:43', 200000.00, 0.00, 'confirmed', '2025-06-29 14:43:43', '2025-06-29 14:45:47'),
+(68, 4, 3, '2025-06-29 14:53:24', 200000.00, 0.00, 'pending', '2025-06-29 14:53:24', '2025-06-29 14:53:24'),
+(69, 4, 3, '2025-06-29 14:53:35', 200000.00, 0.00, 'confirmed', '2025-06-29 14:53:35', '2025-06-29 14:54:06'),
+(70, 4, 3, '2025-06-29 14:57:33', 200000.00, 0.00, 'confirmed', '2025-06-29 14:57:33', '2025-06-29 14:57:57'),
+(71, 4, 3, '2025-06-29 15:00:05', 200000.00, 0.00, 'confirmed', '2025-06-29 15:00:05', '2025-06-29 15:00:50');
 
 -- --------------------------------------------------------
 
@@ -219,57 +223,58 @@ CREATE TABLE `order_items` (
   `product_id` int(11) NOT NULL,
   `variant_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
-  `price` decimal(15,2) NOT NULL
+  `price` decimal(15,2) NOT NULL,
+  `platform_fee` decimal(15,2) DEFAULT 0.00 COMMENT 'Platform fee for this item'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `order_items`
 --
 
-INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `variant_id`, `quantity`, `price`) VALUES
-(4, 3, 3, 4, 3, 434.00),
-(24, 21, 3, 4, 1, 500000.00),
-(25, 21, 4, 6, 1, 60000.00),
-(26, 22, 3, 4, 1, 500000.00),
-(45, 41, 3, 4, 1, 10000.00),
-(46, 41, 4, 6, 1, 200000.00),
-(47, 42, 3, 4, 1, 10000.00),
-(48, 42, 4, 6, 1, 200000.00),
-(49, 43, 3, 4, 1, 10000.00),
-(50, 43, 4, 6, 1, 200000.00),
-(51, 44, 3, 4, 1, 10000.00),
-(52, 44, 4, 6, 1, 200000.00),
-(53, 45, 3, 4, 1, 10000.00),
-(54, 45, 4, 6, 1, 200000.00),
-(55, 46, 3, 4, 1, 10000.00),
-(56, 46, 4, 6, 1, 200000.00),
-(57, 47, 3, 4, 1, 10000.00),
-(58, 47, 4, 6, 1, 200000.00),
-(59, 48, 3, 4, 1, 10000.00),
-(60, 48, 4, 6, 1, 200000.00),
-(61, 49, 4, 6, 1, 200000.00),
-(62, 50, 4, 6, 1, 200000.00),
-(63, 51, 4, 7, 1, 190000.00),
-(64, 52, 4, 6, 1, 200000.00),
-(65, 53, 3, 5, 4, 110000.00),
-(66, 54, 6, 7, 1, 320000.00),
-(67, 55, 3, 4, 1, 10000.00),
-(68, 56, 3, 4, 1, 10000.00),
-(69, 57, 3, 4, 1, 10000.00),
-(70, 58, 4, 6, 1, 200000.00),
-(71, 59, 3, 4, 1, 10000.00),
-(72, 60, 3, 4, 1, 10000.00),
-(73, 61, 4, 6, 1, 200000.00),
-(74, 62, 4, 6, 1, 200000.00),
-(75, 63, 4, 6, 1, 200000.00),
-(76, 64, 6, 7, 1, 320000.00),
-(77, 65, 6, 7, 1, 320000.00),
-(78, 66, 6, 7, 1, 320000.00),
-(79, 67, 4, 6, 1, 200000.00),
-(80, 68, 4, 6, 1, 200000.00),
-(81, 69, 4, 6, 1, 200000.00),
-(82, 70, 4, 6, 1, 200000.00),
-(83, 71, 4, 6, 1, 200000.00);
+INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `variant_id`, `quantity`, `price`, `platform_fee`) VALUES
+(4, 3, 3, 4, 3, 434.00, 0.00),
+(24, 21, 3, 4, 1, 500000.00, 0.00),
+(25, 21, 4, 6, 1, 60000.00, 0.00),
+(26, 22, 3, 4, 1, 500000.00, 0.00),
+(45, 41, 3, 4, 1, 10000.00, 0.00),
+(46, 41, 4, 6, 1, 200000.00, 0.00),
+(47, 42, 3, 4, 1, 10000.00, 0.00),
+(48, 42, 4, 6, 1, 200000.00, 0.00),
+(49, 43, 3, 4, 1, 10000.00, 0.00),
+(50, 43, 4, 6, 1, 200000.00, 0.00),
+(51, 44, 3, 4, 1, 10000.00, 0.00),
+(52, 44, 4, 6, 1, 200000.00, 0.00),
+(53, 45, 3, 4, 1, 10000.00, 0.00),
+(54, 45, 4, 6, 1, 200000.00, 0.00),
+(55, 46, 3, 4, 1, 10000.00, 0.00),
+(56, 46, 4, 6, 1, 200000.00, 0.00),
+(57, 47, 3, 4, 1, 10000.00, 0.00),
+(58, 47, 4, 6, 1, 200000.00, 0.00),
+(59, 48, 3, 4, 1, 10000.00, 0.00),
+(60, 48, 4, 6, 1, 200000.00, 0.00),
+(61, 49, 4, 6, 1, 200000.00, 0.00),
+(62, 50, 4, 6, 1, 200000.00, 0.00),
+(63, 51, 4, 7, 1, 190000.00, 0.00),
+(64, 52, 4, 6, 1, 200000.00, 0.00),
+(65, 53, 3, 5, 4, 110000.00, 0.00),
+(66, 54, 6, 7, 1, 320000.00, 0.00),
+(67, 55, 3, 4, 1, 10000.00, 0.00),
+(68, 56, 3, 4, 1, 10000.00, 0.00),
+(69, 57, 3, 4, 1, 10000.00, 0.00),
+(70, 58, 4, 6, 1, 200000.00, 0.00),
+(71, 59, 3, 4, 1, 10000.00, 0.00),
+(72, 60, 3, 4, 1, 10000.00, 0.00),
+(73, 61, 4, 6, 1, 200000.00, 0.00),
+(74, 62, 4, 6, 1, 200000.00, 0.00),
+(75, 63, 4, 6, 1, 200000.00, 0.00),
+(76, 64, 6, 7, 1, 320000.00, 0.00),
+(77, 65, 6, 7, 1, 320000.00, 0.00),
+(78, 66, 6, 7, 1, 320000.00, 0.00),
+(79, 67, 4, 6, 1, 200000.00, 0.00),
+(80, 68, 4, 6, 1, 200000.00, 0.00),
+(81, 69, 4, 6, 1, 200000.00, 0.00),
+(82, 70, 4, 6, 1, 200000.00, 0.00),
+(83, 71, 4, 6, 1, 200000.00, 0.00);
 
 -- --------------------------------------------------------
 
@@ -340,6 +345,10 @@ CREATE TABLE `products` (
   `category` varchar(100) NOT NULL,
   `gender_target` varchar(20) NOT NULL,
   `main_image` varchar(255) DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL COMMENT 'user_id who created this product',
+  `is_agency_product` tinyint(1) DEFAULT 0 COMMENT '1 if created by agency, 0 if by admin',
+  `status` enum('pending','approved','rejected','active','inactive') DEFAULT 'pending',
+  `platform_fee_rate` decimal(5,2) DEFAULT 20.00 COMMENT 'Platform fee rate in percentage',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -348,10 +357,26 @@ CREATE TABLE `products` (
 -- Đang đổ dữ liệu cho bảng `products`
 --
 
-INSERT INTO `products` (`id`, `name`, `description`, `category`, `gender_target`, `main_image`, `created_at`, `updated_at`) VALUES
-(3, 'Áo thun', 'Thoáng mát , thoải mái', 'T-Shirts', 'unisex', '685fc2a4bf938_1751106212.jpg', '2025-06-27 10:35:00', '2025-06-28 17:23:32'),
-(4, 'Áo đi biển', 'SIêu đẹp , năng động', 'T-Shirts', 'unisex', '685fc2bef398e_1751106238.jpg', '2025-06-28 07:08:07', '2025-06-28 17:23:59'),
-(6, 'Áo khoác', 'Ấm áp , thời trang', 'T-Shirts', 'unisex', '685fc2de852d4_1751106270.jpg', '2025-06-28 17:24:30', '2025-06-28 17:24:50');
+INSERT INTO `products` (`id`, `name`, `description`, `category`, `gender_target`, `main_image`, `created_by`, `is_agency_product`, `status`, `platform_fee_rate`, `created_at`, `updated_at`) VALUES
+(3, 'Áo thun', 'Thoáng mát , thoải mái', 'T-Shirts', 'unisex', '685fc2a4bf938_1751106212.jpg', 6, 0, 'active', 20.00, '2025-06-27 10:35:00', '2025-06-28 17:23:32'),
+(4, 'Áo đi biển', 'SIêu đẹp , năng động', 'T-Shirts', 'unisex', '685fc2bef398e_1751106238.jpg', 6, 0, 'active', 20.00, '2025-06-28 07:08:07', '2025-06-28 17:23:59'),
+(6, 'Áo khoác', 'Ấm áp , thời trang', 'T-Shirts', 'unisex', '685fc2de852d4_1751106270.jpg', 6, 0, 'active', 20.00, '2025-06-28 17:24:30', '2025-06-28 17:24:50');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `product_approvals`
+--
+
+CREATE TABLE `product_approvals` (
+  `id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `reviewed_by` int(11) DEFAULT NULL COMMENT 'admin user_id who reviewed',
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `review_notes` text DEFAULT NULL,
+  `reviewed_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -415,7 +440,7 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `gender` enum('male','female','other') DEFAULT NULL,
   `dob` date DEFAULT NULL,
-  `role` enum('user','admin') DEFAULT 'user',
+  `role` enum('user','admin','agency') DEFAULT 'user',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -427,6 +452,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `gender`, `dob`, `role`, `created_at`, `updated_at`) VALUES
 (4, 'user', 'user@gmail.com', '0967586754', '6ad14ba9986e3615423dfca256d04e3f', 'male', '2025-06-05', 'user', '2025-06-27 10:36:13', '2025-06-27 11:57:17'),
 (6, 'admin', 'admin@gmail.com', '09675867543', '0192023a7bbd73250516f069df18b500', 'male', NULL, 'admin', '2025-06-27 10:38:00', '2025-06-27 10:38:00');
+
 
 -- --------------------------------------------------------
 
@@ -528,14 +554,16 @@ INSERT INTO `variant_attribute_values` (`variant_id`, `attribute_value_id`) VALU
 --
 ALTER TABLE `attributes`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name` (`name`);
+  ADD UNIQUE KEY `name` (`name`),
+  ADD KEY `created_by` (`created_by`);
 
 --
 -- Chỉ mục cho bảng `attribute_values`
 --
 ALTER TABLE `attribute_values`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `attribute_id` (`attribute_id`);
+  ADD KEY `attribute_id` (`attribute_id`),
+  ADD KEY `created_by` (`created_by`);
 
 --
 -- Chỉ mục cho bảng `cart_items`
@@ -579,7 +607,16 @@ ALTER TABLE `payments`
 -- Chỉ mục cho bảng `products`
 --
 ALTER TABLE `products`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `created_by` (`created_by`);
+
+--
+-- Chỉ mục cho bảng `product_approvals`
+--
+ALTER TABLE `product_approvals`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `product_id` (`product_id`),
+  ADD KEY `reviewed_by` (`reviewed_by`);
 
 --
 -- Chỉ mục cho bảng `product_reviews`
@@ -680,6 +717,12 @@ ALTER TABLE `products`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
+-- AUTO_INCREMENT cho bảng `product_approvals`
+--
+ALTER TABLE `product_approvals`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT cho bảng `product_reviews`
 --
 ALTER TABLE `product_reviews`
@@ -708,10 +751,17 @@ ALTER TABLE `variants`
 --
 
 --
+-- Các ràng buộc cho bảng `attributes`
+--
+ALTER TABLE `attributes`
+  ADD CONSTRAINT `attributes_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
 -- Các ràng buộc cho bảng `attribute_values`
 --
 ALTER TABLE `attribute_values`
-  ADD CONSTRAINT `attribute_values_ibfk_1` FOREIGN KEY (`attribute_id`) REFERENCES `attributes` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `attribute_values_ibfk_1` FOREIGN KEY (`attribute_id`) REFERENCES `attributes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `attribute_values_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Các ràng buộc cho bảng `cart_items`
@@ -745,6 +795,19 @@ ALTER TABLE `order_items`
 --
 ALTER TABLE `payments`
   ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `products`
+--
+ALTER TABLE `products`
+  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Các ràng buộc cho bảng `product_approvals`
+--
+ALTER TABLE `product_approvals`
+  ADD CONSTRAINT `product_approvals_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `product_approvals_ibfk_2` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Các ràng buộc cho bảng `product_reviews`
