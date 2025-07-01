@@ -10,6 +10,7 @@ import '../payment/payment_dashboard_screen.dart'; // thêm dòng này
 import '../products/attribute_manager_screen.dart';
 import '../notifications/notification_management_screen.dart';
 import '../user/all_user_addresses_screen.dart';
+import '../product_review/product_review_screen.dart';
 
 import 'components/side_menu.dart';
 
@@ -44,8 +45,8 @@ class _MainScreenState extends State<MainScreen> {
         // case "Chi tiết đơn hàng":
         //   _selectedScreen = const Center(child: Text("Trang 'Chi tiết đơn hàng' đang cập nhật"));
         //   break;
-        case "Đánh giá":
-          _selectedScreen = const Center(child: Text("Trang 'Đánh giá' đang cập nhật"));
+        case "Kiểm duyệt sản phẩm":
+          _selectedScreen = const ProductReviewScreen();
           break;
         case "Thanh toán":
           _selectedScreen = const PaymentDashboardScreen();

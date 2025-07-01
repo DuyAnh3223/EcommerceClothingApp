@@ -55,16 +55,34 @@ while ($row = $result->fetch_assoc()) {
         'sku' => $row['sku'],
         'price' => (float)$row['price'],
         'stock' => (int)$row['stock'],
-        'image_url' => $row['image_url'],
+        'image_url' => $row['image_url'] ?? '',
         'status' => $row['status'],
         'attribute_values' => $attribute_values
     ];
 }
 $stmt->close();
+
+// Lấy thông tin sản phẩm
+$product_sql = "SELECT id, name, description, category, gender_target, main_image, status 
+                FROM products WHERE id = ?";
+$product_stmt = $conn->prepare($product_sql);
+$product_stmt->bind_param("i", $product_id);
+$product_stmt->execute();
+$product_result = $product_stmt->get_result();
+$product = $product_result->fetch_assoc();
+$product_stmt->close();
+
+// Fix null values in product data
+if ($product) {
+    $product['main_image'] = $product['main_image'] ?? '';
+    $product['status'] = $product['status'] ?? '';
+}
+
 http_response_code(200);
 echo json_encode([
     "success" => true,
     "variants" => $variants,
+    "product" => $product,
     "total_variants" => count($variants)
 ]);
 $conn->close(); 

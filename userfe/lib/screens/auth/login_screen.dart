@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:userfe/screens/home/home_screen.dart';
 import 'package:userfe/screens/agency/agency_dashboard.dart';
 import 'package:userfe/screens/agency/agency_product_screen.dart';
-import 'package:userfe/screens/agency/agency_attribute_manager_screen.dart';
-import 'package:userfe/screens/agency/agency_variant_screen.dart';
 import 'package:userfe/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -76,8 +74,9 @@ class _LoginScreenState extends State<LoginScreen> {
             return;
           case 'user':
           default:
-            // User thường sẽ được chuyển hướng đến home screen
-            targetScreen = const AgencyDashboard();
+            // User thường sẽ được chuyển hướng đến home screen 
+            targetScreen = const HomeScreen();//HomeScreen(); //r
+
             break;
         }
 

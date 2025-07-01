@@ -35,7 +35,7 @@ if (
 
     // Validate gender and role
     $allowed_genders = ['male', 'female'];
-    $allowed_roles = ['user', 'admin'];
+    $allowed_roles = ['user', 'admin', 'agency'];
     if (!in_array($gender, $allowed_genders) || !in_array($role, $allowed_roles)) {
         echo json_encode([
             "success" => false,

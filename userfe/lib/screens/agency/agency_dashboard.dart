@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/agency_product_model.dart';
 import '../../services/agency_service.dart';
-import 'add_product_screen.dart';
-import 'product_list_screen.dart';
 import 'agency_product_screen.dart';
 import 'agency_attribute_manager_screen.dart';
-import 'agency_variant_screen.dart';
 
 class AgencyDashboard extends StatefulWidget {
   const AgencyDashboard({Key? key}) : super(key: key);
@@ -23,13 +20,11 @@ class _AgencyDashboardState extends State<AgencyDashboard> {
   final List<Widget> _screens = [
     const AgencyProductScreen(),
     const AgencyAttributeManagerScreen(),
-    const AgencyVariantScreen(),
   ];
 
   final List<String> _titles = [
     'Quản lý sản phẩm',
     'Quản lý thuộc tính',
-    'Quản lý biến thể',
   ];
 
   @override
@@ -101,10 +96,6 @@ class _AgencyDashboardState extends State<AgencyDashboard> {
           BottomNavigationBarItem(
             icon: Icon(Icons.category),
             label: 'Thuộc tính',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Biến thể',
           ),
         ],
       ),

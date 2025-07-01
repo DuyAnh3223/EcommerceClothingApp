@@ -3,56 +3,60 @@ import 'package:http/http.dart' as http;
 import '../models/agency_product_model.dart';
 
 class AgencyService {
-  static const String baseUrl = 'http://127.0.0.1/EcommerceClothingApp/API'; //
-  
-  // Get agency products
-  static Future<Map<String, dynamic>> getProducts({
-    String status = 'all',
-    int page = 1,
-    int limit = 10,
-    String? token,
-  }) async {
+  static const String baseUrl = 'http://127.0.0.1/EcommerceClothingApp/API/agency';
+
+  // Helper method to get headers with token
+  static Map<String, String> _getHeaders() {
+    // In a real app, you would get the token from secure storage
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer your_token_here', // Replace with actual token
+    };
+  }
+
+  // Lấy danh sách sản phẩm của agency
+  static Future<Map<String, dynamic>> getProducts({String? status}) async {
     try {
-      final url = '$baseUrl/agency/get_products.php?status=$status&page=$page&limit=$limit';
-      print('DEBUG: Calling API: $url');
-      
+      String url = '$baseUrl/products/get_products.php';
+      if (status != null && status != 'all') {
+        url += '?status=$status';
+      }
+
       final response = await http.get(
         Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
+        headers: _getHeaders(),
       );
-
-      print('DEBUG: Response status: ${response.statusCode}');
-      print('DEBUG: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['success']) {
-          final products = (data['data']['products'] as List)
-              .map((json) => AgencyProduct.fromJson(json))
+        
+        if (data['success'] == true) {
+          final productsData = data['data']['products'] as List;
+          
+          final products = productsData
+              .map((product) => AgencyProduct.fromJson(product))
               .toList();
           
           return {
             'success': true,
             'products': products,
-            'pagination': data['data']['pagination'],
+            'total': data['data']['total'],
+            'page': data['data']['page'],
+            'limit': data['data']['limit'],
           };
         } else {
           return {
             'success': false,
-            'message': data['message'],
+            'message': data['message'] ?? 'Unknown error',
           };
         }
       } else {
         return {
           'success': false,
-          'message': 'HTTP ${response.statusCode}: ${response.body}',
+          'message': 'HTTP Error: ${response.statusCode}',
         };
       }
     } catch (e) {
-      print('DEBUG: Exception caught: $e');
       return {
         'success': false,
         'message': 'Network error: $e',
@@ -60,131 +64,38 @@ class AgencyService {
     }
   }
 
-  // Add new product
+  // Thêm sản phẩm mới
   static Future<Map<String, dynamic>> addProduct({
     required String name,
     required String description,
     required String category,
     required String genderTarget,
     String? mainImage,
-    required List<Map<String, dynamic>> variants,
-    String? token,
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/agency/add_product.php'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
+        Uri.parse('$baseUrl/products/add_product.php'),
+        headers: _getHeaders(),
         body: json.encode({
           'name': name,
           'description': description,
           'category': category,
           'gender_target': genderTarget,
           'main_image': mainImage,
-          'variants': variants,
         }),
       );
 
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
         return {
-          'success': true,
-          'message': data['message'],
-          'product_id': data['data']['product_id'],
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
         };
-      } else {
-        final data = json.decode(response.body);
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Failed to add product',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Error: $e',
-      };
-    }
-  }
-
-  // Get attributes
-  static Future<Map<String, dynamic>> getAttributes({
-    String? token,
-  }) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/agency/get_attributes.php'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success']) {
-          final attributes = (data['data']['attributes'] as List)
-              .map((json) => Attribute.fromJson(json))
-              .toList();
-          
-          return {
-            'success': true,
-            'attributes': attributes,
-          };
-        } else {
-          return {
-            'success': false,
-            'message': data['message'],
-          };
-        }
       } else {
         return {
           'success': false,
-          'message': 'Failed to load attributes',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Error: $e',
-      };
-    }
-  }
-
-  // Get attribute values
-  static Future<Map<String, dynamic>> getAttributeValues({
-    required int attributeId,
-    String? token,
-  }) async {
-    try {
-      final url = '$baseUrl/agency/get_attribute_values.php?attribute_id=$attributeId';
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['success']) {
-          return {
-            'success': true,
-            'values': data['data']['values'],
-          };
-        } else {
-          return {
-            'success': false,
-            'message': data['message'],
-          };
-        }
-      } else {
-        return {
-          'success': false,
-          'message': 'HTTP ${response.statusCode}: ${response.body}',
+          'message': 'HTTP Error: ${response.statusCode}',
         };
       }
     } catch (e) {
@@ -195,115 +106,40 @@ class AgencyService {
     }
   }
 
-  // Delete attribute
-  static Future<Map<String, dynamic>> deleteAttribute({
-    required int attributeId,
-    String? token,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/agency/delete_attribute.php'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: json.encode({
-          'attribute_id': attributeId,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return {
-          'success': true,
-          'message': data['message'],
-        };
-      } else {
-        final data = json.decode(response.body);
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Failed to delete attribute',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Error: $e',
-      };
-    }
-  }
-
-  // Delete attribute value
-  static Future<Map<String, dynamic>> deleteAttributeValue({
-    required int valueId,
-    String? token,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/agency/delete_attribute_value.php'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: json.encode({
-          'value_id': valueId,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return {
-          'success': true,
-          'message': data['message'],
-        };
-      } else {
-        final data = json.decode(response.body);
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Failed to delete attribute value',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Error: $e',
-      };
-    }
-  }
-
-  // Get product variants
-  static Future<Map<String, dynamic>> getProductVariants({
+  // Cập nhật sản phẩm
+  static Future<Map<String, dynamic>> updateProduct({
     required int productId,
-    String? token,
+    String? name,
+    String? description,
+    String? category,
+    String? genderTarget,
+    String? mainImage,
   }) async {
     try {
-      final url = '$baseUrl/agency/get_product_variants.php?product_id=$productId';
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
+      final body = <String, dynamic>{'product_id': productId};
+      if (name != null) body['name'] = name;
+      if (description != null) body['description'] = description;
+      if (category != null) body['category'] = category;
+      if (genderTarget != null) body['gender_target'] = genderTarget;
+      if (mainImage != null) body['main_image'] = mainImage;
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/products/update_product.php'),
+        headers: _getHeaders(),
+        body: json.encode(body),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['success']) {
-          return {
-            'success': true,
-            'variants': data['data']['variants'],
-            'product': data['data']['product'],
-          };
-        } else {
-          return {
-            'success': false,
-            'message': data['message'],
-          };
-        }
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
+        };
       } else {
         return {
           'success': false,
-          'message': 'HTTP ${response.statusCode}: ${response.body}',
+          'message': 'HTTP Error: ${response.statusCode}',
         };
       }
     } catch (e) {
@@ -314,37 +150,26 @@ class AgencyService {
     }
   }
 
-  // Get all variants
-  static Future<Map<String, dynamic>> getAllVariants({
-    String? token,
-  }) async {
+  // Xóa sản phẩm
+  static Future<Map<String, dynamic>> deleteProduct(int productId) async {
     try {
-      final url = '$baseUrl/agency/get_all_variants.php';
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
+      final response = await http.delete(
+        Uri.parse('$baseUrl/products/delete_product.php'),
+        headers: _getHeaders(),
+        body: json.encode({'product_id': productId}),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['success']) {
-          return {
-            'success': true,
-            'variants': data['data']['variants'],
-          };
-        } else {
-          return {
-            'success': false,
-            'message': data['message'],
-          };
-        }
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
+        };
       } else {
         return {
           'success': false,
-          'message': 'HTTP ${response.statusCode}: ${response.body}',
+          'message': 'HTTP Error: ${response.statusCode}',
         };
       }
     } catch (e) {
@@ -355,241 +180,409 @@ class AgencyService {
     }
   }
 
-  // Delete variant
-  static Future<Map<String, dynamic>> deleteVariant({
-    required int variantId,
-    String? token,
-  }) async {
+  // Lấy danh sách thuộc tính
+  static Future<Map<String, dynamic>> getAttributes() async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/agency/delete_variant.php'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: json.encode({
-          'variant_id': variantId,
-        }),
+      final response = await http.get(
+        Uri.parse('$baseUrl/variants_attributes/get_attributes.php'),
+        headers: _getHeaders(),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return {
-          'success': true,
-          'message': data['message'],
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
         };
       } else {
-        final data = json.decode(response.body);
         return {
           'success': false,
-          'message': data['message'] ?? 'Failed to delete variant',
+          'message': 'HTTP Error: ${response.statusCode}',
         };
       }
     } catch (e) {
       return {
         'success': false,
-        'message': 'Error: $e',
+        'message': 'Network error: $e',
       };
     }
   }
 
-  // Delete product
-  static Future<Map<String, dynamic>> deleteProduct({
-    required int productId,
-    String? token,
-  }) async {
+  // Thêm thuộc tính mới
+  static Future<Map<String, dynamic>> addAttribute(String name) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/agency/delete_product.php'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: json.encode({
-          'product_id': productId,
-        }),
+        Uri.parse('$baseUrl/variants_attributes/add_attribute.php'),
+        headers: _getHeaders(),
+        body: json.encode({'name': name}),
       );
-      if (response.statusCode == 200) {
+
+      if (response.statusCode == 201) {
         final data = json.decode(response.body);
         return {
-          'success': true,
-          'message': data['message'],
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
         };
       } else {
-        final data = json.decode(response.body);
         return {
           'success': false,
-          'message': data['message'] ?? 'Failed to delete product',
+          'message': 'HTTP Error: ${response.statusCode}',
         };
       }
     } catch (e) {
       return {
         'success': false,
-        'message': 'Error: $e',
+        'message': 'Network error: $e',
       };
     }
   }
 
-  // Submit product for approval
-  static Future<Map<String, dynamic>> submitForApproval({
-    required int productId,
-    String? token,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/agency/submit_for_approval.php'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: json.encode({
-          'product_id': productId,
-        }),
-      );
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return {
-          'success': true,
-          'message': data['message'],
-        };
-      } else {
-        final data = json.decode(response.body);
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Failed to submit for approval',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Error: $e',
-      };
-    }
-  }
-
-  // Add attribute
-  static Future<Map<String, dynamic>> addAttribute({
-    required String name,
-    String? token,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/agency/add_attribute.php'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: json.encode({
-          'name': name,
-        }),
-      );
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return {
-          'success': true,
-          'message': data['message'],
-          'attribute_id': data['data']?['attribute_id'],
-        };
-      } else {
-        final data = json.decode(response.body);
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Failed to add attribute',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Error: $e',
-      };
-    }
-  }
-
-  // Add attribute value
+  // Thêm giá trị thuộc tính
   static Future<Map<String, dynamic>> addAttributeValue({
     required int attributeId,
     required String value,
-    String? token,
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/agency/add_attribute_value.php'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
+        Uri.parse('$baseUrl/variants_attributes/add_attribute_value.php'),
+        headers: _getHeaders(),
         body: json.encode({
           'attribute_id': attributeId,
           'value': value,
         }),
       );
-      if (response.statusCode == 201 || response.statusCode == 200) {
+
+      if (response.statusCode == 201) {
         final data = json.decode(response.body);
         return {
-          'success': true,
-          'message': data['message'],
-          'value_id': data['data']?['value_id'],
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
         };
       } else {
-        final data = json.decode(response.body);
         return {
           'success': false,
-          'message': data['message'] ?? 'Failed to add attribute value',
+          'message': 'HTTP Error: ${response.statusCode}',
         };
       }
     } catch (e) {
       return {
         'success': false,
-        'message': 'Error: $e',
+        'message': 'Network error: $e',
       };
     }
   }
 
-  // Update product
-  static Future<Map<String, dynamic>> updateProduct({
-    required int productId,
-    required String name,
-    required String description,
-    required String category,
-    required String genderTarget,
-    String? mainImage,
-    required List<Map<String, dynamic>> variants,
-    String? token,
-  }) async {
+  // Lấy danh sách biến thể
+  static Future<Map<String, dynamic>> getVariants({int? productId}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/agency/update_product.php'),
-        headers: {
-          'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: json.encode({
-          'product_id': productId,
-          'name': name,
-          'description': description,
-          'category': category,
-          'gender_target': genderTarget,
-          'main_image': mainImage,
-          'variants': variants,
-        }),
+      String url = '$baseUrl/variants_attributes/get_variants.php';
+      if (productId != null) {
+        url += '?product_id=$productId';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: _getHeaders(),
       );
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return {
-          'success': true,
-          'message': data['message'],
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'] ?? data, // Fallback to full response if no 'data' field
         };
       } else {
-        final data = json.decode(response.body);
         return {
           'success': false,
-          'message': data['message'] ?? 'Failed to update product',
+          'message': 'HTTP Error: ${response.statusCode}',
         };
       }
     } catch (e) {
       return {
         'success': false,
-        'message': 'Error: $e',
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Thêm variant mới
+  static Future<Map<String, dynamic>> addVariant({
+    required int productId,
+    required String sku,
+    required double price,
+    required int stock,
+    required List<int> attributeValueIds,
+    String? imageUrl,
+  }) async {
+    try {
+      final body = {
+        'product_id': productId,
+        'sku': sku,
+        'price': price,
+        'stock': stock,
+        'attribute_values': attributeValueIds,
+      };
+      
+      if (imageUrl != null) {
+        body['image_url'] = imageUrl;
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/variants_attributes/add_variant.php'),
+        headers: _getHeaders(),
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 201) {
+        final data = json.decode(response.body);
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'HTTP Error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Gửi sản phẩm để duyệt
+  static Future<Map<String, dynamic>> submitForApproval(int productId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/submit_for_approval.php'),
+        headers: _getHeaders(),
+        body: json.encode({'product_id': productId}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'HTTP Error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Lấy danh sách giá trị thuộc tính
+  static Future<Map<String, dynamic>> getAttributeValues(int attributeId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/variants_attributes/get_attribute_values.php?attribute_id=$attributeId'),
+        headers: _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'HTTP Error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Xóa thuộc tính
+  static Future<Map<String, dynamic>> deleteAttribute(int attributeId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/variants_attributes/delete_attribute.php'),
+        headers: _getHeaders(),
+        body: json.encode({'attribute_id': attributeId}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'HTTP Error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Xóa giá trị thuộc tính
+  static Future<Map<String, dynamic>> deleteAttributeValue(int valueId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/variants_attributes/delete_attribute_value.php'),
+        headers: _getHeaders(),
+        body: json.encode({'value_id': valueId}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'HTTP Error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Lấy danh sách variants của sản phẩm (alias for getVariants)
+  static Future<Map<String, dynamic>> getProductVariants(int productId) async {
+    return getVariants(productId: productId);
+  }
+
+  // Lấy tất cả variants
+  static Future<Map<String, dynamic>> getAllVariants() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/variants_attributes/get_variants.php'),
+        headers: _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'HTTP Error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Xóa variant
+  static Future<Map<String, dynamic>> deleteVariant(int variantId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/variants_attributes/delete_variant.php'),
+        headers: _getHeaders(),
+        body: json.encode({'variant_id': variantId}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'HTTP Error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Cập nhật variant
+  static Future<Map<String, dynamic>> updateVariant({
+    required int variantId,
+    required String sku,
+    required double price,
+    required int stock,
+    required List<int> attributeValueIds,
+    String? imageUrl,
+  }) async {
+    try {
+      final body = {
+        'variant_id': variantId,
+        'sku': sku,
+        'price': price,
+        'stock': stock,
+        'attribute_value_ids': attributeValueIds,
+      };
+      
+      if (imageUrl != null) {
+        body['image_url'] = imageUrl;
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/variants_attributes/update_variant.php'),
+        headers: _getHeaders(),
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'HTTP Error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
       };
     }
   }

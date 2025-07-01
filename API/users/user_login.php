@@ -32,6 +32,13 @@ if (!empty($data['email']) && !empty($data['password'])) {
                 "message" => "Đăng nhập thành công",
                 "user" => $user
             ]);
+        } else if ($user['role'] === 'agency') {
+            unset($user['password']);
+            echo json_encode([
+                "success" => true,
+                "message" => "Đăng nhập Agency thành công ",
+                "user" => $user
+            ]);
         } else {
             echo json_encode([
                 "success" => false,

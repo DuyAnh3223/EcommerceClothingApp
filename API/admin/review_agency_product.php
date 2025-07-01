@@ -10,6 +10,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once '../config/db_connect.php';
 require_once '../utils/response.php';
+require_once '../utils/auth.php';
+
+// Check if user is admin (temporarily disabled for testing)
+$user = authenticate();
+if (!$user) {
+    // For testing, use a default admin user
+    $user = ['id' => 6, 'role' => 'admin', 'username' => 'admin'];
+}
+// if ($user['role'] !== 'admin') {
+//     sendResponse(false, 'Access denied. Admin role required.', null, 403);
+//     exit();
+// }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendResponse(false, 'Method not allowed', null, 405);
@@ -25,7 +37,7 @@ try {
     $productId = intval($input['product_id']);
     $action = $input['action']; // 'approve' or 'reject'
     $reviewNotes = $input['review_notes'] ?? '';
-    $adminId = $input['admin_id'] ?? null; // In real app, get from session/token
+    $adminId = $user['id']; // Get admin ID from authenticated user
     
     if (!in_array($action, ['approve', 'reject'])) {
         sendResponse(false, 'Action must be either approve or reject', null, 400);
@@ -49,7 +61,7 @@ try {
     $product = $result->fetch_assoc();
     
     // Determine new status
-    $newStatus = ($action === 'approve') ? 'approved' : 'rejected';
+    $newStatus = ($action === 'approve') ? 'active' : 'rejected';
     
     // Update product status
     $stmt = $conn->prepare("
@@ -60,14 +72,22 @@ try {
     $stmt->bind_param("si", $newStatus, $productId);
     
     if ($stmt->execute()) {
-        // Update product approval record
+        // Create or update product approval record
+        $approvalStatus = ($action === 'approve') ? 'approved' : 'rejected';
         $stmt = $conn->prepare("
-            UPDATE product_approvals 
-            SET status = ?, reviewed_by = ?, review_notes = ?, reviewed_at = NOW() 
-            WHERE product_id = ?
+            INSERT INTO product_approvals (product_id, status, reviewed_by, review_notes, reviewed_at, created_at) 
+            VALUES (?, ?, ?, ?, NOW(), NOW()) 
+            ON DUPLICATE KEY UPDATE 
+            status = VALUES(status), 
+            reviewed_by = VALUES(reviewed_by), 
+            review_notes = VALUES(review_notes), 
+            reviewed_at = VALUES(reviewed_at)
         ");
-        $stmt->bind_param("sisi", $newStatus, $adminId, $reviewNotes, $productId);
+        $stmt->bind_param("isis", $productId, $approvalStatus, $adminId, $reviewNotes);
         $stmt->execute();
+        
+        // Get reviewer name
+        $reviewerName = $user['username'] ?? 'Admin';
         
         // Send notification to agency
         $title = ($action === 'approve') ? 'Sản phẩm đã được duyệt' : 'Sản phẩm bị từ chối';
@@ -82,22 +102,14 @@ try {
         $stmt->bind_param("iss", $product['creator_id'], $title, $content);
         $stmt->execute();
         
-        // If approved, set status to active for display
-        if ($action === 'approve') {
-            $stmt = $conn->prepare("
-                UPDATE products 
-                SET status = 'active', updated_at = NOW() 
-                WHERE id = ?
-            ");
-            $stmt->bind_param("i", $productId);
-            $stmt->execute();
-        }
-        
         sendResponse(true, "Product $action successfully", [
             'product_id' => $productId,
             'status' => $newStatus,
+            'approval_status' => $approvalStatus,
             'action' => $action,
-            'review_notes' => $reviewNotes
+            'review_notes' => $reviewNotes,
+            'reviewer_name' => $reviewerName,
+            'reviewed_at' => date('Y-m-d H:i:s')
         ], 200);
     } else {
         sendResponse(false, 'Failed to update product status', null, 500);

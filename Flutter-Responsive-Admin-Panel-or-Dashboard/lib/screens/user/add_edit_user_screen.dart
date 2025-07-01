@@ -137,6 +137,7 @@ class _AddEditUserScreenState extends State<AddEditUserScreen> {
         items: const [
           DropdownMenuItem(value: 'user', child: Text('user')),
           DropdownMenuItem(value: 'admin', child: Text('admin')),
+          DropdownMenuItem(value: 'agency', child: Text('agency')),
         ],
         onChanged: (value) {
           setState(() {

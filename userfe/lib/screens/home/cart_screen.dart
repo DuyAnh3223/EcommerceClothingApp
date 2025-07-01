@@ -649,8 +649,8 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
                 isExpanded: true,
                 items: const [
                   DropdownMenuItem(value: 'COD', child: Text('Thanh toán khi nhận hàng (COD)')),
-                  DropdownMenuItem(value: 'Bank', child: Text('Chuyển khoản ngân hàng')),
-                  DropdownMenuItem(value: 'Momo', child: Text('Ví Momo')),
+                 // DropdownMenuItem(value: 'Bank', child: Text('Chuyển khoản ngân hàng')),
+                 // DropdownMenuItem(value: 'Momo', child: Text('Ví Momo')),
                   DropdownMenuItem(value: 'VNPAY', child: Text('VNPAY')),
                 ],
                 onChanged: (v) => setState(() => paymentMethod = v ?? 'COD'),

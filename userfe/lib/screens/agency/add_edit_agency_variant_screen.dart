@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../models/agency_product_model.dart';
-import '../../services/image_service.dart';
 import '../../services/agency_service.dart';
-import 'package:image_picker/image_picker.dart';
+import '../../services/image_service.dart';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 
 class AddEditAgencyVariantScreen extends StatefulWidget {
-  final AgencyProductVariant? variant;
   final int productId;
+  final ProductVariant? variant;
 
   const AddEditAgencyVariantScreen({
     Key? key,
-    this.variant,
     required this.productId,
+    this.variant,
   }) : super(key: key);
 
   @override
@@ -22,93 +23,57 @@ class AddEditAgencyVariantScreen extends StatefulWidget {
 
 class _AddEditAgencyVariantScreenState extends State<AddEditAgencyVariantScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController skuController;
-  late TextEditingController priceController;
-  late TextEditingController stockController;
-  String? selectedStatus;
-  bool isLoading = false;
-  bool isDropdownLoading = true;
-  List<String> statuses = ['active', 'inactive', 'out_of_stock'];
-
-  // Image upload variables
-  XFile? _selectedImage;
-  Uint8List? _imageBytes;
-  bool _shouldRemoveImage = false;
-
-  // Thuộc tính động
+  late TextEditingController _skuController;
+  late TextEditingController _priceController;
+  late TextEditingController _stockController;
+  late TextEditingController _imageController;
+  
   List<Map<String, dynamic>> attributes = [];
-  Map<int, List<Map<String, dynamic>>> attributeValues = {}; // attribute_id -> List<value>
-  Map<int, int?> selectedValueIds = {}; // attribute_id -> value_id
+  List<Map<String, dynamic>> selectedAttributeValues = [];
+  bool isLoading = true;
+  bool isSaving = false;
+  
+  File? _selectedImage;
+  Uint8List? _imageBytes;
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
+  bool _shouldRemoveImage = false;
 
   @override
   void initState() {
     super.initState();
-    skuController = TextEditingController(text: widget.variant?.sku ?? '');
-    priceController = TextEditingController(text: widget.variant?.price.toString() ?? '');
-    stockController = TextEditingController(text: widget.variant?.stock.toString() ?? '');
-    selectedStatus = widget.variant?.status ?? statuses.first;
-    _loadAttributesAndValues();
-  }
-
-  Future<void> _loadAttributesAndValues() async {
-    setState(() { isDropdownLoading = true; });
-    try {
-      // Lấy danh sách thuộc tính
-      final result = await AgencyService.getAttributes();
-      if (result['success']) {
-        attributes = result['attributes'];
-        // Lấy giá trị cho từng thuộc tính
-        for (var attr in attributes) {
-          final attrId = attr['id'];
-          final valResult = await AgencyService.getAttributeValues(attributeId: attrId);
-          if (valResult['success']) {
-            attributeValues[attrId] = valResult['values'];
-          } else {
-            attributeValues[attrId] = [];
-          }
-        }
-        // Nếu là sửa, map giá trị đã chọn
-        if (widget.variant != null) {
-          for (var av in widget.variant!.attributeValues) {
-            selectedValueIds[av.attributeId] = av.valueId;
-          }
-        } else {
-          for (var attr in attributes) {
-            selectedValueIds[attr['id']] = null;
-          }
-        }
-      }
-      setState(() { isDropdownLoading = false; });
-    } catch (e) {
-      setState(() { isDropdownLoading = false; });
-    }
+    _skuController = TextEditingController(text: widget.variant?.sku ?? '');
+    _priceController = TextEditingController(text: widget.variant?.price.toString() ?? '');
+    _stockController = TextEditingController(text: widget.variant?.stock.toString() ?? '');
+    _imageController = TextEditingController(text: widget.variant?.imageUrl ?? '');
+    
+    _loadAttributes();
   }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
+      final XFile? image = await _picker.pickImage(
         source: source,
         maxWidth: 1024,
         maxHeight: 1024,
         imageQuality: 85,
       );
 
-      if (image != null) {
+      if (image != null && mounted) {
+        final file = File(image.path);
         final bytes = await image.readAsBytes();
-        if (mounted) {
-          setState(() {
-            _selectedImage = image;
-            _imageBytes = bytes;
-            _shouldRemoveImage = false;
-          });
-        }
+        
+        setState(() {
+          _selectedImage = file;
+          _imageBytes = bytes;
+          _shouldRemoveImage = false;
+        });
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi chọn hình ảnh: $e'),
+            content: Text('Lỗi khi chọn hình ảnh: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -117,17 +82,32 @@ class _AddEditAgencyVariantScreenState extends State<AddEditAgencyVariantScreen>
   }
 
   Future<String?> _uploadImage() async {
-    if (_imageBytes == null) return null;
+    if (_selectedImage == null || _imageBytes == null) {
+      return null;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isUploading = true;
+      });
+    }
 
     try {
       final result = await ImageService.uploadImageFromBytes(_imageBytes!);
-      if (result['success'] == true) {
-        return result['filename'];
+
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+
+      if (result['success']) {
+        return result['image_url'];
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Lỗi upload hình ảnh: ${result['message']}'),
+              content: Text('Upload thất bại: ${result['message']}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -136,9 +116,12 @@ class _AddEditAgencyVariantScreenState extends State<AddEditAgencyVariantScreen>
       }
     } catch (e) {
       if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lỗi upload hình ảnh: $e'),
+            content: Text('Lỗi: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -147,87 +130,165 @@ class _AddEditAgencyVariantScreenState extends State<AddEditAgencyVariantScreen>
     }
   }
 
-  Future<void> _saveVariant() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (selectedValueIds.values.any((v) => v == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn đầy đủ giá trị cho tất cả thuộc tính!'), backgroundColor: Colors.red),
-      );
-      return;
-    }
+  @override
+  void dispose() {
+    _skuController.dispose();
+    _priceController.dispose();
+    _stockController.dispose();
+    _imageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAttributes() async {
     setState(() { isLoading = true; });
     try {
-      // Upload hình ảnh nếu có
-      String? imageUrl;
-      if (_imageBytes != null) {
-        imageUrl = await _uploadImage();
-        if (imageUrl == null) {
-          setState(() { isLoading = false; });
-          return;
+      final result = await AgencyService.getAttributes();
+      if (result['success']) {
+        setState(() {
+          attributes = List<Map<String, dynamic>>.from(result['data']?['attributes'] ?? []);
+          isLoading = false;
+        });
+        
+        // Nếu đang sửa variant, load các thuộc tính đã chọn
+        if (widget.variant != null) {
+          _loadSelectedAttributes();
         }
-      } else if (_shouldRemoveImage) {
-        imageUrl = null;
       } else {
-        // Giữ nguyên hình ảnh cũ nếu có
-        imageUrl = widget.variant?.imageUrl;
+        setState(() { isLoading = false; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Lỗi tải thuộc tính'), backgroundColor: Colors.red),
+        );
       }
-
-      // TODO: Implement add/edit variant API call
-      // For now, just show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Variant saved successfully'), backgroundColor: Colors.green),
-      );
-      Navigator.pop(context, true);
     } catch (e) {
+      setState(() { isLoading = false; });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
       );
-    } finally {
-      setState(() { isLoading = false; });
     }
   }
 
-  Widget _buildAttributeDropdown(Map<String, dynamic> attr) {
-    final attrId = attr['id'];
-    final attrName = attr['name'];
-    final values = attributeValues[attrId] ?? [];
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: DropdownButtonFormField<int>(
-        value: selectedValueIds[attrId],
-        decoration: InputDecoration(labelText: attrName, border: OutlineInputBorder()),
-        items: values.map<DropdownMenuItem<int>>((item) => DropdownMenuItem(
-          value: item['value_id'],
-          child: Text(item['value']),
-        )).toList(),
-        onChanged: (val) => setState(() => selectedValueIds[attrId] = val),
-        validator: (val) => val == null ? 'Vui lòng chọn $attrName' : null,
-      ),
-    );
+  void _loadSelectedAttributes() {
+    if (widget.variant != null) {
+      // Map các thuộc tính đã chọn từ variant
+      for (final attr in attributes) {
+        final attrValues = List<Map<String, dynamic>>.from(attr['values'] ?? []);
+        for (final variantAttr in widget.variant!.attributes) {
+          if (variantAttr.attributeId == attr['id']) {
+            final selectedValue = attrValues.firstWhere(
+              (value) => value['id'] == variantAttr.id,
+              orElse: () => {},
+            );
+            if (selectedValue.isNotEmpty) {
+              selectedAttributeValues.add({
+                'attribute_id': attr['id'],
+                'attribute_name': attr['name'],
+                'value_id': selectedValue['id'],
+                'value': selectedValue['value'],
+              });
+            }
+          }
+        }
+      }
+    }
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, {TextInputType? keyboardType, int maxLines = 1, String? Function(String?)? validator}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(labelText: label, border: OutlineInputBorder()),
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        validator: validator,
-      ),
-    );
+  void _selectAttributeValue(Map<String, dynamic> attribute, Map<String, dynamic> value) {
+    setState(() {
+      // Xóa giá trị cũ của thuộc tính này nếu có
+      selectedAttributeValues.removeWhere((item) => item['attribute_id'] == attribute['id']);
+      
+      // Thêm giá trị mới
+      selectedAttributeValues.add({
+        'attribute_id': attribute['id'],
+        'attribute_name': attribute['name'],
+        'value_id': value['id'],
+        'value': value['value'],
+      });
+    });
+  }
+
+  void _removeAttributeValue(int attributeId) {
+    setState(() {
+      selectedAttributeValues.removeWhere((item) => item['attribute_id'] == attributeId);
+    });
+  }
+
+  Future<void> _saveVariant() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (selectedAttributeValues.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn ít nhất một thuộc tính'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() { isSaving = true; });
+    
+    try {
+      // Upload hình ảnh trước nếu có hình ảnh mới được chọn
+      String? imageUrl;
+      if (_selectedImage != null) {
+        imageUrl = await _uploadImage();
+        if (imageUrl == null) {
+          setState(() { isSaving = false; });
+          return; // Dừng nếu upload thất bại
+        }
+      }
+
+      final attributeValueIds = selectedAttributeValues.map((item) => item['value_id'] as int).toList();
+      
+      Map<String, dynamic> result;
+      if (widget.variant == null) {
+        // Thêm mới
+        result = await AgencyService.addVariant(
+          productId: widget.productId,
+          sku: _skuController.text.trim(),
+          price: double.parse(_priceController.text),
+          stock: int.parse(_stockController.text),
+          attributeValueIds: attributeValueIds,
+          imageUrl: imageUrl,
+        );
+      } else {
+        // Cập nhật
+        result = await AgencyService.updateVariant(
+          variantId: widget.variant!.id,
+          sku: _skuController.text.trim(),
+          price: double.parse(_priceController.text),
+          stock: int.parse(_stockController.text),
+          attributeValueIds: attributeValueIds,
+          imageUrl: imageUrl,
+        );
+      }
+
+      setState(() { isSaving = false; });
+      
+      if (result['success']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Lưu biến thể thành công'), backgroundColor: Colors.green),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Lỗi lưu biến thể'), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      setState(() { isSaving = false; });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.variant == null ? "Thêm biến thể" : "Sửa biến thể"),
+        title: Text(widget.variant == null ? 'Thêm biến thể' : 'Sửa biến thể'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
-      body: isDropdownLoading
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -236,99 +297,203 @@ class _AddEditAgencyVariantScreenState extends State<AddEditAgencyVariantScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Thông tin biến thể', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo[800])),
-                    const SizedBox(height: 20),
-                    _buildTextField(skuController, "SKU *", validator: (v) => v!.isEmpty ? "SKU không được để trống" : null),
-                    ...attributes.map(_buildAttributeDropdown).toList(),
-                    _buildTextField(priceController, "Giá *", keyboardType: TextInputType.number, validator: (value) {
-                      if (value!.isEmpty) return "Giá không được để trống";
-                      if (double.tryParse(value) == null) return "Giá phải là số";
-                      if (double.parse(value) <= 0) return "Giá phải lớn hơn 0";
-                      return null;
-                    }),
-                    _buildTextField(stockController, "Tồn kho *", keyboardType: TextInputType.number, validator: (value) {
-                      if (value!.isEmpty) return "Tồn kho không được để trống";
-                      if (int.tryParse(value) == null) return "Tồn kho phải là số";
-                      if (int.parse(value) < 0) return "Tồn kho không được âm";
-                      return null;
-                    }),
+                    // Thông tin cơ bản
+                    const Text(
+                      'Thông tin cơ bản',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
                     
-                    // Image Upload Section
-                    const SizedBox(height: 20),
-                    Text(
-                      'Hình ảnh biến thể',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.indigo[700],
+                    TextFormField(
+                      controller: _skuController,
+                      decoration: const InputDecoration(
+                        labelText: 'SKU *',
+                        border: OutlineInputBorder(),
                       ),
+                      validator: (value) => value?.isEmpty == true ? 'Vui lòng nhập SKU' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    TextFormField(
+                      controller: _priceController,
+                      decoration: const InputDecoration(
+                        labelText: 'Giá (VNĐ) *',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value?.isEmpty == true) return 'Vui lòng nhập giá';
+                        if (double.tryParse(value!) == null) return 'Giá không hợp lệ';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    TextFormField(
+                      controller: _stockController,
+                      decoration: const InputDecoration(
+                        labelText: 'Tồn kho *',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value?.isEmpty == true) return 'Vui lòng nhập tồn kho';
+                        if (int.tryParse(value!) == null) return 'Tồn kho không hợp lệ';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Hình ảnh biến thể
+                    const Text(
+                      'Hình ảnh biến thể',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     
                     // Image Preview
-                    Container(
-                      constraints: const BoxConstraints(
-                        minHeight: 200,
-                        maxHeight: 400,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.grey.shade50,
-                      ),
-                      child: _imageBytes != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.memory(
-                                _imageBytes!,
-                                fit: BoxFit.contain,
-                                width: double.infinity,
-                                height: double.infinity,
-                                errorBuilder: (context, error, stackTrace) => const Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.error, size: 64, color: Colors.red),
-                                      SizedBox(height: 8),
-                                      Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
-                                    ],
+                    GestureDetector(
+                      onTap: () {
+                        // Hiển thị hình ảnh full size khi click
+                        if (_imageBytes != null || 
+                            (widget.variant != null && widget.variant!.imageUrl != null && widget.variant!.imageUrl!.isNotEmpty)) {
+                          showDialog(
+                            context: context,
+                            builder: (context) => Dialog(
+                              child: Container(
+                                constraints: BoxConstraints(
+                                  maxWidth: MediaQuery.of(context).size.width * 0.8,
+                                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    AppBar(
+                                      title: const Text('Xem hình ảnh'),
+                                      backgroundColor: Colors.transparent,
+                                      elevation: 0,
+                                      actions: [
+                                        IconButton(
+                                          icon: const Icon(Icons.close),
+                                          onPressed: () => Navigator.of(context).pop(),
+                                        ),
+                                      ],
+                                    ),
+                                    Expanded(
+                                      child: _imageBytes != null
+                                          ? Image.memory(
+                                              _imageBytes!,
+                                              fit: BoxFit.contain,
+                                            )
+                                          : Image.network(
+                                              'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.variant!.imageUrl!}',
+                                              fit: BoxFit.contain,
+                                              errorBuilder: (context, error, stackTrace) => const Center(
+                                                child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(Icons.error, size: 64, color: Colors.red),
+                                                    SizedBox(height: 8),
+                                                    Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minHeight: 150,
+                          maxHeight: 300,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey.shade50,
+                        ),
+                        child: Stack(
+                          children: [
+                            _imageBytes != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.memory(
+                                      _imageBytes!,
+                                      fit: BoxFit.contain,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      errorBuilder: (context, error, stackTrace) => const Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.error, size: 64, color: Colors.red),
+                                            SizedBox(height: 8),
+                                            Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : (widget.variant != null && widget.variant!.imageUrl != null && widget.variant!.imageUrl!.isNotEmpty)
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.network(
+                                          'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.variant!.imageUrl!}',
+                                          fit: BoxFit.contain,
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                          errorBuilder: (context, error, stackTrace) => const Center(
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(Icons.image, size: 64, color: Colors.grey),
+                                                SizedBox(height: 8),
+                                                Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.grey)),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : Container(
+                                        height: 150,
+                                        child: const Center(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.image, size: 64, color: Colors.grey),
+                                              SizedBox(height: 8),
+                                              Text('Chưa có hình ảnh', style: TextStyle(color: Colors.grey)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                            // Overlay để hiển thị icon zoom khi có hình ảnh
+                            if (_imageBytes != null || 
+                                (widget.variant != null && widget.variant!.imageUrl != null && widget.variant!.imageUrl!.isNotEmpty))
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.5),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Icon(
+                                    Icons.zoom_in,
+                                    color: Colors.white,
+                                    size: 20,
                                   ),
                                 ),
                               ),
-                            )
-                          : (widget.variant != null && widget.variant!.imageUrl != null && widget.variant!.imageUrl!.isNotEmpty)
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${widget.variant!.imageUrl!}',
-                                    fit: BoxFit.contain,
-                                    width: double.infinity,
-                                    height: double.infinity,
-                                    errorBuilder: (context, error, stackTrace) => const Center(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.image, size: 64, color: Colors.grey),
-                                          SizedBox(height: 8),
-                                          Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.grey)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : Container(
-                                  height: 200,
-                                  child: const Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.image, size: 64, color: Colors.grey),
-                                        SizedBox(height: 8),
-                                        Text('Chưa có hình ảnh', style: TextStyle(color: Colors.grey)),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                          ],
+                        ),
+                      ),
                     ),
                     
                     const SizedBox(height: 12),
@@ -377,7 +542,7 @@ class _AddEditAgencyVariantScreenState extends State<AddEditAgencyVariantScreen>
                                 _selectedImage = null;
                                 _imageBytes = null;
                               });
-                              // Nếu đang sửa biến thể, đánh dấu để xóa hình ảnh
+                              // Nếu đang sửa variant, đánh dấu để xóa hình ảnh
                               if (widget.variant != null) {
                                 _shouldRemoveImage = true;
                               }
@@ -392,27 +557,84 @@ class _AddEditAgencyVariantScreenState extends State<AddEditAgencyVariantScreen>
                         ),
                       ),
                     
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: DropdownButtonFormField<String>(
-                        value: selectedStatus,
-                        decoration: const InputDecoration(labelText: 'Trạng thái', border: OutlineInputBorder()),
-                        items: statuses.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
-                        onChanged: (val) => setState(() => selectedStatus = val),
-                        validator: (val) => val == null || val.isEmpty ? 'Vui lòng chọn trạng thái' : null,
+                    const SizedBox(height: 24),
+                    
+                    // Thuộc tính đã chọn
+                    if (selectedAttributeValues.isNotEmpty) ...[
+                      const Text(
+                        'Thuộc tính đã chọn',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: selectedAttributeValues.map((item) {
+                          return Chip(
+                            label: Text('${item['attribute_name']}: ${item['value']}'),
+                            onDeleted: () => _removeAttributeValue(item['attribute_id']),
+                            deleteIcon: const Icon(Icons.close, size: 18),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    
+                    // Chọn thuộc tính
+                    const Text(
+                      'Chọn thuộc tính',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
+                    
+                    ...attributes.map((attribute) {
+                      final values = List<Map<String, dynamic>>.from(attribute['values'] ?? []);
+                      final isSelected = selectedAttributeValues.any((item) => item['attribute_id'] == attribute['id']);
+                      
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ExpansionTile(
+                          title: Text(
+                            attribute['name'],
+                            style: TextStyle(
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? Colors.blue : Colors.black,
+                            ),
+                          ),
+                          subtitle: isSelected 
+                              ? Text('Đã chọn: ${selectedAttributeValues.firstWhere((item) => item['attribute_id'] == attribute['id'])['value']}')
+                              : const Text('Chưa chọn'),
+                          children: values.map((value) {
+                            final isValueSelected = selectedAttributeValues.any((item) => 
+                                item['attribute_id'] == attribute['id'] && item['value_id'] == value['id']);
+                            
+                            return ListTile(
+                              title: Text(value['value']),
+                              trailing: isValueSelected ? const Icon(Icons.check, color: Colors.green) : null,
+                              onTap: () => _selectAttributeValue(attribute, value),
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    }).toList(),
+                    
+                    const SizedBox(height: 24),
+                    
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: isLoading ? null : _saveVariant,
+                        onPressed: isSaving ? null : _saveVariant,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                        child: isLoading ? const CircularProgressIndicator(color: Colors.white) : Text(widget.variant == null ? "Thêm biến thể" : "Lưu thay đổi"),
+                        child: isSaving
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                widget.variant == null ? 'Thêm biến thể' : 'Cập nhật biến thể',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
                       ),
                     ),
                   ],

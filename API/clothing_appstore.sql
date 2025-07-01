@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th6 29, 2025 lúc 10:02 AM
--- Phiên bản máy phục vụ: 10.4.32-MariaDB
--- Phiên bản PHP: 8.2.12
+-- Host: 127.0.0.1
+-- Generation Time: Jul 01, 2025 at 05:58 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Cơ sở dữ liệu: `clothing_appstore`
+-- Database: `clothing_appstore`
 --
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `attributes`
+-- Table structure for table `attributes`
 --
 
 CREATE TABLE `attributes` (
@@ -35,18 +35,19 @@ CREATE TABLE `attributes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `attributes`
+-- Dumping data for table `attributes`
 --
 
 INSERT INTO `attributes` (`id`, `name`, `created_by`, `created_at`) VALUES
-(3, 'brand', 6, '2025-06-27 10:35:00'),
 (1, 'color', 6, '2025-06-27 10:35:00'),
-(2, 'size', 6, '2025-06-27 10:35:00');
+(2, 'size', 6, '2025-06-27 10:35:00'),
+(3, 'brand', 6, '2025-06-27 10:35:00'),
+(22, 'style', 9, '2025-07-01 08:16:41');
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `attribute_values`
+-- Table structure for table `attribute_values`
 --
 
 CREATE TABLE `attribute_values` (
@@ -57,7 +58,7 @@ CREATE TABLE `attribute_values` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `attribute_values`
+-- Dumping data for table `attribute_values`
 --
 
 INSERT INTO `attribute_values` (`id`, `attribute_id`, `value`, `created_by`) VALUES
@@ -67,12 +68,15 @@ INSERT INTO `attribute_values` (`id`, `attribute_id`, `value`, `created_by`) VAL
 (15, 3, 'Adidas', 6),
 (16, 1, 'black', 6),
 (17, 1, 'while', 6),
-(18, 1, 'yellow', 6);
+(18, 1, 'yellow', 6),
+(30, 22, 'fit', 9),
+(31, 22, 'big', 9),
+(32, 22, 'fashion', 9);
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `cart_items`
+-- Table structure for table `cart_items`
 --
 
 CREATE TABLE `cart_items` (
@@ -87,7 +91,7 @@ CREATE TABLE `cart_items` (
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `notifications`
+-- Table structure for table `notifications`
 --
 
 CREATE TABLE `notifications` (
@@ -101,7 +105,7 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `notifications`
+-- Dumping data for table `notifications`
 --
 
 INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `type`, `is_read`, `created_at`) VALUES
@@ -151,12 +155,22 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `type`, `is_re
 (58, 4, 'Thanh toán thành công', 'Đơn hàng #67 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045522', 'order_status', 0, '2025-06-29 14:45:47'),
 (59, 4, 'Thanh toán thành công', 'Đơn hàng #69 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045528', 'order_status', 0, '2025-06-29 14:54:06'),
 (60, 4, 'Thanh toán thành công', 'Đơn hàng #70 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045532', 'order_status', 0, '2025-06-29 14:57:57'),
-(61, 4, 'Thanh toán thành công', 'Đơn hàng #71 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045538', 'order_status', 0, '2025-06-29 15:00:50');
+(61, 4, 'Thanh toán thành công', 'Đơn hàng #71 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045538', 'order_status', 0, '2025-06-29 15:00:50'),
+(62, 4, 'Thanh toán thành công', 'Đơn hàng #101 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15047235', 'order_status', 0, '2025-06-30 12:45:19'),
+(63, 4, 'Thanh toán thành công', 'Đơn hàng #105 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15047266', 'order_status', 0, '2025-06-30 13:17:48'),
+(64, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'A\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-01 09:15:37'),
+(65, 9, 'Sản phẩm đã được duyệt', 'Sản phẩm \'A\' đã được admin duyệt và sẽ được hiển thị trên cửa hàng.', 'product_approval', 0, '2025-07-01 10:01:58'),
+(66, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'Quần da bò\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-01 10:12:28'),
+(67, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'Vét Nam Tính\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-01 10:13:20'),
+(68, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'Áo khoác thể thao\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-01 10:35:42'),
+(69, 9, 'Sản phẩm đã được duyệt', 'Sản phẩm \'Áo khoác thể thao\' đã được admin duyệt và sẽ được hiển thị trên cửa hàng.', 'product_approval', 0, '2025-07-01 10:37:48'),
+(70, 9, 'Sản phẩm bị từ chối', 'Sản phẩm \'Quần da bò\' đã bị admin từ chối. Lý do: Quá nhiều tồn kho', 'product_approval', 0, '2025-07-01 10:38:01'),
+(71, 9, 'Sản phẩm đã được duyệt', 'Sản phẩm \'Vét Nam Tính\' đã được admin duyệt và sẽ được hiển thị trên cửa hàng.', 'product_approval', 0, '2025-07-01 10:44:04');
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `orders`
+-- Table structure for table `orders`
 --
 
 CREATE TABLE `orders` (
@@ -172,7 +186,7 @@ CREATE TABLE `orders` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `orders`
+-- Dumping data for table `orders`
 --
 
 INSERT INTO `orders` (`id`, `user_id`, `address_id`, `order_date`, `total_amount`, `platform_fee`, `status`, `created_at`, `updated_at`) VALUES
@@ -209,12 +223,46 @@ INSERT INTO `orders` (`id`, `user_id`, `address_id`, `order_date`, `total_amount
 (68, 4, 3, '2025-06-29 14:53:24', 200000.00, 0.00, 'pending', '2025-06-29 14:53:24', '2025-06-29 14:53:24'),
 (69, 4, 3, '2025-06-29 14:53:35', 200000.00, 0.00, 'confirmed', '2025-06-29 14:53:35', '2025-06-29 14:54:06'),
 (70, 4, 3, '2025-06-29 14:57:33', 200000.00, 0.00, 'confirmed', '2025-06-29 14:57:33', '2025-06-29 14:57:57'),
-(71, 4, 3, '2025-06-29 15:00:05', 200000.00, 0.00, 'confirmed', '2025-06-29 15:00:05', '2025-06-29 15:00:50');
+(71, 4, 3, '2025-06-29 15:00:05', 200000.00, 0.00, 'confirmed', '2025-06-29 15:00:05', '2025-06-29 15:00:50'),
+(72, 4, 3, '2025-06-30 07:35:50', 30000.00, 0.00, 'pending', '2025-06-30 07:35:50', '2025-06-30 07:35:50'),
+(73, 4, 3, '2025-06-30 07:35:56', 30000.00, 0.00, 'pending', '2025-06-30 07:35:56', '2025-06-30 07:35:56'),
+(74, 4, 3, '2025-06-30 07:36:00', 30000.00, 0.00, 'pending', '2025-06-30 07:36:00', '2025-06-30 07:36:00'),
+(75, 4, 3, '2025-06-30 07:36:34', 10000.00, 0.00, 'pending', '2025-06-30 07:36:34', '2025-06-30 07:36:34'),
+(76, 4, 3, '2025-06-30 07:36:52', 10000.00, 0.00, 'pending', '2025-06-30 07:36:52', '2025-06-30 07:36:52'),
+(77, 4, 3, '2025-06-30 07:37:08', 350000.00, 0.00, 'pending', '2025-06-30 07:37:08', '2025-06-30 07:37:08'),
+(78, 4, 3, '2025-06-30 07:37:09', 350000.00, 0.00, 'pending', '2025-06-30 07:37:09', '2025-06-30 07:37:09'),
+(79, 4, 3, '2025-06-30 07:37:10', 350000.00, 0.00, 'pending', '2025-06-30 07:37:10', '2025-06-30 07:37:10'),
+(80, 4, 3, '2025-06-30 07:37:11', 350000.00, 0.00, 'pending', '2025-06-30 07:37:11', '2025-06-30 07:37:11'),
+(81, 4, 3, '2025-06-30 07:37:11', 350000.00, 0.00, 'pending', '2025-06-30 07:37:11', '2025-06-30 07:37:11'),
+(82, 4, 3, '2025-06-30 07:37:11', 350000.00, 0.00, 'pending', '2025-06-30 07:37:11', '2025-06-30 07:37:11'),
+(83, 4, 3, '2025-06-30 07:37:12', 350000.00, 0.00, 'pending', '2025-06-30 07:37:12', '2025-06-30 07:37:12'),
+(84, 4, 3, '2025-06-30 07:37:12', 350000.00, 0.00, 'pending', '2025-06-30 07:37:12', '2025-06-30 07:37:12'),
+(85, 4, 3, '2025-06-30 07:56:01', 350000.00, 0.00, 'pending', '2025-06-30 07:56:01', '2025-06-30 07:56:01'),
+(86, 4, 3, '2025-06-30 09:26:10', 600000.00, 0.00, 'pending', '2025-06-30 09:26:10', '2025-06-30 09:26:10'),
+(87, 4, 3, '2025-06-30 09:26:12', 600000.00, 0.00, 'pending', '2025-06-30 09:26:12', '2025-06-30 09:26:12'),
+(88, 4, 3, '2025-06-30 09:26:12', 600000.00, 0.00, 'pending', '2025-06-30 09:26:12', '2025-06-30 09:26:12'),
+(89, 4, 3, '2025-06-30 09:26:12', 600000.00, 0.00, 'pending', '2025-06-30 09:26:12', '2025-06-30 09:26:12'),
+(90, 4, 3, '2025-06-30 09:26:13', 600000.00, 0.00, 'pending', '2025-06-30 09:26:13', '2025-06-30 09:26:13'),
+(91, 4, 3, '2025-06-30 09:26:13', 600000.00, 0.00, 'pending', '2025-06-30 09:26:13', '2025-06-30 09:26:13'),
+(92, 4, 3, '2025-06-30 09:26:13', 600000.00, 0.00, 'pending', '2025-06-30 09:26:13', '2025-06-30 09:26:13'),
+(93, 4, 3, '2025-06-30 09:26:13', 600000.00, 0.00, 'pending', '2025-06-30 09:26:13', '2025-06-30 09:26:13'),
+(94, 4, 3, '2025-06-30 09:26:13', 600000.00, 0.00, 'pending', '2025-06-30 09:26:13', '2025-06-30 09:26:13'),
+(95, 4, 3, '2025-06-30 09:26:14', 600000.00, 0.00, 'pending', '2025-06-30 09:26:14', '2025-06-30 09:26:14'),
+(96, 4, 3, '2025-06-30 09:26:14', 600000.00, 0.00, 'pending', '2025-06-30 09:26:14', '2025-06-30 09:26:14'),
+(97, 4, 3, '2025-06-30 09:26:14', 600000.00, 0.00, 'pending', '2025-06-30 09:26:14', '2025-06-30 09:26:14'),
+(98, 4, 3, '2025-06-30 09:26:14', 600000.00, 0.00, 'pending', '2025-06-30 09:26:14', '2025-06-30 09:26:14'),
+(99, 4, 3, '2025-06-30 09:26:14', 600000.00, 0.00, 'pending', '2025-06-30 09:26:14', '2025-06-30 09:26:14'),
+(100, 4, 3, '2025-06-30 09:28:22', 800000.00, 0.00, 'pending', '2025-06-30 09:28:22', '2025-06-30 09:28:22'),
+(101, 4, 3, '2025-06-30 12:43:57', 230000.00, 0.00, 'confirmed', '2025-06-30 12:43:57', '2025-06-30 12:45:19'),
+(102, 4, 3, '2025-06-30 12:55:00', 620000.00, 0.00, 'pending', '2025-06-30 12:55:00', '2025-06-30 12:55:00'),
+(103, 4, 3, '2025-06-30 12:55:15', 520000.00, 0.00, 'pending', '2025-06-30 12:55:15', '2025-06-30 12:55:15'),
+(104, 4, 3, '2025-06-30 13:00:59', 210000.00, 0.00, 'pending', '2025-06-30 13:00:59', '2025-06-30 13:00:59'),
+(105, 4, 3, '2025-06-30 13:17:21', 230000.00, 0.00, 'confirmed', '2025-06-30 13:17:21', '2025-06-30 13:17:48');
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `order_items`
+-- Table structure for table `order_items`
 --
 
 CREATE TABLE `order_items` (
@@ -228,7 +276,7 @@ CREATE TABLE `order_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `order_items`
+-- Dumping data for table `order_items`
 --
 
 INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `variant_id`, `quantity`, `price`, `platform_fee`) VALUES
@@ -274,12 +322,52 @@ INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `variant_id`, `quanti
 (80, 68, 4, 6, 1, 200000.00, 0.00),
 (81, 69, 4, 6, 1, 200000.00, 0.00),
 (82, 70, 4, 6, 1, 200000.00, 0.00),
-(83, 71, 4, 6, 1, 200000.00, 0.00);
+(83, 71, 4, 6, 1, 200000.00, 0.00),
+(84, 72, 3, 4, 3, 10000.00, 0.00),
+(85, 73, 3, 4, 3, 10000.00, 0.00),
+(86, 74, 3, 4, 3, 10000.00, 0.00),
+(87, 75, 3, 4, 1, 10000.00, 0.00),
+(88, 76, 3, 4, 1, 10000.00, 0.00),
+(89, 77, 6, 11, 1, 350000.00, 0.00),
+(90, 78, 6, 11, 1, 350000.00, 0.00),
+(91, 79, 6, 11, 1, 350000.00, 0.00),
+(92, 80, 6, 11, 1, 350000.00, 0.00),
+(93, 81, 6, 11, 1, 350000.00, 0.00),
+(94, 82, 6, 11, 1, 350000.00, 0.00),
+(95, 83, 6, 11, 1, 350000.00, 0.00),
+(96, 84, 6, 11, 1, 350000.00, 0.00),
+(97, 85, 6, 11, 1, 350000.00, 0.00),
+(98, 86, 4, 6, 3, 200000.00, 0.00),
+(99, 87, 4, 6, 3, 200000.00, 0.00),
+(100, 88, 4, 6, 3, 200000.00, 0.00),
+(101, 89, 4, 6, 3, 200000.00, 0.00),
+(102, 90, 4, 6, 3, 200000.00, 0.00),
+(103, 91, 4, 6, 3, 200000.00, 0.00),
+(104, 92, 4, 6, 3, 200000.00, 0.00),
+(105, 93, 4, 6, 3, 200000.00, 0.00),
+(106, 94, 4, 6, 3, 200000.00, 0.00),
+(107, 95, 4, 6, 3, 200000.00, 0.00),
+(108, 96, 4, 6, 3, 200000.00, 0.00),
+(109, 97, 4, 6, 3, 200000.00, 0.00),
+(110, 98, 4, 6, 3, 200000.00, 0.00),
+(111, 99, 4, 6, 3, 200000.00, 0.00),
+(112, 100, 4, 6, 4, 200000.00, 0.00),
+(113, 101, 4, 6, 1, 200000.00, 0.00),
+(114, 101, 3, 4, 3, 10000.00, 0.00),
+(115, 102, 3, 5, 1, 110000.00, 0.00),
+(116, 102, 4, 7, 1, 190000.00, 0.00),
+(117, 102, 6, 7, 1, 320000.00, 0.00),
+(118, 103, 6, 7, 1, 320000.00, 0.00),
+(119, 103, 4, 6, 1, 200000.00, 0.00),
+(120, 104, 4, 6, 1, 200000.00, 0.00),
+(121, 104, 3, 4, 1, 10000.00, 0.00),
+(122, 105, 4, 6, 1, 200000.00, 0.00),
+(123, 105, 3, 4, 3, 10000.00, 0.00);
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `payments`
+-- Table structure for table `payments`
 --
 
 CREATE TABLE `payments` (
@@ -293,7 +381,7 @@ CREATE TABLE `payments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `payments`
+-- Dumping data for table `payments`
 --
 
 INSERT INTO `payments` (`id`, `order_id`, `payment_method`, `amount`, `status`, `transaction_code`, `paid_at`) VALUES
@@ -330,12 +418,46 @@ INSERT INTO `payments` (`id`, `order_id`, `payment_method`, `amount`, `status`, 
 (69, 68, 'COD', 200000.00, 'pending', NULL, NULL),
 (70, 69, 'VNPAY', 200000.00, 'paid', '15045528', '2025-06-29 14:54:06'),
 (71, 70, 'VNPAY', 200000.00, 'paid', '15045532', '2025-06-29 14:57:57'),
-(72, 71, 'VNPAY', 200000.00, 'paid', '15045538', '2025-06-29 15:00:50');
+(72, 71, 'VNPAY', 200000.00, 'paid', '15045538', '2025-06-29 15:00:50'),
+(73, 72, 'VNPAY', 30000.00, 'pending', NULL, NULL),
+(74, 73, 'VNPAY', 30000.00, 'pending', NULL, NULL),
+(75, 74, 'COD', 30000.00, 'pending', NULL, NULL),
+(76, 75, 'VNPAY', 10000.00, 'pending', NULL, NULL),
+(77, 76, 'COD', 10000.00, 'pending', NULL, NULL),
+(78, 77, 'VNPAY', 350000.00, 'pending', NULL, NULL),
+(79, 78, 'VNPAY', 350000.00, 'pending', NULL, NULL),
+(80, 79, 'VNPAY', 350000.00, 'pending', NULL, NULL),
+(81, 80, 'VNPAY', 350000.00, 'pending', NULL, NULL),
+(82, 81, 'VNPAY', 350000.00, 'pending', NULL, NULL),
+(83, 82, 'VNPAY', 350000.00, 'pending', NULL, NULL),
+(84, 83, 'VNPAY', 350000.00, 'pending', NULL, NULL),
+(85, 84, 'VNPAY', 350000.00, 'pending', NULL, NULL),
+(86, 85, 'VNPAY', 350000.00, 'pending', NULL, NULL),
+(87, 86, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(88, 87, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(89, 88, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(90, 89, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(91, 90, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(92, 91, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(93, 92, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(94, 93, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(95, 94, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(96, 95, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(97, 96, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(98, 97, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(99, 98, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(100, 99, 'VNPAY', 600000.00, 'pending', NULL, NULL),
+(101, 100, 'VNPAY', 800000.00, 'pending', NULL, NULL),
+(102, 101, 'VNPAY', 230000.00, 'paid', '15047235', '2025-06-30 12:45:19'),
+(103, 102, 'COD', 620000.00, 'pending', NULL, NULL),
+(104, 103, 'VNPAY', 520000.00, 'pending', NULL, NULL),
+(105, 104, 'VNPAY', 210000.00, 'pending', NULL, NULL),
+(106, 105, 'VNPAY', 230000.00, 'paid', '15047266', '2025-06-30 13:17:48');
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `products`
+-- Table structure for table `products`
 --
 
 CREATE TABLE `products` (
@@ -354,18 +476,20 @@ CREATE TABLE `products` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `products`
+-- Dumping data for table `products`
 --
 
 INSERT INTO `products` (`id`, `name`, `description`, `category`, `gender_target`, `main_image`, `created_by`, `is_agency_product`, `status`, `platform_fee_rate`, `created_at`, `updated_at`) VALUES
 (3, 'Áo thun', 'Thoáng mát , thoải mái', 'T-Shirts', 'unisex', '685fc2a4bf938_1751106212.jpg', 6, 0, 'active', 20.00, '2025-06-27 10:35:00', '2025-06-28 17:23:32'),
 (4, 'Áo đi biển', 'SIêu đẹp , năng động', 'T-Shirts', 'unisex', '685fc2bef398e_1751106238.jpg', 6, 0, 'active', 20.00, '2025-06-28 07:08:07', '2025-06-28 17:23:59'),
-(6, 'Áo khoác', 'Ấm áp , thời trang', 'T-Shirts', 'unisex', '685fc2de852d4_1751106270.jpg', 6, 0, 'active', 20.00, '2025-06-28 17:24:30', '2025-06-28 17:24:50');
+(6, 'Áo khoác', 'Ấm áp , thời trang', 'T-Shirts', 'unisex', '685fc2de852d4_1751106270.jpg', 6, 0, 'active', 20.00, '2025-06-28 17:24:30', '2025-06-28 17:24:50'),
+(15, 'Quần da bò', 'Da bò xịn, chính hãng, 1-1', 'Pants', 'male', '6863518fa7601_1751339407.jpg', 9, 1, 'rejected', 20.00, '2025-07-01 10:10:07', '2025-07-01 10:38:01'),
+(16, 'Vét Nam Tính', 'Thời trang, chính hãng', 'Suits & Blazers', 'male', '68635200c7ecc_1751339520.jpg', 9, 1, 'active', 20.00, '2025-07-01 10:12:00', '2025-07-01 10:57:00');
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `product_approvals`
+-- Table structure for table `product_approvals`
 --
 
 CREATE TABLE `product_approvals` (
@@ -378,10 +502,19 @@ CREATE TABLE `product_approvals` (
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `product_approvals`
+--
+
+INSERT INTO `product_approvals` (`id`, `product_id`, `reviewed_by`, `status`, `review_notes`, `reviewed_at`, `created_at`) VALUES
+(7, 15, 9, 'rejected', 'Quá nhiều tồn kho', '2025-07-01 10:38:01', '2025-07-01 10:10:07'),
+(9, 15, 9, 'rejected', 'Quá nhiều tồn kho', '2025-07-01 10:38:01', '2025-07-01 10:12:28'),
+(13, 16, NULL, 'pending', NULL, NULL, '2025-07-01 10:55:52');
+
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `product_reviews`
+-- Table structure for table `product_reviews`
 --
 
 CREATE TABLE `product_reviews` (
@@ -399,7 +532,7 @@ CREATE TABLE `product_reviews` (
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `product_variant`
+-- Table structure for table `product_variant`
 --
 
 CREATE TABLE `product_variant` (
@@ -412,24 +545,27 @@ CREATE TABLE `product_variant` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `product_variant`
+-- Dumping data for table `product_variant`
 --
 
 INSERT INTO `product_variant` (`product_id`, `variant_id`, `price`, `stock`, `image_url`, `status`) VALUES
-(3, 4, 10000.00, 187, '685fc3208d62a_1751106336.jpg', 'active'),
-(3, 5, 110000.00, 119, '685fc347a1b41_1751106375.jpg', 'active'),
+(3, 4, 10000.00, 169, '685fc3208d62a_1751106336.jpg', 'active'),
+(3, 5, 110000.00, 118, '685fc347a1b41_1751106375.jpg', 'active'),
 (3, 6, 120000.00, 200, '685fc3698f547_1751106409.jpg', 'active'),
-(4, 6, 200000.00, 137, '685fc4426c6ca_1751106626.jpg', 'active'),
-(4, 7, 190000.00, 96, '685fc44a1726b_1751106634.jpg', 'active'),
+(4, 6, 200000.00, 87, '685fc4426c6ca_1751106626.jpg', 'active'),
+(4, 7, 190000.00, 95, '685fc44a1726b_1751106634.jpg', 'active'),
 (4, 9, 210000.00, 99, '685fc4571983c_1751106647.jpg', 'active'),
-(6, 7, 320000.00, 93, '685fc63e59b33_1751107134.jpg', 'active'),
+(6, 7, 320000.00, 91, '685fc63e59b33_1751107134.jpg', 'active'),
 (6, 10, 300000.00, 207, '685fc65061fbc_1751107152.jpg', 'active'),
-(6, 11, 350000.00, 200, '685fc4b6e7c7f_1751106742.jpg', 'active');
+(6, 11, 350000.00, 191, '685fc4b6e7c7f_1751106742.jpg', 'active'),
+(15, 16, 400000.00, 20, '686351ade8d28_1751339437.jpg', 'active'),
+(15, 17, 500000.00, 40, '686351c427a5c_1751339460.jpg', 'active'),
+(16, 18, 600000.00, 40, '6863521358f3d_1751339539.jpg', 'active');
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `users`
+-- Table structure for table `users`
 --
 
 CREATE TABLE `users` (
@@ -446,18 +582,18 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `users`
+-- Dumping data for table `users`
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `gender`, `dob`, `role`, `created_at`, `updated_at`) VALUES
 (4, 'user', 'user@gmail.com', '0967586754', '6ad14ba9986e3615423dfca256d04e3f', 'male', '2025-06-05', 'user', '2025-06-27 10:36:13', '2025-06-27 11:57:17'),
-(6, 'admin', 'admin@gmail.com', '09675867543', '0192023a7bbd73250516f069df18b500', 'male', NULL, 'admin', '2025-06-27 10:38:00', '2025-06-27 10:38:00');
-
+(6, 'admin', 'admin@gmail.com', '09675867543', '0192023a7bbd73250516f069df18b500', 'male', NULL, 'admin', '2025-06-27 10:38:00', '2025-06-27 10:38:00'),
+(9, 'agency', 'agency@gmail.com', '0123456788', 'ca08cd773aac01eb003a9d50dedce7fa', 'male', NULL, 'agency', '2025-06-30 23:30:57', '2025-06-30 23:30:57');
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `user_addresses`
+-- Table structure for table `user_addresses`
 --
 
 CREATE TABLE `user_addresses` (
@@ -472,7 +608,7 @@ CREATE TABLE `user_addresses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `user_addresses`
+-- Dumping data for table `user_addresses`
 --
 
 INSERT INTO `user_addresses` (`id`, `user_id`, `address_line`, `city`, `province`, `postal_code`, `is_default`, `created_at`) VALUES
@@ -482,7 +618,7 @@ INSERT INTO `user_addresses` (`id`, `user_id`, `address_line`, `city`, `province
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `variants`
+-- Table structure for table `variants`
 --
 
 CREATE TABLE `variants` (
@@ -491,7 +627,7 @@ CREATE TABLE `variants` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `variants`
+-- Dumping data for table `variants`
 --
 
 INSERT INTO `variants` (`id`, `sku`) VALUES
@@ -503,12 +639,20 @@ INSERT INTO `variants` (`id`, `sku`) VALUES
 (9, '56'),
 (7, '65'),
 (11, '87'),
+(13, 'AGENCY-12-686336d219c25'),
+(14, 'AGENCY-13-68633a4e498d6'),
+(15, 'AGENCY-14-686344c01186f'),
+(16, 'AGENCY-15-686351ae04db7'),
+(17, 'AGENCY-15-686351c431927'),
+(18, 'AGENCY-16-6863521365b37'),
+(19, 'AGENCY-17-68635789ec4ae'),
+(12, 'AGENCY-TEST-001'),
 (3, 'JEANS-BLUE-XL-NIKE');
 
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `variant_attribute_values`
+-- Table structure for table `variant_attribute_values`
 --
 
 CREATE TABLE `variant_attribute_values` (
@@ -517,7 +661,7 @@ CREATE TABLE `variant_attribute_values` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Đang đổ dữ liệu cho bảng `variant_attribute_values`
+-- Dumping data for table `variant_attribute_values`
 --
 
 INSERT INTO `variant_attribute_values` (`variant_id`, `attribute_value_id`) VALUES
@@ -543,14 +687,42 @@ INSERT INTO `variant_attribute_values` (`variant_id`, `attribute_value_id`) VALU
 (10, 17),
 (11, 12),
 (11, 14),
-(11, 18);
+(11, 18),
+(12, 12),
+(12, 16),
+(13, 12),
+(13, 15),
+(13, 17),
+(14, 13),
+(14, 15),
+(14, 17),
+(14, 32),
+(15, 13),
+(15, 14),
+(15, 16),
+(15, 32),
+(16, 13),
+(16, 14),
+(16, 16),
+(16, 32),
+(17, 12),
+(17, 14),
+(17, 16),
+(17, 32),
+(18, 12),
+(18, 14),
+(18, 16),
+(19, 13),
+(19, 14),
+(19, 16),
+(19, 32);
 
 --
--- Chỉ mục cho các bảng đã đổ
+-- Indexes for dumped tables
 --
 
 --
--- Chỉ mục cho bảng `attributes`
+-- Indexes for table `attributes`
 --
 ALTER TABLE `attributes`
   ADD PRIMARY KEY (`id`),
@@ -558,7 +730,7 @@ ALTER TABLE `attributes`
   ADD KEY `created_by` (`created_by`);
 
 --
--- Chỉ mục cho bảng `attribute_values`
+-- Indexes for table `attribute_values`
 --
 ALTER TABLE `attribute_values`
   ADD PRIMARY KEY (`id`),
@@ -566,7 +738,7 @@ ALTER TABLE `attribute_values`
   ADD KEY `created_by` (`created_by`);
 
 --
--- Chỉ mục cho bảng `cart_items`
+-- Indexes for table `cart_items`
 --
 ALTER TABLE `cart_items`
   ADD PRIMARY KEY (`id`),
@@ -574,14 +746,14 @@ ALTER TABLE `cart_items`
   ADD KEY `product_id` (`product_id`,`variant_id`);
 
 --
--- Chỉ mục cho bảng `notifications`
+-- Indexes for table `notifications`
 --
 ALTER TABLE `notifications`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Chỉ mục cho bảng `orders`
+-- Indexes for table `orders`
 --
 ALTER TABLE `orders`
   ADD PRIMARY KEY (`id`),
@@ -589,7 +761,7 @@ ALTER TABLE `orders`
   ADD KEY `address_id` (`address_id`);
 
 --
--- Chỉ mục cho bảng `order_items`
+-- Indexes for table `order_items`
 --
 ALTER TABLE `order_items`
   ADD PRIMARY KEY (`id`),
@@ -597,21 +769,21 @@ ALTER TABLE `order_items`
   ADD KEY `product_id` (`product_id`,`variant_id`);
 
 --
--- Chỉ mục cho bảng `payments`
+-- Indexes for table `payments`
 --
 ALTER TABLE `payments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `order_id` (`order_id`);
 
 --
--- Chỉ mục cho bảng `products`
+-- Indexes for table `products`
 --
 ALTER TABLE `products`
   ADD PRIMARY KEY (`id`),
   ADD KEY `created_by` (`created_by`);
 
 --
--- Chỉ mục cho bảng `product_approvals`
+-- Indexes for table `product_approvals`
 --
 ALTER TABLE `product_approvals`
   ADD PRIMARY KEY (`id`),
@@ -619,7 +791,7 @@ ALTER TABLE `product_approvals`
   ADD KEY `reviewed_by` (`reviewed_by`);
 
 --
--- Chỉ mục cho bảng `product_reviews`
+-- Indexes for table `product_reviews`
 --
 ALTER TABLE `product_reviews`
   ADD PRIMARY KEY (`id`),
@@ -628,14 +800,14 @@ ALTER TABLE `product_reviews`
   ADD KEY `order_id` (`order_id`);
 
 --
--- Chỉ mục cho bảng `product_variant`
+-- Indexes for table `product_variant`
 --
 ALTER TABLE `product_variant`
   ADD PRIMARY KEY (`product_id`,`variant_id`),
   ADD KEY `variant_id` (`variant_id`);
 
 --
--- Chỉ mục cho bảng `users`
+-- Indexes for table `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
@@ -644,173 +816,173 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `phone` (`phone`);
 
 --
--- Chỉ mục cho bảng `user_addresses`
+-- Indexes for table `user_addresses`
 --
 ALTER TABLE `user_addresses`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Chỉ mục cho bảng `variants`
+-- Indexes for table `variants`
 --
 ALTER TABLE `variants`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `sku` (`sku`);
 
 --
--- Chỉ mục cho bảng `variant_attribute_values`
+-- Indexes for table `variant_attribute_values`
 --
 ALTER TABLE `variant_attribute_values`
   ADD PRIMARY KEY (`variant_id`,`attribute_value_id`),
   ADD KEY `attribute_value_id` (`attribute_value_id`);
 
 --
--- AUTO_INCREMENT cho các bảng đã đổ
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT cho bảng `attributes`
+-- AUTO_INCREMENT for table `attributes`
 --
 ALTER TABLE `attributes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
--- AUTO_INCREMENT cho bảng `attribute_values`
+-- AUTO_INCREMENT for table `attribute_values`
 --
 ALTER TABLE `attribute_values`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
--- AUTO_INCREMENT cho bảng `cart_items`
+-- AUTO_INCREMENT for table `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
 
 --
--- AUTO_INCREMENT cho bảng `notifications`
+-- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
-
---
--- AUTO_INCREMENT cho bảng `orders`
---
-ALTER TABLE `orders`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
--- AUTO_INCREMENT cho bảng `order_items`
+-- AUTO_INCREMENT for table `orders`
+--
+ALTER TABLE `orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
+
+--
+-- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=124;
 
 --
--- AUTO_INCREMENT cho bảng `payments`
+-- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
 
 --
--- AUTO_INCREMENT cho bảng `products`
+-- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
--- AUTO_INCREMENT cho bảng `product_approvals`
+-- AUTO_INCREMENT for table `product_approvals`
 --
 ALTER TABLE `product_approvals`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
--- AUTO_INCREMENT cho bảng `product_reviews`
+-- AUTO_INCREMENT for table `product_reviews`
 --
 ALTER TABLE `product_reviews`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT cho bảng `users`
+-- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
--- AUTO_INCREMENT cho bảng `user_addresses`
+-- AUTO_INCREMENT for table `user_addresses`
 --
 ALTER TABLE `user_addresses`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
--- AUTO_INCREMENT cho bảng `variants`
+-- AUTO_INCREMENT for table `variants`
 --
 ALTER TABLE `variants`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
--- Các ràng buộc cho các bảng đã đổ
+-- Constraints for dumped tables
 --
 
 --
--- Các ràng buộc cho bảng `attributes`
+-- Constraints for table `attributes`
 --
 ALTER TABLE `attributes`
   ADD CONSTRAINT `attributes_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Các ràng buộc cho bảng `attribute_values`
+-- Constraints for table `attribute_values`
 --
 ALTER TABLE `attribute_values`
   ADD CONSTRAINT `attribute_values_ibfk_1` FOREIGN KEY (`attribute_id`) REFERENCES `attributes` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `attribute_values_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Các ràng buộc cho bảng `cart_items`
+-- Constraints for table `cart_items`
 --
 ALTER TABLE `cart_items`
   ADD CONSTRAINT `cart_items_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `cart_items_ibfk_2` FOREIGN KEY (`product_id`,`variant_id`) REFERENCES `product_variant` (`product_id`, `variant_id`);
 
 --
--- Các ràng buộc cho bảng `notifications`
+-- Constraints for table `notifications`
 --
 ALTER TABLE `notifications`
   ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Các ràng buộc cho bảng `orders`
+-- Constraints for table `orders`
 --
 ALTER TABLE `orders`
   ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`address_id`) REFERENCES `user_addresses` (`id`);
 
 --
--- Các ràng buộc cho bảng `order_items`
+-- Constraints for table `order_items`
 --
 ALTER TABLE `order_items`
   ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`,`variant_id`) REFERENCES `product_variant` (`product_id`, `variant_id`);
 
 --
--- Các ràng buộc cho bảng `payments`
+-- Constraints for table `payments`
 --
 ALTER TABLE `payments`
   ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
 
 --
--- Các ràng buộc cho bảng `products`
+-- Constraints for table `products`
 --
 ALTER TABLE `products`
   ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Các ràng buộc cho bảng `product_approvals`
+-- Constraints for table `product_approvals`
 --
 ALTER TABLE `product_approvals`
   ADD CONSTRAINT `product_approvals_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `product_approvals_ibfk_2` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Các ràng buộc cho bảng `product_reviews`
+-- Constraints for table `product_reviews`
 --
 ALTER TABLE `product_reviews`
   ADD CONSTRAINT `product_reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
@@ -818,20 +990,20 @@ ALTER TABLE `product_reviews`
   ADD CONSTRAINT `product_reviews_ibfk_3` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`);
 
 --
--- Các ràng buộc cho bảng `product_variant`
+-- Constraints for table `product_variant`
 --
 ALTER TABLE `product_variant`
   ADD CONSTRAINT `product_variant_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `product_variant_ibfk_2` FOREIGN KEY (`variant_id`) REFERENCES `variants` (`id`) ON DELETE CASCADE;
 
 --
--- Các ràng buộc cho bảng `user_addresses`
+-- Constraints for table `user_addresses`
 --
 ALTER TABLE `user_addresses`
   ADD CONSTRAINT `user_addresses_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Các ràng buộc cho bảng `variant_attribute_values`
+-- Constraints for table `variant_attribute_values`
 --
 ALTER TABLE `variant_attribute_values`
   ADD CONSTRAINT `variant_attribute_values_ibfk_1` FOREIGN KEY (`variant_id`) REFERENCES `variants` (`id`) ON DELETE CASCADE,

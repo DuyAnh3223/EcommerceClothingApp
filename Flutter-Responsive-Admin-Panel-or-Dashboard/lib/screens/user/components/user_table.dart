@@ -74,6 +74,8 @@ class _UserTableState extends State<UserTable> {
         return 'admin';
       case 'user':
         return 'user';
+      case 'agency':
+        return 'agency';
       default:
         return role;
     }
@@ -85,6 +87,8 @@ class _UserTableState extends State<UserTable> {
         return Colors.red;
       case 'user':
         return Colors.blue;
+      case 'agency':
+        return Colors.green;
       default:
         return Colors.grey;
     }

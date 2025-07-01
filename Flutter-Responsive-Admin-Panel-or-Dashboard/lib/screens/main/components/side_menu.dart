@@ -114,11 +114,11 @@ class SideMenu extends StatelessWidget {
           //   },
           // ),
           DrawerListTile(
-            title: "Đánh giá",
+            title: "Kiểm duyệt sản phẩm",
             svgSrc: "assets/icons/danhgia.svg",
             press: () {
               if (onMenuSelected != null) {
-                onMenuSelected!("Đánh giá");
+                onMenuSelected!("Kiểm duyệt sản phẩm");
               }
             },
           ),
