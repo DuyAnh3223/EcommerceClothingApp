@@ -70,7 +70,7 @@ class _ApprovedProductsScreenState extends State<ApprovedProductsScreen> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
-                      'http://127.0.0.1/EcommerceClothingApp/API/uploads/${product.mainImage}',
+                      'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product.mainImage}',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => const Center(
                         child: Icon(Icons.image, size: 64, color: Colors.grey),
@@ -174,7 +174,7 @@ class _ApprovedProductsScreenState extends State<ApprovedProductsScreen> {
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: Image.network(
-                                  'http://127.0.0.1/EcommerceClothingApp/API/uploads/${product.mainImage}',
+                                  'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product.mainImage}',
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) => const Icon(
                                     Icons.image,

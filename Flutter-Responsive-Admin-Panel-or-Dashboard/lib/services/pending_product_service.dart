@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/pending_product_model.dart';
 
 class PendingProductService {
-  static const String baseUrl = 'http://localhost/EcommerceClothingApp/API';
+  static const String baseUrl = 'http://127.0.0.1/EcommerceClothingApp/API';
 
   // Helper method to get headers with token
   static Map<String, String> _getHeaders() {

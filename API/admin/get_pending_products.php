@@ -31,18 +31,36 @@ try {
     $params = [];
     $types = "";
     
-    if ($status !== 'all') {
-        $where_clause .= " AND p.status = ?";
-        $params[] = $status;
-        $types .= "s";
+    if ($status === 'approved') {
+        // For approved products, get from product_approvals table
+        $where_clause = "WHERE p.is_agency_product = 1 AND pa.status = 'approved'";
+    } elseif ($status === 'rejected') {
+        // For rejected products, get from product_approvals table
+        $where_clause = "WHERE p.is_agency_product = 1 AND pa.status = 'rejected'";
+    } elseif ($status === 'pending') {
+        // For pending products, get products that are pending or have no approval record
+        $where_clause = "WHERE p.is_agency_product = 1 AND (p.status = 'pending' OR pa.status IS NULL OR pa.status = 'pending')";
+    } else {
+        // For 'all' status, no additional filter
+        $where_clause = "WHERE p.is_agency_product = 1";
     }
     
     // Get total count
-    $count_query = "SELECT COUNT(*) as total FROM products p $where_clause";
+    $count_query = "
+        SELECT COUNT(DISTINCT p.id) as total 
+        FROM products p
+        LEFT JOIN (
+            SELECT pa1.*
+            FROM product_approvals pa1
+            INNER JOIN (
+                SELECT product_id, MAX(created_at) as max_created_at
+                FROM product_approvals
+                GROUP BY product_id
+            ) pa2 ON pa1.product_id = pa2.product_id AND pa1.created_at = pa2.max_created_at
+        ) pa ON p.id = pa.product_id
+        $where_clause
+    ";
     $stmt = $conn->prepare($count_query);
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
     $stmt->execute();
     $total = $stmt->get_result()->fetch_assoc()['total'];
     

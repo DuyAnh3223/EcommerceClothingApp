@@ -317,7 +317,7 @@ class _AgencyProductScreenState extends State<AgencyProductScreen> {
             children: [
               if (product.mainImage != null && product.mainImage!.isNotEmpty)
                 Image.network(
-                  'http://127.0.0.1/EcommerceClothingApp/API/uploads/${product.mainImage}',
+                  'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product.mainImage}',
                   height: 180,
                   fit: BoxFit.contain,
                 ),
@@ -422,7 +422,7 @@ class _AgencyProductScreenState extends State<AgencyProductScreen> {
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
                                       child: Image.network(
-                                        'http://127.0.0.1/EcommerceClothingApp/API/uploads/${product.mainImage}',
+                                        'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product.mainImage}',
                                         fit: BoxFit.cover,
                                         width: 60,
                                         height: 60,

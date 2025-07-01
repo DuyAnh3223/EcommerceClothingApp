@@ -36,7 +36,7 @@ class ProductVariantsScreen extends StatelessWidget {
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: Image.network(
-                                'http://127.0.0.1/EcommerceClothingApp/API/uploads/${product.mainImage}',
+                                'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product.mainImage}',
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) => const Icon(
                                   Icons.image,
@@ -137,7 +137,7 @@ class ProductVariantsScreen extends StatelessWidget {
                                           ? ClipRRect(
                                               borderRadius: BorderRadius.circular(8),
                                               child: Image.network(
-                                                'http://127.0.0.1/EcommerceClothingApp/API/uploads/${variant.imageUrl}',
+                                                'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${variant.imageUrl}',
                                                 fit: BoxFit.cover,
                                                 errorBuilder: (context, error, stackTrace) => const Icon(
                                                   Icons.image,
