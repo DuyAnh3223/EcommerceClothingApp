@@ -60,6 +60,15 @@ class SideMenu extends StatelessWidget {
             },
           ),
           DrawerListTile(
+            title: "Tổ hợp sản phẩm",
+            svgSrc: "assets/icons/widgets.svg",
+            press: () {
+              if (onMenuSelected != null) {
+                onMenuSelected!("Tổ hợp sản phẩm");
+              }
+            },
+          ),
+          DrawerListTile(
             title: "Đơn hàng",
             svgSrc: "assets/icons/donhang.svg",
             press: () {

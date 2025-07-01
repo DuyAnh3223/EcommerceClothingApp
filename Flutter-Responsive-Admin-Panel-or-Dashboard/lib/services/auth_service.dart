@@ -1,6 +1,13 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+class User {
+  final int id;
+  final String username;
+  final String role; // 'admin' hoặc 'agency'
+  User({required this.id, required this.username, required this.role});
+}
+
 class AuthService {
   static const String baseUrl = 'http://127.0.0.1/EcommerceClothingApp/API';
 
@@ -110,5 +117,12 @@ class AuthService {
         'message': 'Lỗi kết nối: $e',
       };
     }
+  }
+
+  // Mock: trả về user admin
+  static Future<User> getCurrentUser() async {
+    // TODO: Lấy từ local storage/session thực tế
+    return User(id: 6, username: 'admin', role: 'admin');
+    // return User(id: 9, username: 'agency', role: 'agency');
   }
 } 

@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once '../config/db_connect.php';
 
 // Only get active products (approved and active)
-$sql = "SELECT id, name, description, category, gender_target, main_image, created_at, updated_at, is_agency_product, platform_fee_rate FROM products WHERE status = 'active' ORDER BY id";
+$sql = "SELECT id, name, description, category, gender_target, main_image, created_at, updated_at, is_agency_product, platform_fee_rate, created_by FROM products WHERE status = 'active' ORDER BY id";
 $result = $conn->query($sql);
 if (!$result) {
     http_response_code(500);
@@ -94,6 +94,7 @@ while ($row = $result->fetch_assoc()) {
         'main_image' => $row['main_image'],
         'is_agency_product' => $is_agency_product,
         'platform_fee_rate' => $platform_fee_rate,
+        'created_by' => $row['created_by'],
         'created_at' => $row['created_at'],
         'updated_at' => $row['updated_at'],
         'variants' => $variants

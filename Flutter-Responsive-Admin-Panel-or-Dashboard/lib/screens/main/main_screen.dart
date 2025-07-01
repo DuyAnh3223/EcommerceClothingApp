@@ -11,6 +11,7 @@ import '../products/attribute_manager_screen.dart';
 import '../notifications/notification_management_screen.dart';
 import '../user/all_user_addresses_screen.dart';
 import '../product_review/product_review_screen.dart';
+import '../product_combinations/product_combinations_screen.dart';
 
 import 'components/side_menu.dart';
 
@@ -32,6 +33,9 @@ class _MainScreenState extends State<MainScreen> {
           break;
         case "Sản phẩm":
           _selectedScreen = const ProductScreen();
+          break;
+        case "Tổ hợp sản phẩm":
+          _selectedScreen = const ProductCombinationsScreen();
           break;
         case "Người dùng":
           _selectedScreen = const UserScreen();
