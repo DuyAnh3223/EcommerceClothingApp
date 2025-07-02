@@ -9,7 +9,7 @@ import 'package:userfe/screens/home/cart_screen.dart';
 import 'package:userfe/screens/profile/profile_screen.dart';
 import 'package:userfe/screens/notifications/notifications_screen.dart';
 import 'package:userfe/services/vnpay_service.dart';
-import 'package:userfe/screens/home/combination_list_screen.dart';
+import 'product_combination_screens/combo_carousel_section.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -386,141 +386,132 @@ class _HomeScreenState extends State<HomeScreen> {
                   
                   const SizedBox(height: 16),
                   
-                  // Combo Section
-                  SizedBox(
-                    height: 320,
-                    child: CombinationListScreen(),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
                   // Products Grid
                   Expanded(
-                    child: products.isEmpty
-                        ? const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.inventory_2,
-                                  size: 64,
-                                  color: Colors.grey,
-                                ),
-                                SizedBox(height: 16),
-                                Text(
-                                  'Không có sản phẩm nào',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : GridView.builder(
-                            padding: const EdgeInsets.all(16),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                            ),
-                            itemCount: products.length,
-                            itemBuilder: (context, index) {
-                              final product = products[index];
-                              final variants = product['variants'] as List? ?? [];
-                              final firstVariant = variants.isNotEmpty ? variants[0] : null;
-                              return Card(
-                                elevation: 4,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        // Title combo
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Text(
+                            'Combo sản phẩm nổi bật',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange.shade700),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 300,
+                          child: ComboCarouselSection(),
+                        ),
+                        const SizedBox(height: 16),
+                        // Danh sách sản phẩm
+                        products.isEmpty
+                            ? const Center(
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    // Product Image
-                                    Expanded(
-                                      flex: 3,
-                                      child: Container(
-                                        width: double.infinity,
-                                        decoration: BoxDecoration(
-                                          borderRadius: const BorderRadius.vertical(
-                                            top: Radius.circular(12),
-                                          ),
-                                          color: Colors.grey.shade200,
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius: const BorderRadius.vertical(
-                                            top: Radius.circular(12),
-                                          ),
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              // Hiển thị hình ảnh full size
-                                              final imageUrl = (product['main_image'] != null && product['main_image'] != '')
-                                                  ? 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product['main_image']}'
-                                                  : (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '')
-                                                      ? 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${firstVariant['image_url']}'
-                                                      : null;
-                                              
-                                              if (imageUrl != null) {
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (context) => Dialog(
-                                                    child: Container(
-                                                      constraints: BoxConstraints(
-                                                        maxWidth: MediaQuery.of(context).size.width * 0.9,
-                                                        maxHeight: MediaQuery.of(context).size.height * 0.8,
-                                                      ),
-                                                      child: Column(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: [
-                                                          AppBar(
-                                                            title: Text('Hình ảnh: ${product['name']}'),
-                                                            backgroundColor: Colors.transparent,
-                                                            elevation: 0,
-                                                            actions: [
-                                                              IconButton(
-                                                                icon: const Icon(Icons.close),
-                                                                onPressed: () => Navigator.of(context).pop(),
-                                                              ),
-                                                            ],
+                                    Icon(
+                                      Icons.inventory_2,
+                                      size: 64,
+                                      color: Colors.grey,
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      'Không có sản phẩm nào',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: const EdgeInsets.all(16),
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  childAspectRatio: 0.75,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                ),
+                                itemCount: products.length,
+                                itemBuilder: (context, index) {
+                                  final product = products[index];
+                                  final variants = product['variants'] as List? ?? [];
+                                  final firstVariant = variants.isNotEmpty ? variants[0] : null;
+                                  return Card(
+                                    elevation: 4,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Product Image
+                                        Expanded(
+                                          flex: 3,
+                                          child: Container(
+                                            width: double.infinity,
+                                            decoration: BoxDecoration(
+                                              borderRadius: const BorderRadius.vertical(
+                                                top: Radius.circular(12),
+                                              ),
+                                              color: Colors.grey.shade200,
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius: const BorderRadius.vertical(
+                                                top: Radius.circular(12),
+                                              ),
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  // Hiển thị hình ảnh full size
+                                                  final imageUrl = (product['main_image'] != null && product['main_image'] != '')
+                                                      ? 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product['main_image']}'
+                                                      : (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '')
+                                                          ? 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${firstVariant['image_url']}'
+                                                          : null;
+                                                  
+                                                  if (imageUrl != null) {
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (context) => Dialog(
+                                                        child: Container(
+                                                          constraints: BoxConstraints(
+                                                            maxWidth: MediaQuery.of(context).size.width * 0.9,
+                                                            maxHeight: MediaQuery.of(context).size.height * 0.8,
                                                           ),
-                                                          Expanded(
-                                                            child: Stack(
-                                                              children: [
-                                                                // Ưu tiên hiển thị hình ảnh chính của sản phẩm
-                                                                (product['main_image'] != null && product['main_image'] != '')
-                                                                    ? CachedNetworkImage(
-                                                                        imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product['main_image']}',
-                                                                        height: 180,
-                                                                        placeholder: (context, url) {
-                                                                          print('Loading main image: $url');
-                                                                          return const Center(
-                                                                            child: CircularProgressIndicator(),
-                                                                          );
-                                                                        },
-                                                                        errorWidget: (context, url, error) {
-                                                                          print('Error loading main image: $url');
-                                                                          print('Error: $error');
-                                                                          return const Icon(
-                                                                            Icons.image,
-                                                                            size: 50,
-                                                                            color: Colors.grey,
-                                                                          );
-                                                                        },
-                                                                      )
-                                                                    : (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '')
+                                                          child: Column(
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              AppBar(
+                                                                title: Text('Hình ảnh: ${product['name']}'),
+                                                                backgroundColor: Colors.transparent,
+                                                                elevation: 0,
+                                                                actions: [
+                                                                  IconButton(
+                                                                    icon: const Icon(Icons.close),
+                                                                    onPressed: () => Navigator.of(context).pop(),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                              Expanded(
+                                                                child: Stack(
+                                                                  children: [
+                                                                    // Ưu tiên hiển thị hình ảnh chính của sản phẩm
+                                                                    (product['main_image'] != null && product['main_image'] != '')
                                                                         ? CachedNetworkImage(
-                                                                            imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${firstVariant['image_url']}',
+                                                                            imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product['main_image']}',
                                                                             height: 180,
                                                                             placeholder: (context, url) {
-                                                                              print('Loading variant image: $url');
+                                                                              print('Loading main image: $url');
                                                                               return const Center(
                                                                                 child: CircularProgressIndicator(),
                                                                               );
                                                                             },
                                                                             errorWidget: (context, url, error) {
-                                                                              print('Error loading variant image: $url');
+                                                                              print('Error loading main image: $url');
                                                                               print('Error: $error');
                                                                               return const Icon(
                                                                                 Icons.image,
@@ -529,75 +520,75 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                               );
                                                                             },
                                                                           )
-                                                                        : const Icon(
-                                                                            Icons.image,
-                                                                            size: 50,
-                                                                            color: Colors.grey,
+                                                                        : (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '')
+                                                                            ? CachedNetworkImage(
+                                                                                imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${firstVariant['image_url']}',
+                                                                                height: 180,
+                                                                                placeholder: (context, url) {
+                                                                                  print('Loading variant image: $url');
+                                                                                  return const Center(
+                                                                                    child: CircularProgressIndicator(),
+                                                                                  );
+                                                                                },
+                                                                                errorWidget: (context, url, error) {
+                                                                                  print('Error loading variant image: $url');
+                                                                                  print('Error: $error');
+                                                                                  return const Icon(
+                                                                                    Icons.image,
+                                                                                    size: 50,
+                                                                                    color: Colors.grey,
+                                                                                  );
+                                                                                },
+                                                                              )
+                                                                            : const Icon(
+                                                                                Icons.image,
+                                                                                size: 50,
+                                                                                color: Colors.grey,
+                                                                              ),
+                                                                    // Icon zoom khi có hình ảnh
+                                                                    if ((product['main_image'] != null && product['main_image'] != '') ||
+                                                                        (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != ''))
+                                                                      Positioned(
+                                                                        top: 8,
+                                                                        right: 8,
+                                                                        child: Container(
+                                                                          padding: const EdgeInsets.all(4),
+                                                                          decoration: BoxDecoration(
+                                                                            color: Colors.black.withOpacity(0.6),
+                                                                            borderRadius: BorderRadius.circular(4),
                                                                           ),
-                                                                // Icon zoom khi có hình ảnh
-                                                                if ((product['main_image'] != null && product['main_image'] != '') ||
-                                                                    (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != ''))
-                                                                  Positioned(
-                                                                    top: 8,
-                                                                    right: 8,
-                                                                    child: Container(
-                                                                      padding: const EdgeInsets.all(4),
-                                                                      decoration: BoxDecoration(
-                                                                        color: Colors.black.withOpacity(0.6),
-                                                                        borderRadius: BorderRadius.circular(4),
+                                                                          child: const Icon(
+                                                                            Icons.zoom_in,
+                                                                            color: Colors.white,
+                                                                            size: 16,
+                                                                          ),
+                                                                        ),
                                                                       ),
-                                                                      child: const Icon(
-                                                                        Icons.zoom_in,
-                                                                        color: Colors.white,
-                                                                        size: 16,
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                              ],
-                                                            ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ],
                                                           ),
-                                                        ],
+                                                        ),
                                                       ),
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                            child: Stack(
-                                              children: [
-                                                // Ưu tiên hiển thị hình ảnh chính của sản phẩm
-                                                (product['main_image'] != null && product['main_image'] != '')
-                                                    ? CachedNetworkImage(
-                                                        imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product['main_image']}',
-                                                        fit: BoxFit.cover,
-                                                        placeholder: (context, url) {
-                                                          print('Loading main image: $url');
-                                                          return const Center(
-                                                            child: CircularProgressIndicator(),
-                                                          );
-                                                        },
-                                                        errorWidget: (context, url, error) {
-                                                          print('Error loading main image: $url');
-                                                          print('Error: $error');
-                                                          return const Icon(
-                                                            Icons.image,
-                                                            size: 50,
-                                                            color: Colors.grey,
-                                                          );
-                                                        },
-                                                      )
-                                                    : (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '')
+                                                    );
+                                                  }
+                                                },
+                                                child: Stack(
+                                                  children: [
+                                                    // Ưu tiên hiển thị hình ảnh chính của sản phẩm
+                                                    (product['main_image'] != null && product['main_image'] != '')
                                                         ? CachedNetworkImage(
-                                                            imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${firstVariant['image_url']}',
+                                                            imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${product['main_image']}',
                                                             fit: BoxFit.cover,
                                                             placeholder: (context, url) {
-                                                              print('Loading variant image: $url');
+                                                              print('Loading main image: $url');
                                                               return const Center(
                                                                 child: CircularProgressIndicator(),
                                                               );
                                                             },
                                                             errorWidget: (context, url, error) {
-                                                              print('Error loading variant image: $url');
+                                                              print('Error loading main image: $url');
                                                               print('Error: $error');
                                                               return const Icon(
                                                                 Icons.image,
@@ -606,117 +597,139 @@ class _HomeScreenState extends State<HomeScreen> {
                                                               );
                                                             },
                                                           )
-                                                        : const Icon(
-                                                            Icons.image,
-                                                            size: 50,
-                                                            color: Colors.grey,
+                                                        : (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != '')
+                                                            ? CachedNetworkImage(
+                                                                imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${firstVariant['image_url']}',
+                                                                fit: BoxFit.cover,
+                                                                placeholder: (context, url) {
+                                                                  print('Loading variant image: $url');
+                                                                  return const Center(
+                                                                    child: CircularProgressIndicator(),
+                                                                  );
+                                                                },
+                                                                errorWidget: (context, url, error) {
+                                                                  print('Error loading variant image: $url');
+                                                                  print('Error: $error');
+                                                                  return const Icon(
+                                                                    Icons.image,
+                                                                    size: 50,
+                                                                    color: Colors.grey,
+                                                                  );
+                                                                },
+                                                              )
+                                                            : const Icon(
+                                                                Icons.image,
+                                                                size: 50,
+                                                                color: Colors.grey,
+                                                              ),
+                                                    // Icon zoom khi có hình ảnh
+                                                    if ((product['main_image'] != null && product['main_image'] != '') ||
+                                                        (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != ''))
+                                                      Positioned(
+                                                        top: 8,
+                                                        right: 8,
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(4),
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.black.withOpacity(0.6),
+                                                            borderRadius: BorderRadius.circular(4),
                                                           ),
-                                                // Icon zoom khi có hình ảnh
-                                                if ((product['main_image'] != null && product['main_image'] != '') ||
-                                                    (firstVariant != null && firstVariant['image_url'] != null && firstVariant['image_url'] != ''))
-                                                  Positioned(
-                                                    top: 8,
-                                                    right: 8,
-                                                    child: Container(
-                                                      padding: const EdgeInsets.all(4),
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.black.withOpacity(0.6),
-                                                        borderRadius: BorderRadius.circular(4),
+                                                          child: const Icon(
+                                                            Icons.zoom_in,
+                                                            color: Colors.white,
+                                                            size: 16,
+                                                          ),
+                                                        ),
                                                       ),
-                                                      child: const Icon(
-                                                        Icons.zoom_in,
-                                                        color: Colors.white,
-                                                        size: 16,
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        
+                                        // Product Info
+                                        Expanded(
+                                          flex: 2,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  product['name'] ?? 'Tên sản phẩm',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  (firstVariant != null && firstVariant['price'] != null)
+                                                      ? 'Giá từ: ${firstVariant['price'].toStringAsFixed(0)} VNĐ'
+                                                      : '0 VNĐ',
+                                                  style: TextStyle(
+                                                    color: Colors.orange.shade700,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                                // Hiển thị thông tin sản phẩm agency
+                                                if (product['is_agency_product'] == true) ...[
+                                                  const SizedBox(height: 4),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.blue.withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                                                    ),
+                                                    child: Text(
+                                                      'Sản phẩm Agency',
+                                                      style: TextStyle(
+                                                        color: Colors.blue.shade700,
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.w500,
                                                       ),
                                                     ),
                                                   ),
+                                                ],
+                                                const SizedBox(height: 8),
+                                                SizedBox(
+                                                  width: double.infinity,
+                                                  child: ElevatedButton(
+                                                    onPressed: () {
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (context) => ProductDetailDialog(product: product, onCartChanged: _updateCartCount),
+                                                      );
+                                                    },
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: Colors.orange.shade700,
+                                                      foregroundColor: Colors.white,
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                    ),
+                                                    child: const Text(
+                                                      'Xem chi tiết',
+                                                      style: TextStyle(fontSize: 12),
+                                                    ),
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           ),
                                         ),
-                                      ),
+                                      ],
                                     ),
-                                    
-                                    // Product Info
-                                    Expanded(
-                                      flex: 2,
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              product['name'] ?? 'Tên sản phẩm',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              (firstVariant != null && firstVariant['price'] != null)
-                                                  ? 'Giá từ: ${firstVariant['price'].toStringAsFixed(0)} VNĐ'
-                                                  : '0 VNĐ',
-                                              style: TextStyle(
-                                                color: Colors.orange.shade700,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                            // Hiển thị thông tin sản phẩm agency
-                                            if (product['is_agency_product'] == true) ...[
-                                              const SizedBox(height: 4),
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.blue.withOpacity(0.1),
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                                                ),
-                                                child: Text(
-                                                  'Sản phẩm Agency',
-                                                  style: TextStyle(
-                                                    color: Colors.blue.shade700,
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                            const SizedBox(height: 8),
-                                            SizedBox(
-                                              width: double.infinity,
-                                              child: ElevatedButton(
-                                                onPressed: () {
-                                                  showDialog(
-                                                    context: context,
-                                                    builder: (context) => ProductDetailDialog(product: product, onCartChanged: _updateCartCount),
-                                                  );
-                                                },
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.orange.shade700,
-                                                  foregroundColor: Colors.white,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(8),
-                                                  ),
-                                                ),
-                                                child: const Text(
-                                                  'Xem chi tiết',
-                                                  style: TextStyle(fontSize: 12),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
+                                  );
+                                },
+                              ),
+                      ],
+                    ),
                   ),
                 ],
               ),

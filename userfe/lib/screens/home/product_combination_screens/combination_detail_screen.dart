@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/product_combination_model.dart';
+import '../../../models/product_combination_model.dart';
 
 class CombinationDetailScreen extends StatelessWidget {
   final ProductCombination combination;
