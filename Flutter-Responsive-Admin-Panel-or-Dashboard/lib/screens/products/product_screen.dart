@@ -32,7 +32,7 @@ class _ProductScreenState extends State<ProductScreen> {
     });
 
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/products/get_products.php'));
+      final response = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/admin/products/get_products.php'));
       
       if (!mounted) return;
       
@@ -118,7 +118,7 @@ class _ProductScreenState extends State<ProductScreen> {
     if (confirmed == true) {
       try {
         final response = await http.post(
-          Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/products/delete_product.php'),
+          Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/admin/products/delete_product.php'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'id': productId}),
         );

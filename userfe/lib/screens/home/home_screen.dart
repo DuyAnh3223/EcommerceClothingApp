@@ -9,6 +9,7 @@ import 'package:userfe/screens/home/cart_screen.dart';
 import 'package:userfe/screens/profile/profile_screen.dart';
 import 'package:userfe/screens/notifications/notifications_screen.dart';
 import 'package:userfe/services/vnpay_service.dart';
+import 'package:userfe/screens/home/combination_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -381,6 +382,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         fillColor: Colors.grey.shade100,
                       ),
                     ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Combo Section
+                  SizedBox(
+                    height: 320,
+                    child: CombinationListScreen(),
                   ),
                   
                   const SizedBox(height: 16),

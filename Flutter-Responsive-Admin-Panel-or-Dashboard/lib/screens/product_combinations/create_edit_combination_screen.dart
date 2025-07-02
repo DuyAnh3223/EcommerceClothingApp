@@ -40,6 +40,9 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
   String searchBrand = '';
   List<Product> filteredProducts = [];
 
+  // Thay vì chỉ lưu selectedProducts, ta lưu selectedVariants: Map<productId, variant>
+  Map<int, ProductVariant> selectedVariants = {};
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +54,22 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
       discountPrice = widget.combination!.discountPrice;
       status = widget.combination!.status;
       isFeatured = false;
+      // Nếu có items, map selectedVariants
+      for (final item in widget.combination!.items) {
+        Product? product;
+        try {
+          product = allProducts.firstWhere((p) => p.id == item.productId);
+        } catch (e) {
+          product = null;
+        }
+        if (product != null && product.variants.isNotEmpty) {
+          final variant = product.variants.firstWhere(
+            (v) => v.id == item.variantId,
+            orElse: () => product!.variants.first,
+          );
+          selectedVariants[product.id!] = variant;
+        }
+      }
     }
   }
 
@@ -259,52 +278,77 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
     );
   }
 
+  // Sửa lại hàm _onSubmit để đảm bảo form validate và có thông báo khi nhấn nút
   void _onSubmit() async {
-    if (!_formKey.currentState!.validate() || selectedProducts.length < 2) {
-      if (selectedProducts.length < 2) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vui lòng chọn ít nhất 2 sản phẩm!')),
-        );
-      }
+    print('Submit pressed');
+    // Kiểm tra validate form
+    final form = _formKey.currentState;
+    if (form == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Có lỗi xảy ra với form!')),
+      );
       return;
     }
-    _formKey.currentState!.save();
-    setState(() { isLoading = true; });
-    final user = await AuthService.getCurrentUser();
-    final userId = user.id;
-    final creatorType = user.role;
-    final categories = selectedProducts.map((p) => p.category).toList();
-    final items = selectedProducts.map((p) {
-      final variant = p.variants.isNotEmpty ? p.variants.first : null;
-      return {
-        'product_id': p.id,
-        if (variant != null) 'variant_id': variant.id,
-        if (variant != null && variant.attributeValues.isNotEmpty)
-          'attributes': {
-            for (var attr in variant.attributeValues) attr.attributeName: attr.value
-          },
-      };
-    }).toList();
-    final result = await ProductCombinationService.createCombination(
-      name: name,
-      description: description,
-      imageUrl: imageUrl,
-      discountPrice: discountPrice,
-      status: status,
-      createdBy: userId,
-      creatorType: creatorType,
-      categories: categories,
-      items: items,
-    );
-    setState(() { isLoading = false; });
-    if (result['success']) {
-      Navigator.pop(context, true);
+    if (!form.validate()) {
+      // Nếu form không hợp lệ, show thông báo lỗi
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tạo tổ hợp thành công!')),
+        const SnackBar(content: Text('Vui lòng điền đầy đủ thông tin hợp lệ!')),
       );
-    } else {
+      return;
+    }
+    if (selectedProducts.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'Lỗi tạo tổ hợp')),
+        const SnackBar(content: Text('Vui lòng chọn ít nhất 2 sản phẩm!')),
+      );
+      return;
+    }
+    form.save();
+    setState(() { isLoading = true; });
+
+    try {
+      final user = await AuthService.getCurrentUser();
+      final userId = user.id;
+      final creatorType = user.role;
+      final categories = selectedProducts.map((p) => p.category).toList();
+      final items = selectedProducts.map((p) {
+        // Sử dụng selectedVariants nếu có, nếu không lấy variant đầu tiên
+        final variant = selectedVariants[p.id] ?? (p.variants.isNotEmpty ? p.variants.first : null);
+        return {
+          'product_id': p.id,
+          if (variant != null) 'variant_id': variant.id,
+          if (variant != null && variant.attributeValues.isNotEmpty)
+            'attributes': {
+              for (var attr in variant.attributeValues) attr.attributeName: attr.value
+            },
+        };
+      }).toList();
+      final result = await ProductCombinationService.createCombination(
+        name: name,
+        description: description,
+        imageUrl: imageUrl,
+        discountPrice: discountPrice,
+        status: status,
+        createdBy: userId,
+        creatorType: creatorType,
+        categories: categories,
+        items: items,
+      );
+      setState(() { isLoading = false; });
+      if (result['success'] == true) {
+        // Đảm bảo show thông báo thành công
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tạo tổ hợp thành công!')),
+        );
+        Navigator.pop(context, true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Lỗi tạo tổ hợp')),
+        );
+      }
+    } catch (e) {
+      setState(() { isLoading = false; });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: ${e.toString()}')),
       );
     }
   }
@@ -317,53 +361,75 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
         : 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=$mainImage';
   }
 
+  // Hàm tiện ích để lấy chuỗi thuộc tính của variant, ví dụ: color: white, size: X, brand: Adidas
+  String getVariantAttributesString(ProductVariant v) {
+    if (v.attributeValues.isEmpty) return '';
+    return v.attributeValues
+        .map((attr) => '${attr.attributeName}: ${attr.value}')
+        .join(', ');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(widget.combination == null ? 'Tạo tổ hợp sản phẩm' : 'Sửa tổ hợp sản phẩm')),
+      backgroundColor: Colors.grey[900],
+      appBar: AppBar(
+        backgroundColor: Colors.grey[900],
+        elevation: 2,
+        iconTheme: const IconThemeData(color: Colors.cyanAccent),
+        title: Text(
+          widget.combination == null ? 'Tạo tổ hợp sản phẩm' : 'Sửa tổ hợp sản phẩm',
+          style: const TextStyle(
+            color: Colors.cyanAccent,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+        centerTitle: true,
+      ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Colors.cyanAccent))
           : Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   // Cột 1: Tìm kiếm, chọn sản phẩm, sản phẩm đã chọn
                   Expanded(
                     flex: 2,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         // Ô tìm kiếm
                         TextField(
                           controller: searchController,
+                          style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             labelText: 'Tìm kiếm sản phẩm',
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon: searchController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: () {
-                                      searchController.clear();
-                                      _filterProducts();
-                                    },
-                                  )
-                                : null,
+                            labelStyle: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
+                            prefixIcon: const Icon(Icons.search, color: Colors.cyanAccent),
+                            filled: true,
+                            fillColor: Colors.grey[850],
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Colors.cyanAccent, width: 2),
+                            ),
                           ),
                           onChanged: (v) => _filterProducts(),
                         ),
-                        const SizedBox(height: 8),
-                        // TODO: Thêm filter nâng cao (category, gender, color, size, brand...)
+                        const SizedBox(height: 16),
                         // Danh sách sản phẩm
                         Expanded(
                           child: filteredProducts.isEmpty
-                              ? const Center(child: Text('Không có sản phẩm phù hợp'))
+                              ? const Center(child: Text('Không có sản phẩm phù hợp', style: TextStyle(color: Colors.white70)))
                               : GridView.builder(
                                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 2,
                                     childAspectRatio: 2.8,
-                                    crossAxisSpacing: 8,
-                                    mainAxisSpacing: 8,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
                                   ),
                                   itemCount: filteredProducts.length,
                                   itemBuilder: (context, idx) {
@@ -372,35 +438,54 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
                                     final isCategoryDuplicate = !isSelected && selectedCategories.contains(product.category);
                                     return GestureDetector(
                                       onTap: () => _onProductTap(product),
-                                      child: Card(
-                                        color: isSelected
-                                            ? Colors.blue.shade100
-                                            : isCategoryDuplicate
-                                                ? Colors.grey.shade200
-                                                : null,
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 150),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? Colors.cyan[900]
+                                              : isCategoryDuplicate
+                                                  ? Colors.grey[800]
+                                                  : Colors.grey[850],
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: isSelected ? Colors.cyanAccent : Colors.transparent,
+                                            width: 2,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.12),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
                                         child: Row(
-                                          children: [
+                                          children: <Widget>[
                                             Padding(
                                               padding: const EdgeInsets.all(8.0),
-                                              child: Image.network(
-                                                getProductImageUrl(product.mainImage),
-                                                width: 40,
-                                                height: 40,
-                                                errorBuilder: (c, e, s) => const Icon(Icons.image),
+                                              child: ClipRRect(
+                                                borderRadius: BorderRadius.circular(12),
+                                                child: Image.network(
+                                                  getProductImageUrl(product.mainImage),
+                                                  width: 80,
+                                                  height: 80,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (c, e, s) => const Icon(Icons.image, color: Colors.white38, size: 48),
+                                                ),
                                               ),
                                             ),
                                             Expanded(
                                               child: Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                                  Text(product.category, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                                children: <Widget>[
+                                                  Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                                                  Text(product.category, style: TextStyle(fontSize: 12, color: Colors.cyanAccent.withOpacity(0.7))),
                                                 ],
                                               ),
                                             ),
                                             if (isSelected)
-                                              const Icon(Icons.check_circle, color: Colors.blue),
+                                              const Icon(Icons.check_circle, color: Colors.cyanAccent),
                                           ],
                                         ),
                                       ),
@@ -408,104 +493,270 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
                                   },
                                 ),
                         ),
-                        const SizedBox(height: 8),
-                        // Khung sản phẩm đã chọn
-                        Text('Sản phẩm đã chọn:', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        SizedBox(
-                          height: 70,
-                          child: selectedProducts.isEmpty
-                              ? const Center(child: Text('Chưa chọn sản phẩm nào'))
-                              : ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: selectedProducts.length,
-                                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                                  itemBuilder: (context, idx) {
-                                    final p = selectedProducts[idx];
-                                    return GestureDetector(
-                                      onTap: () => _onEditSelectedProduct(p),
-                                      child: Column(
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: Image.network(
-                                              getProductImageUrl(p.mainImage),
-                                              width: 48,
-                                              height: 48,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (c, e, s) => const Icon(Icons.image),
-                                            ),
-                                          ),
-                                          Text(p.name, style: const TextStyle(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                        ),
+                        const SizedBox(height: 12),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 24),
+                  const SizedBox(width: 32),
                   // Cột 2: Form thông tin tổ hợp
                   Expanded(
                     flex: 3,
-                    child: Form(
-                      key: _formKey,
-                      child: ListView(
-                        shrinkWrap: true,
-                        children: [
-                          TextFormField(
-                            initialValue: name,
-                            decoration: const InputDecoration(labelText: 'Tên tổ hợp'),
-                            validator: (v) => v == null || v.isEmpty ? 'Bắt buộc' : null,
-                            onSaved: (v) => name = v!,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        // Sử dụng Expanded + Stack để tổng giá gốc nằm fix ở dưới cùng
+                        Expanded(
+                          flex: 1,
+                          child: Card(
+                            color: Colors.grey[850],
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: selectedProducts.isEmpty
+                                  ? const Center(child: Text('Chưa chọn sản phẩm nào', style: TextStyle(color: Colors.white70)))
+                                  : Stack(
+                                      children: [
+                                        // List các biến thể và giá tiền (scrollable)
+                                        Positioned.fill(
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(bottom: 60), // chừa chỗ cho tổng giá gốc
+                                            child: ListView.separated(
+                                              itemCount: selectedProducts.length,
+                                              separatorBuilder: (context, idx) => const SizedBox(height: 12),
+                                              itemBuilder: (context, idx) {
+                                                final p = selectedProducts[idx];
+                                                final variant = selectedVariants[p.id] ?? (p.variants.isNotEmpty ? p.variants.first : null);
+                                                return GestureDetector(
+                                                  onTap: () async {
+                                                    if (p.variants.length <= 1) return;
+                                                    ProductVariant? newVariant = await showDialog<ProductVariant>(
+                                                      context: context,
+                                                      builder: (context) => SimpleDialog(
+                                                        backgroundColor: Colors.grey[900],
+                                                        title: Text('Chọn biến thể cho ${p.name}', style: const TextStyle(color: Colors.cyanAccent)),
+                                                        children: p.variants.map((v) {
+                                                          final attrString = getVariantAttributesString(v);
+                                                          return ListTile(
+                                                            leading: v.imageUrl != null && v.imageUrl!.isNotEmpty
+                                                                ? Image.network(getProductImageUrl(v.imageUrl), width: 64, height: 64, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.image, color: Colors.white38, size: 48))
+                                                                : const Icon(Icons.image, color: Colors.white38, size: 48),
+                                                            title: Text(
+                                                              attrString.isNotEmpty
+                                                                  ? attrString
+                                                                  : v.attributeValues.isNotEmpty
+                                                                      ? v.attributeValues
+                                                                          .map((attr) => '${attr.attributeName}: ${attr.value}')
+                                                                          .join(', ')
+                                                                      : '',
+                                                              style: const TextStyle(color: Colors.white),
+                                                              maxLines: 2,
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                            subtitle: Text('Giá: ${v.price?.toStringAsFixed(0) ?? 'N/A'} đ', style: const TextStyle(color: Colors.cyanAccent)),
+                                                            selected: variant?.id == v.id,
+                                                            selectedTileColor: Colors.cyan[900],
+                                                            onTap: () => Navigator.pop(context, v),
+                                                          );
+                                                        }).toList(),
+                                                      ),
+                                                    );
+                                                    if (newVariant != null) {
+                                                      setState(() {
+                                                        selectedVariants[p.id!] = newVariant;
+                                                      });
+                                                    }
+                                                  },
+                                                  child: Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                                    children: <Widget>[
+                                                      ClipRRect(
+                                                        borderRadius: BorderRadius.circular(12),
+                                                        child: variant != null && variant.imageUrl != null && variant.imageUrl!.isNotEmpty
+                                                            ? Image.network(getProductImageUrl(variant.imageUrl), width: 64, height: 64, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.image, color: Colors.white38, size: 48))
+                                                            : Image.network(getProductImageUrl(p.mainImage), width: 64, height: 64, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.image, color: Colors.white38, size: 48)),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      // Tên sản phẩm và thuộc tính
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: [
+                                                            Text(
+                                                              p.name,
+                                                              maxLines: 1,
+                                                              overflow: TextOverflow.ellipsis,
+                                                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                                            ),
+                                                            if (variant != null && variant.attributeValues.isNotEmpty)
+                                                              Text(
+                                                                getVariantAttributesString(variant),
+                                                                style: const TextStyle(fontSize: 12, color: Colors.cyanAccent),
+                                                                maxLines: 2,
+                                                                overflow: TextOverflow.ellipsis,
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      // Giá tiền căn chỉnh cùng hàng
+                                                      Container(
+                                                        width: 100,
+                                                        alignment: Alignment.centerRight,
+                                                        child: Text(
+                                                          variant?.price != null ? '${variant!.price!.toStringAsFixed(0)} đ' : 'Chưa có giá',
+                                                          style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.cyanAccent, fontSize: 16),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        // Tổng giá gốc fix ở dưới cùng
+                                        Positioned(
+                                          left: 0,
+                                          right: 0,
+                                          bottom: 0,
+                                          child: Container(
+                                            color: Colors.grey[900]?.withOpacity(0.95),
+                                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                                            child: Align(
+                                              alignment: Alignment.centerRight,
+                                              child: Builder(
+                                                builder: (context) {
+                                                  double total = 0;
+                                                  for (final p in selectedProducts) {
+                                                    final variant = selectedVariants[p.id] ?? (p.variants.isNotEmpty ? p.variants.first : null);
+                                                    if (variant?.price != null) total += variant!.price!;
+                                                  }
+                                                  return Text(
+                                                    'Tổng giá gốc: ${total.toStringAsFixed(0)} đ',
+                                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.cyanAccent, fontSize: 20),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
                           ),
-                          TextFormField(
-                            initialValue: description,
-                            decoration: const InputDecoration(labelText: 'Mô tả'),
-                            onSaved: (v) => description = v ?? '',
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.image),
-                                label: const Text('Chọn ảnh đại diện'),
-                                onPressed: _pickAndUploadImage,
-                              ),
-                              if (imageUrl != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 16),
-                                  child: Image.network(
-                                    getProductImageUrl(imageUrl),
-                                    height: 60,
+                        ),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          flex: 1,
+                          child: Card(
+                            color: Colors.grey[850],
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: SingleChildScrollView(
+                                child: Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      // Giá ưu đãi
+                                      TextFormField(
+                                        initialValue: discountPrice?.toString(),
+                                        style: const TextStyle(color: Colors.white),
+                                        decoration: InputDecoration(
+                                          labelText: 'Giá ưu đãi',
+                                          labelStyle: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
+                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                            borderSide: const BorderSide(color: Colors.cyanAccent, width: 2),
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.grey[900],
+                                        ),
+                                        keyboardType: TextInputType.number,
+                                        onSaved: (v) => discountPrice = double.tryParse(v ?? ''),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      // Form nhập thông tin tổ hợp
+                                      TextFormField(
+                                        initialValue: name,
+                                        style: const TextStyle(color: Colors.white),
+                                        decoration: InputDecoration(
+                                          labelText: 'Tên tổ hợp',
+                                          labelStyle: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
+                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                            borderSide: const BorderSide(color: Colors.cyanAccent, width: 2),
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.grey[900],
+                                        ),
+                                        validator: (v) => v == null || v.isEmpty ? 'Bắt buộc' : null,
+                                        onSaved: (v) => name = v!,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      TextFormField(
+                                        initialValue: description,
+                                        style: const TextStyle(color: Colors.white),
+                                        decoration: InputDecoration(
+                                          labelText: 'Mô tả',
+                                          labelStyle: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
+                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                            borderSide: const BorderSide(color: Colors.cyanAccent, width: 2),
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.grey[900],
+                                        ),
+                                        onSaved: (v) => description = v ?? '',
+                                      ),
+                                      const SizedBox(height: 12),
+                                      DropdownButtonFormField<String>(
+                                        value: status,
+                                        dropdownColor: Colors.grey[900],
+                                        style: const TextStyle(color: Colors.white),
+                                        decoration: InputDecoration(
+                                          labelText: 'Trạng thái',
+                                          labelStyle: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
+                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                          filled: true,
+                                          fillColor: Colors.grey[900],
+                                        ),
+                                        items: const [
+                                          DropdownMenuItem(value: 'active', child: Text('Hoạt động', style: TextStyle(color: Colors.cyanAccent))),
+                                          DropdownMenuItem(value: 'inactive', child: Text('Không hoạt động', style: TextStyle(color: Colors.cyanAccent))),
+                                        ],
+                                        onChanged: (v) => setState(() => status = v!),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.cyanAccent,
+                                            foregroundColor: Colors.black,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            padding: const EdgeInsets.symmetric(vertical: 18),
+                                            textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                            elevation: 2,
+                                          ),
+                                          onPressed: _onSubmit,
+                                          child: Text(widget.combination == null ? 'Tạo tổ hợp' : 'Cập nhật tổ hợp'),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                            ],
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          TextFormField(
-                            initialValue: discountPrice?.toString(),
-                            decoration: const InputDecoration(labelText: 'Giá ưu đãi'),
-                            keyboardType: TextInputType.number,
-                            onSaved: (v) => discountPrice = double.tryParse(v ?? ''),
-                          ),
-                          DropdownButtonFormField<String>(
-                            value: status,
-                            items: const [
-                              DropdownMenuItem(value: 'active', child: Text('Hoạt động')),
-                              DropdownMenuItem(value: 'inactive', child: Text('Không hoạt động')),
-                            ],
-                            onChanged: (v) => setState(() => status = v!),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _onSubmit,
-                            child: Text(widget.combination == null ? 'Tạo tổ hợp' : 'Cập nhật tổ hợp'),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -513,4 +764,4 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
             ),
     );
   }
-} 
+}

@@ -57,14 +57,14 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
     setState(() { isDropdownLoading = true; });
     try {
       // Lấy danh sách thuộc tính
-      final attrRes = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/get_attributes.php'));
+      final attrRes = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/admin/variants_attributes/get_attributes.php?created_by=6'));
       final attrData = json.decode(attrRes.body);
       if (attrData['success'] == true) {
         attributes = List<Map<String, dynamic>>.from(attrData['attributes']);
         // Lấy giá trị cho từng thuộc tính
         for (var attr in attributes) {
           final attrId = attr['id'];
-          final valRes = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/get_attribute_values.php?attribute_id=$attrId'));
+          final valRes = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/admin/variants_attributes/get_attribute_values.php?attribute_id=$attrId'));
           final valData = json.decode(valRes.body);
           if (valData['success'] == true) {
             attributeValues[attrId] = List<Map<String, dynamic>>.from(valData['values']);
@@ -178,8 +178,8 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
       }
 
       final url = widget.variant == null
-          ? 'http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/add_variant.php'
-          : 'http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/update_variant.php';
+          ? 'http://127.0.0.1/EcommerceClothingApp/API/admin/variants_attributes/add_variant.php'
+          : 'http://127.0.0.1/EcommerceClothingApp/API/admin/variants_attributes/update_variant.php';
       final data = {
         if (widget.variant != null) 'variant_id': widget.variant!.id,
         'product_id': widget.productId,

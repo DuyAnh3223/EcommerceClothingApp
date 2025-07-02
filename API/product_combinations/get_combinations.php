@@ -1,4 +1,11 @@
 <?php
+// API này trả về danh sách tổ hợp sản phẩm (product combinations) cho FE user hoặc admin.
+// Để lấy danh sách tổ hợp đang bán cho khách hàng, gọi:
+//   GET /API/product_combinations/get_combinations.php?status=active&page=1&limit=10
+// Trả về: id, name, description, image_url, discount_price, original_price, status, created_by, creator_type, created_at, updated_at, categories, items[]
+// items[] gồm: product_id, variant_id, quantity, price_in_combination, product_name, product_image, product_category, sku, original_price, stock, variant_image
+//
+// Nếu muốn lấy chi tiết 1 tổ hợp, FE chỉ cần lấy phần tử trong mảng combinations trả về (không cần API riêng detail).
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: GET');

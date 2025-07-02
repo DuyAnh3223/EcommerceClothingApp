@@ -34,9 +34,9 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
     try {
       String url;
       if (widget.productId != null) {
-        url = 'http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/get_variants.php?product_id=${widget.productId}';
+        url = 'http://127.0.0.1/EcommerceClothingApp/API/admin/variants_attributes/get_variants.php?product_id=${widget.productId}';
       } else {
-        url = 'http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/get_variants.php';
+        url = 'http://127.0.0.1/EcommerceClothingApp/API/admin/variants_attributes/get_variants.php';
       }
 
       final response = await http.get(Uri.parse(url));
@@ -97,7 +97,7 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
     if (confirmed == true) {
       try {
         final response = await http.post(
-          Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/variants_attributes/delete_variant.php'),
+          Uri.parse('http://127.0.0.1/EcommerceClothingApp/admin/API/variants_attributes/delete_variant.php'),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'id': variantId}),
         );

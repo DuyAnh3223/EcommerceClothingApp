@@ -198,11 +198,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
       if (widget.product == null) {
         // Add new product
-        url = 'http://127.0.0.1/EcommerceClothingApp/API/products/add_product.php';
+        url = 'http://127.0.0.1/EcommerceClothingApp/API/admin/products/add_product.php';
         method = 'POST';
       } else {
         // Update existing product
-        url = 'http://127.0.0.1/EcommerceClothingApp/API/products/update_product.php';
+        url = 'http://127.0.0.1/EcommerceClothingApp/API/admin/products/update_product.php';
         method = 'POST';
         productData['id'] = widget.product!.id.toString(); // Convert int to String
       }
