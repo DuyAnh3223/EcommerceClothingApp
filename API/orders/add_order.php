@@ -75,7 +75,7 @@ try {
             SELECT p.is_agency_product, p.platform_fee_rate, pv.price 
             FROM products p 
             JOIN product_variant pv ON p.id = pv.product_id 
-            WHERE p.id = ? AND pv.variant_id = ?
+            WHERE p.id = ? AND pv.variant_id = ? AND p.status = 'active' AND pv.status = 'active'
         ");
         $stmt->bind_param("ii", $product_id, $variant_id);
         $stmt->execute();

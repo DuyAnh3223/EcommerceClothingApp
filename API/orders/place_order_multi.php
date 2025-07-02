@@ -30,36 +30,57 @@ if (!$user_id || !$address_id || empty($items)) {
     exit();
 }
 
-// Tính tổng tiền
+// Tính tổng tiền và platform fees
 $total_amount = 0;
+$total_platform_fee = 0;
 foreach ($items as $item) {
     $product_id = (int)$item['product_id'];
     $variant_id = (int)$item['variant_id'];
     $quantity = (int)$item['quantity'];
-    $pv_sql = "SELECT price, stock FROM product_variant WHERE product_id = ? AND variant_id = ?";
-    $pv_stmt = $conn->prepare($pv_sql);
-    $pv_stmt->bind_param("ii", $product_id, $variant_id);
-    $pv_stmt->execute();
-    $pv_result = $pv_stmt->get_result();
-    if ($pv_result->num_rows === 0) {
+    
+    // Get product and variant info with platform fee calculation
+    $stmt = $conn->prepare("
+        SELECT p.is_agency_product, p.platform_fee_rate, pv.price, pv.stock 
+        FROM products p 
+        JOIN product_variant pv ON p.id = pv.product_id 
+        WHERE p.id = ? AND pv.variant_id = ? AND p.status = 'active' AND pv.status = 'active'
+    ");
+    $stmt->bind_param("ii", $product_id, $variant_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 0) {
         echo json_encode(["success" => false, "message" => "Không tìm thấy sản phẩm hoặc biến thể."]);
         exit();
     }
-    $pv_row = $pv_result->fetch_assoc();
-    $price = (float)$pv_row['price'];
-    $stock = (int)$pv_row['stock'];
+    
+    $product_info = $result->fetch_assoc();
+    $base_price = (float)$product_info['price'];
+    $stock = (int)$product_info['stock'];
+    $is_agency_product = (bool)$product_info['is_agency_product'];
+    $platform_fee_rate = (float)$product_info['platform_fee_rate'];
+    
     if ($stock < $quantity) {
         echo json_encode(["success" => false, "message" => "Sản phẩm đã hết hàng hoặc không đủ số lượng."]);
         exit();
     }
-    $total_amount += $price * $quantity;
-    $pv_stmt->close();
+    
+    $item_total = $base_price * $quantity;
+    $item_platform_fee = 0;
+    
+    if ($is_agency_product) {
+        $item_platform_fee = $item_total * ($platform_fee_rate / 100);
+    }
+    
+    $total_amount += $item_total + $item_platform_fee;
+    $total_platform_fee += $item_platform_fee;
+    $stmt->close();
 }
 
 // Tạo đơn hàng
-$order_sql = "INSERT INTO orders (user_id, address_id, total_amount, status) VALUES (?, ?, ?, 'pending')";
+$order_sql = "INSERT INTO orders (user_id, address_id, total_amount, platform_fee, status) VALUES (?, ?, ?, ?, 'pending')";
 $order_stmt = $conn->prepare($order_sql);
-$order_stmt->bind_param("iid", $user_id, $address_id, $total_amount);
+$order_stmt->bind_param("iidd", $user_id, $address_id, $total_amount, $total_platform_fee);
 $order_stmt->execute();
 $order_id = $order_stmt->insert_id;
 $order_stmt->close();
@@ -69,18 +90,37 @@ foreach ($items as $item) {
     $product_id = (int)$item['product_id'];
     $variant_id = (int)$item['variant_id'];
     $quantity = (int)$item['quantity'];
-    $pv_sql = "SELECT price FROM product_variant WHERE product_id = ? AND variant_id = ?";
-    $pv_stmt = $conn->prepare($pv_sql);
-    $pv_stmt->bind_param("ii", $product_id, $variant_id);
-    $pv_stmt->execute();
-    $pv_result = $pv_stmt->get_result();
-    $pv_row = $pv_result->fetch_assoc();
-    $price = (float)$pv_row['price'];
-    $pv_stmt->close();
-
-    $item_sql = "INSERT INTO order_items (order_id, product_id, variant_id, quantity, price) VALUES (?, ?, ?, ?, ?)";
+    
+    // Get product and variant info again for order items
+    $stmt = $conn->prepare("
+        SELECT p.is_agency_product, p.platform_fee_rate, pv.price 
+        FROM products p 
+        JOIN product_variant pv ON p.id = pv.product_id 
+        WHERE p.id = ? AND pv.variant_id = ? AND p.status = 'active' AND pv.status = 'active'
+    ");
+    $stmt->bind_param("ii", $product_id, $variant_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $product_info = $result->fetch_assoc();
+    
+    $base_price = (float)$product_info['price'];
+    $is_agency_product = (bool)$product_info['is_agency_product'];
+    $platform_fee_rate = (float)$product_info['platform_fee_rate'];
+    
+    $final_price = $base_price;
+    $item_platform_fee = 0;
+    
+    if ($is_agency_product) {
+        $item_platform_fee = $base_price * ($platform_fee_rate / 100);
+        $final_price = $base_price + $item_platform_fee;
+    }
+    
+    // Tính platform fee cho toàn bộ quantity
+    $total_item_platform_fee = $item_platform_fee * $quantity;
+    
+    $item_sql = "INSERT INTO order_items (order_id, product_id, variant_id, quantity, price, platform_fee) VALUES (?, ?, ?, ?, ?, ?)";
     $item_stmt = $conn->prepare($item_sql);
-    $item_stmt->bind_param("iiiid", $order_id, $product_id, $variant_id, $quantity, $price);
+    $item_stmt->bind_param("iiiddd", $order_id, $product_id, $variant_id, $quantity, $final_price, $total_item_platform_fee);
     $item_stmt->execute();
     $item_stmt->close();
 
