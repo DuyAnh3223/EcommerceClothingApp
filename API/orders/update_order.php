@@ -111,6 +111,31 @@ try {
     // Commit transaction
     $conn->commit();
 
+    // Nếu trạng thái là 'confirmed', gửi thông báo cho agency các sản phẩm trong đơn hàng này
+    if ($status === 'confirmed') {
+        $sql = "SELECT oi.product_id, oi.quantity, p.name, p.created_by
+                FROM order_items oi
+                JOIN products p ON oi.product_id = p.id
+                WHERE oi.order_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $order_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($row = $result->fetch_assoc()) {
+            $agency_id = $row['created_by'];
+            if ($agency_id) {
+                $title = 'Sản phẩm của bạn đã được bán';
+                $content = 'Sản phẩm: ' . $row['name'] . ' | Số lượng: ' . $row['quantity'];
+                $type = 'order_status';
+                $stmtNotify = $conn->prepare("INSERT INTO notifications (user_id, title, content, type, is_read) VALUES (?, ?, ?, ?, 0)");
+                $stmtNotify->bind_param("isss", $agency_id, $title, $content, $type);
+                $stmtNotify->execute();
+                $stmtNotify->close();
+            }
+        }
+        $stmt->close();
+    }
+
     // Send notification to user about order status change
     $notificationData = json_encode([
         'order_id' => $order_id,

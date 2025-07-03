@@ -161,32 +161,37 @@ class _OrderScreenState extends State<OrderScreen> {
               Center(child: Text(errorMessage!, style: const TextStyle(color: Colors.red)))
             else
               Expanded(
-                child: ListView.builder(
-                  itemCount: orders.length,
-                  itemBuilder: (context, index) {
-                    final order = orders[index];
-                    return Card(
-                      child: ListTile(
-                        title: Text('Đơn hàng #${order.id} - ${order.status}'),
-                        subtitle: Text('Khách: ${order.userName ?? ''} - Tổng: ${order.totalAmount} VNĐ'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
-                              tooltip: 'Sửa',
-                              onPressed: () => _editOrder(order),
+                child: Builder(
+                  builder: (context) {
+                    final pendingOrders = orders.where((order) => order.status == "pending").toList();
+                    return ListView.builder(
+                      itemCount: pendingOrders.length,
+                      itemBuilder: (context, index) {
+                        final order = pendingOrders[index];
+                        return Card(
+                          child: ListTile(
+                            title: Text('Đơn hàng #${order.id} - ${order.status}'),
+                            subtitle: Text('Khách: ${order.userName ?? ''} - Tổng: ${order.totalAmount} VNĐ'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                  tooltip: 'Sửa',
+                                  onPressed: () => _editOrder(order),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  tooltip: 'Xóa',
+                                  onPressed: () => _deleteOrder(order),
+                                ),
+                                const Icon(Icons.arrow_forward_ios),
+                              ],
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              tooltip: 'Xóa',
-                              onPressed: () => _deleteOrder(order),
-                            ),
-                            const Icon(Icons.arrow_forward_ios),
-                          ],
-                        ),
-                        onTap: () => _viewOrderDetail(order),
-                      ),
+                            onTap: () => _viewOrderDetail(order),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

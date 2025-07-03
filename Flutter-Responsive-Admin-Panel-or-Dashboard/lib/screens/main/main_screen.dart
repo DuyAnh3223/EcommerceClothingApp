@@ -12,6 +12,7 @@ import '../notifications/notification_management_screen.dart';
 import '../user/all_user_addresses_screen.dart';
 import '../product_review/product_review_screen.dart';
 import '../product_combinations/product_combinations_screen.dart';
+import '../withdraw/withdraw_screen.dart';
 
 import 'components/side_menu.dart';
 
@@ -46,9 +47,7 @@ class _MainScreenState extends State<MainScreen> {
         case "Thông báo":
           _selectedScreen = const NotificationManagementScreen();
           break;
-        // case "Chi tiết đơn hàng":
-        //   _selectedScreen = const Center(child: Text("Trang 'Chi tiết đơn hàng' đang cập nhật"));
-        //   break;
+
         case "Kiểm duyệt sản phẩm":
           _selectedScreen = const ProductReviewScreen();
           break;
@@ -57,6 +56,9 @@ class _MainScreenState extends State<MainScreen> {
           break;
         case "Quản lý thuộc tính":
           _selectedScreen = const AttributeManagerScreen();
+          break;
+        case "Quản lý rút tiền":
+          _selectedScreen = const WithdrawScreen();
           break;
         default:
           _selectedScreen = Center(child: Text("Trang '$menu' đang cập nhật"));
