@@ -36,6 +36,23 @@ $category = trim($data['category']);
 $gender_target = trim($data['gender_target']);
 $main_image = isset($data['main_image']) ? trim($data['main_image']) : null;
 
+// Nhận thêm các trường cho agency
+$created_by = isset($data['created_by']) ? (int)$data['created_by'] : null;
+$is_agency_product = isset($data['is_agency_product']) ? (int)$data['is_agency_product'] : 0;
+$platform_fee_rate = isset($data['platform_fee_rate']) ? (float)$data['platform_fee_rate'] : 20.0;
+
+// Nếu là sản phẩm agency thì bắt buộc phải có created_by và is_agency_product = 1
+if ($is_agency_product === 1) {
+    if (!$created_by) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Thiếu trường created_by cho sản phẩm agency"
+        ]);
+        exit();
+    }
+}
+
 // Kiểm tra trùng sản phẩm
 $check_stmt = $conn->prepare("SELECT id FROM products WHERE name = ? AND category = ? AND gender_target = ?");
 $check_stmt->bind_param("sss", $name, $category, $gender_target);
@@ -50,8 +67,8 @@ if ($check_stmt->num_rows > 0) {
 $check_stmt->close();
 
 // Insert product
-$stmt = $conn->prepare("INSERT INTO products (name, description, category, gender_target, main_image) VALUES (?, ?, ?, ?, ?)");
-$stmt->bind_param("sssss", $name, $description, $category, $gender_target, $main_image);
+$stmt = $conn->prepare("INSERT INTO products (name, description, category, gender_target, main_image, created_by, is_agency_product, platform_fee_rate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("sssssiid", $name, $description, $category, $gender_target, $main_image, $created_by, $is_agency_product, $platform_fee_rate);
 
 if ($stmt->execute()) {
     http_response_code(200);

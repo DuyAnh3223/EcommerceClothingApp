@@ -72,7 +72,7 @@ try {
         
         // Get product and variant info again for order items
         $stmt = $conn->prepare("
-            SELECT p.is_agency_product, p.platform_fee_rate, pv.price 
+            SELECT p.is_agency_product, p.platform_fee_rate, pv.price, p.created_by, p.name 
             FROM products p 
             JOIN product_variant pv ON p.id = pv.product_id 
             WHERE p.id = ? AND pv.variant_id = ? AND p.status = 'active' AND pv.status = 'active'
@@ -85,6 +85,8 @@ try {
         $base_price = $product_info['price'];
         $is_agency_product = $product_info['is_agency_product'];
         $platform_fee_rate = $product_info['platform_fee_rate'];
+        $agency_id = $product_info['created_by'];
+        $product_name = $product_info['name'];
         
         $final_price = $base_price;
         $item_platform_fee = 0;
@@ -102,6 +104,17 @@ try {
         $stmt = $conn->prepare("UPDATE product_variant SET stock = stock - ? WHERE product_id = ? AND variant_id = ?");
         $stmt->bind_param("iii", $quantity, $product_id, $variant_id);
         $stmt->execute();
+        
+        // Gửi thông báo cho agency nếu là sản phẩm của agency
+        if ($is_agency_product && $agency_id) {
+            $title = 'Sản phẩm của bạn đã được bán';
+            $content = 'Sản phẩm: ' . $product_name . ' | Số lượng: ' . $quantity;
+            $type = 'order_status';
+            $stmtNotify = $conn->prepare("INSERT INTO notifications (user_id, title, content, type, is_read) VALUES (?, ?, ?, ?, 0)");
+            $stmtNotify->bind_param("isss", $agency_id, $title, $content, $type);
+            $stmtNotify->execute();
+            $stmtNotify->close();
+        }
     }
     
     $conn->commit();

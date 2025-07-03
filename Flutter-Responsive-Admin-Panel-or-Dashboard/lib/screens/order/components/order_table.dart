@@ -70,11 +70,11 @@ class OrderTable extends StatelessWidget {
         ],
         rows: orders.map((order) {
           return DataRow(cells: [
-            DataCell(Text(order.maDH)),
-            DataCell(Text(order.maND)),
-            DataCell(Text(order.ngayDatHang)),
-            DataCell(Text(order.tongGiaTri.toString())),
-            DataCell(Text(order.trangThaiDonHang)),
+            DataCell(Text(order.id.toString())),
+            DataCell(Text(order.userId.toString())),
+            DataCell(Text(order.orderDate)),
+            DataCell(Text(order.totalAmount.toString())),
+            DataCell(Text(order.status)),
             DataCell(Row(
               children: [
                 IconButton(
@@ -91,7 +91,7 @@ class OrderTable extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _deleteOrder(context, order.maDH),
+                  onPressed: () => _deleteOrder(context, order.id.toString()),
                 ),
               ],
             )),
