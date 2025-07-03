@@ -103,6 +103,9 @@ class _ProductCombinationsScreenState extends State<ProductCombinationsScreen> {
   @override
   void initState() {
     super.initState();
+    // Chỉ lấy tổ hợp của agency và trạng thái pending
+    selectedStatus = 'pending';
+    selectedCreatorType = 'agency';
     _loadCombinations();
   }
 
@@ -221,6 +224,76 @@ class _ProductCombinationsScreenState extends State<ProductCombinationsScreen> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _approveCombination(int id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận duyệt'),
+        content: const Text('Bạn có chắc chắn muốn duyệt tổ hợp này?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Duyệt'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final result = await ProductCombinationService.updateCombination(
+      id: id,
+      status: 'active',
+    );
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Duyệt tổ hợp thành công'), backgroundColor: Colors.green),
+      );
+      _loadCombinations();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Lỗi duyệt tổ hợp'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _rejectCombination(int id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận từ chối'),
+        content: const Text('Bạn có chắc chắn muốn từ chối tổ hợp này?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Từ chối'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final result = await ProductCombinationService.updateCombination(
+      id: id,
+      status: 'rejected',
+    );
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Từ chối tổ hợp thành công'), backgroundColor: Colors.green),
+      );
+      _loadCombinations();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Lỗi từ chối tổ hợp'), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -512,16 +585,29 @@ class _ProductCombinationsScreenState extends State<ProductCombinationsScreen> {
                                   onPressed: () => _viewCombination(combination),
                                   tooltip: 'Xem chi tiết',
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.edit, color: Colors.orange),
-                                  onPressed: () => _editCombination(combination),
-                                  tooltip: 'Sửa',
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () => _deleteCombination(combination.id),
-                                  tooltip: 'Xóa',
-                                ),
+                                if (combination.creatorType == 'agency' && combination.status == 'pending') ...[
+                                  IconButton(
+                                    icon: const Icon(Icons.check, color: Colors.green),
+                                    onPressed: () => _approveCombination(combination.id),
+                                    tooltip: 'Duyệt',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close, color: Colors.red),
+                                    onPressed: () => _rejectCombination(combination.id),
+                                    tooltip: 'Từ chối',
+                                  ),
+                                ] else if (combination.creatorType == 'admin') ...[
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, color: Colors.orange),
+                                    onPressed: () => _editCombination(combination),
+                                    tooltip: 'Sửa',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () => _deleteCombination(combination.id),
+                                    tooltip: 'Xóa',
+                                  ),
+                                ]
                               ],
                             ),
                           ),

@@ -295,4 +295,33 @@ class ProductCombinationService {
       };
     }
   }
+
+  // Gửi tổ hợp sản phẩm để duyệt
+  static Future<Map<String, dynamic>> submitForApproval(int combinationId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/product_combinations/submit_for_approval.php'),
+        headers: _getHeaders(),
+        body: json.encode({'combination_id': combinationId}),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'success': data['success'] ?? false,
+          'message': data['message'] ?? 'Unknown response',
+          'data': data['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'HTTP Error: [${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
 } 

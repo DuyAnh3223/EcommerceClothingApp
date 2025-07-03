@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 01, 2025 at 08:37 AM
+-- Generation Time: Jul 03, 2025 at 09:20 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -82,10 +82,15 @@ INSERT INTO `attribute_values` (`id`, `attribute_id`, `value`, `created_by`) VAL
 CREATE TABLE `cart_items` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `product_id` int(11) NOT NULL,
-  `variant_id` int(11) NOT NULL,
+  `product_id` int(11) DEFAULT NULL,
+  `variant_id` int(11) DEFAULT NULL,
   `quantity` int(11) NOT NULL DEFAULT 1,
-  `added_at` datetime DEFAULT current_timestamp()
+  `added_at` datetime DEFAULT current_timestamp(),
+  `combination_id` int(11) DEFAULT NULL COMMENT 'ID của combo (nếu là combo)',
+  `combination_name` varchar(255) DEFAULT NULL COMMENT 'Tên combo',
+  `combination_image` varchar(255) DEFAULT NULL COMMENT 'Hình ảnh combo',
+  `combination_price` decimal(15,2) DEFAULT NULL COMMENT 'Giá combo',
+  `combination_items` text DEFAULT NULL COMMENT 'JSON chứa thông tin các sản phẩm trong combo'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -157,7 +162,7 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `type`, `is_re
 (60, 4, 'Thanh toán thành công', 'Đơn hàng #70 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045532', 'order_status', 0, '2025-06-29 14:57:57'),
 (61, 4, 'Thanh toán thành công', 'Đơn hàng #71 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15045538', 'order_status', 0, '2025-06-29 15:00:50'),
 (62, 4, 'Thanh toán thành công', 'Đơn hàng #101 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15047235', 'order_status', 0, '2025-06-30 12:45:19'),
-(63, 4, 'Thanh toán thành công', 'Đơn hàng #105 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15047266', 'order_status', 0, '2025-06-30 13:17:48'),
+(63, 4, 'Thanh toán thành công', 'Đơn hàng #105 đã được thanh toán thành công qua VNPAY. Mã giao dịch: 15047266', 'order_status', 1, '2025-06-30 13:17:48'),
 (64, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'A\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-01 09:15:37'),
 (65, 9, 'Sản phẩm đã được duyệt', 'Sản phẩm \'A\' đã được admin duyệt và sẽ được hiển thị trên cửa hàng.', 'product_approval', 0, '2025-07-01 10:01:58'),
 (66, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'Quần da bò\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-01 10:12:28'),
@@ -171,7 +176,16 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `type`, `is_re
 (74, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'Áo thun co giãn\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-01 12:01:01'),
 (75, 9, 'Sản phẩm bị từ chối', 'Sản phẩm \'Áo thun co giãn\' đã bị admin từ chối. Lý do: Biến thể không hợp lệ', 'product_approval', 0, '2025-07-01 12:02:07'),
 (76, 9, 'Sản phẩm đã được duyệt', 'Sản phẩm \'Đồ ngủ\' đã được admin duyệt và sẽ được hiển thị trên cửa hàng.', 'product_approval', 0, '2025-07-01 12:02:41'),
-(77, 9, 'Sản phẩm bị từ chối', 'Sản phẩm \'Quần da bò\' đã bị admin từ chối. Lý do: Tồn kho không hợp lệ', 'product_approval', 0, '2025-07-01 12:03:06');
+(77, 9, 'Sản phẩm bị từ chối', 'Sản phẩm \'Quần da bò\' đã bị admin từ chối. Lý do: Tồn kho không hợp lệ', 'product_approval', 0, '2025-07-01 12:03:06'),
+(78, 4, 'Cập nhật trạng thái đơn hàng', 'Đơn hàng #107 đã được cập nhật trạng thái thành: pending', 'order_status', 0, '2025-07-03 09:49:46'),
+(79, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'Quần lửng\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-03 13:25:25'),
+(80, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'Quần tây\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-03 13:25:27'),
+(81, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'Áo khoác Vải nỉ\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-03 13:25:28'),
+(82, 6, 'Sản phẩm mới cần duyệt', 'Sản phẩm \'Áo thun co giãn\' từ agency cần được duyệt.', 'product_approval', 0, '2025-07-03 13:25:29'),
+(83, 9, 'Sản phẩm đã được duyệt', 'Sản phẩm \'Quần lửng\' đã được admin duyệt và sẽ được hiển thị trên cửa hàng.', 'product_approval', 0, '2025-07-03 13:25:39'),
+(84, 9, 'Sản phẩm đã được duyệt', 'Sản phẩm \'Quần tây\' đã được admin duyệt và sẽ được hiển thị trên cửa hàng.', 'product_approval', 0, '2025-07-03 13:25:40'),
+(85, 9, 'Sản phẩm đã được duyệt', 'Sản phẩm \'Áo khoác Vải nỉ\' đã được admin duyệt và sẽ được hiển thị trên cửa hàng.', 'product_approval', 0, '2025-07-03 13:25:42'),
+(86, 9, 'Sản phẩm đã được duyệt', 'Sản phẩm \'Áo thun co giãn\' đã được admin duyệt và sẽ được hiển thị trên cửa hàng.', 'product_approval', 0, '2025-07-03 13:25:43');
 
 -- --------------------------------------------------------
 
@@ -263,7 +277,10 @@ INSERT INTO `orders` (`id`, `user_id`, `address_id`, `order_date`, `total_amount
 (102, 4, 3, '2025-06-30 12:55:00', 620000.00, 0.00, 'pending', '2025-06-30 12:55:00', '2025-06-30 12:55:00'),
 (103, 4, 3, '2025-06-30 12:55:15', 520000.00, 0.00, 'pending', '2025-06-30 12:55:15', '2025-06-30 12:55:15'),
 (104, 4, 3, '2025-06-30 13:00:59', 210000.00, 0.00, 'pending', '2025-06-30 13:00:59', '2025-06-30 13:00:59'),
-(105, 4, 3, '2025-06-30 13:17:21', 230000.00, 0.00, 'confirmed', '2025-06-30 13:17:21', '2025-06-30 13:17:48');
+(105, 4, 3, '2025-06-30 13:17:21', 230000.00, 0.00, 'confirmed', '2025-06-30 13:17:21', '2025-06-30 13:17:48'),
+(106, 4, 3, '2025-07-03 09:45:50', 180000.00, 0.00, 'pending', '2025-07-03 09:45:50', '2025-07-03 09:45:50'),
+(107, 4, 3, '2025-07-03 09:46:23', 110000.00, 0.00, 'pending', '2025-07-03 09:46:23', '2025-07-03 09:46:23'),
+(108, 4, 3, '2025-07-03 10:56:15', 1160000.00, 0.00, 'pending', '2025-07-03 10:56:15', '2025-07-03 10:56:15');
 
 -- --------------------------------------------------------
 
@@ -368,7 +385,16 @@ INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `variant_id`, `quanti
 (120, 104, 4, 6, 1, 200000.00, 0.00),
 (121, 104, 3, 4, 1, 10000.00, 0.00),
 (122, 105, 4, 6, 1, 200000.00, 0.00),
-(123, 105, 3, 4, 3, 10000.00, 0.00);
+(123, 105, 3, 4, 3, 10000.00, 0.00),
+(124, 106, 3, 5, 1, 110000.00, 0.00),
+(125, 106, 24, 23, 1, 30000.00, 0.00),
+(126, 106, 26, 24, 1, 40000.00, 0.00),
+(127, 107, 20, 23, 1, 50000.00, 0.00),
+(128, 107, 22, 23, 1, 30000.00, 0.00),
+(129, 107, 24, 23, 1, 30000.00, 0.00),
+(130, 108, 4, 9, 4, 210000.00, 0.00),
+(131, 108, 20, 23, 4, 50000.00, 0.00),
+(132, 108, 22, 23, 4, 30000.00, 0.00);
 
 -- --------------------------------------------------------
 
@@ -458,7 +484,10 @@ INSERT INTO `payments` (`id`, `order_id`, `payment_method`, `amount`, `status`, 
 (103, 102, 'COD', 620000.00, 'pending', NULL, NULL),
 (104, 103, 'VNPAY', 520000.00, 'pending', NULL, NULL),
 (105, 104, 'VNPAY', 210000.00, 'pending', NULL, NULL),
-(106, 105, 'VNPAY', 230000.00, 'paid', '15047266', '2025-06-30 13:17:48');
+(106, 105, 'VNPAY', 230000.00, 'paid', '15047266', '2025-06-30 13:17:48'),
+(107, 106, 'COD', 180000.00, 'pending', NULL, NULL),
+(108, 107, 'COD', 110000.00, 'pending', NULL, NULL),
+(109, 108, 'COD', 1160000.00, 'pending', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -489,9 +518,18 @@ INSERT INTO `products` (`id`, `name`, `description`, `category`, `gender_target`
 (3, 'Áo thun', 'Thoáng mát , thoải mái', 'T-Shirts', 'unisex', '685fc2a4bf938_1751106212.jpg', 6, 0, 'active', 20.00, '2025-06-27 10:35:00', '2025-06-28 17:23:32'),
 (4, 'Áo đi biển', 'SIêu đẹp , năng động', 'T-Shirts', 'unisex', '685fc2bef398e_1751106238.jpg', 6, 0, 'active', 20.00, '2025-06-28 07:08:07', '2025-06-28 17:23:59'),
 (6, 'Áo khoác', 'Ấm áp , thời trang', 'T-Shirts', 'unisex', '685fc2de852d4_1751106270.jpg', 6, 0, 'active', 20.00, '2025-06-28 17:24:30', '2025-06-28 17:24:50'),
-(15, 'Quần da bò', 'Da bò xịn, chính hãng, 1-1', 'Pants', 'male', '6863518fa7601_1751339407.jpg', 9, 1, 'rejected', 20.00, '2025-07-01 10:10:07', '2025-07-01 12:03:06'),
-(18, 'Đồ ngủ', 'Thoáng mát', 'Loungewear', 'unisex', '68636b01e1d22_1751345921.jpg', 9, 1, 'active', 20.00, '2025-07-01 11:58:41', '2025-07-01 12:02:41'),
-(19, 'Áo thun co giãn', 'Mềm mại', 'Shirts', 'unisex', '68636b66dbce9_1751346022.jpg', 9, 1, 'rejected', 20.00, '2025-07-01 12:00:22', '2025-07-01 12:02:07');
+(20, 'Áo sơ mi tay ngắn', 'Sơ mi basic', 'Shirts', 'unisex', '68655c05c1001_1751473157.jpg', 6, 0, 'active', 20.00, '2025-07-02 23:15:58', '2025-07-02 23:19:17'),
+(21, 'Áo sơ mi tay dài', 'Tay dài basic 3 màu', 'T-Shirts', 'unisex', '68655bd79d893_1751473111.jpg', 6, 0, 'active', 20.00, '2025-07-02 23:18:31', '2025-07-02 23:18:31'),
+(22, 'Đồ ngủ xinh', 'Đẹp', 'Loungewear', 'female', '68655c752294a_1751473269.jpg', 6, 0, 'active', 20.00, '2025-07-02 23:21:09', '2025-07-02 23:21:09'),
+(23, 'Áo khoác kaki basic', 'Basic 4 màu', 'Jackets & Coats', 'male', '68655cbbda234_1751473339.jpg', 6, 0, 'active', 20.00, '2025-07-02 23:22:19', '2025-07-02 23:22:27'),
+(24, 'Quần Jean', 'Basic 3 màu', 'Pants', 'unisex', '68655d4800f6e_1751473480.jpg', 6, 0, 'active', 20.00, '2025-07-02 23:24:40', '2025-07-02 23:24:40'),
+(25, 'Quần Short', 'Basic 4 màu', 'Shorts', 'unisex', '68655d87dcedf_1751473543.jpg', 6, 0, 'active', 20.00, '2025-07-02 23:25:43', '2025-07-02 23:26:45'),
+(26, 'Hoodie', 'Basic 4 màu', 'Hoodies', 'unisex', '68655dde89c5d_1751473630.jpg', 6, 0, 'active', 20.00, '2025-07-02 23:27:10', '2025-07-02 23:27:10'),
+(27, 'Quần lót', 'Basic 3 màu', 'Underwear', 'unisex', '68655e5bbe542_1751473755.jpg', 6, 0, 'active', 20.00, '2025-07-02 23:29:15', '2025-07-02 23:29:15'),
+(28, 'Áo thun co giãn', 'Basic 3 biến thể màu', 'Shirts', 'unisex', '686621153a9ea_1751523605.jpg', 9, 1, 'active', 20.00, '2025-07-03 13:20:05', '2025-07-03 13:25:43'),
+(29, 'Áo khoác Vải nỉ', 'Basic 4 biến thể màu', 'Jackets & Coats', 'unisex', '6866213073b4c_1751523632.jpg', 9, 1, 'active', 20.00, '2025-07-03 13:20:32', '2025-07-03 13:25:42'),
+(30, 'Quần tây', 'Basic 3 màu', 'Pants', 'unisex', '6866215492750_1751523668.jpg', 9, 1, 'active', 20.00, '2025-07-03 13:21:08', '2025-07-03 13:25:40'),
+(31, 'Quần lửng', 'Fashion 4 màu', 'Shorts', 'unisex', '6866216d13605_1751523693.jpg', 9, 1, 'active', 20.00, '2025-07-03 13:21:33', '2025-07-03 13:25:39');
 
 -- --------------------------------------------------------
 
@@ -514,10 +552,18 @@ CREATE TABLE `product_approvals` (
 --
 
 INSERT INTO `product_approvals` (`id`, `product_id`, `reviewed_by`, `status`, `review_notes`, `reviewed_at`, `created_at`) VALUES
-(7, 15, 9, 'rejected', 'Quá nhiều tồn kho', '2025-07-01 10:38:01', '2025-07-01 10:10:07'),
-(20, 19, 9, 'rejected', 'Biến thể không hợp lệ', '2025-07-01 12:02:07', '2025-07-01 12:02:07'),
-(21, 18, 9, 'approved', '', '2025-07-01 12:02:41', '2025-07-01 12:02:41'),
-(22, 15, 9, 'rejected', 'Tồn kho không hợp lệ', '2025-07-01 12:03:06', '2025-07-01 12:03:06');
+(23, 28, NULL, '', NULL, NULL, '2025-07-03 13:20:05'),
+(24, 29, NULL, '', NULL, NULL, '2025-07-03 13:20:32'),
+(25, 30, NULL, '', NULL, NULL, '2025-07-03 13:21:08'),
+(26, 31, NULL, '', NULL, NULL, '2025-07-03 13:21:33'),
+(27, 31, NULL, 'pending', NULL, NULL, '2025-07-03 13:25:25'),
+(28, 30, NULL, 'pending', NULL, NULL, '2025-07-03 13:25:27'),
+(29, 29, NULL, 'pending', NULL, NULL, '2025-07-03 13:25:28'),
+(30, 28, NULL, 'pending', NULL, NULL, '2025-07-03 13:25:29'),
+(31, 31, 9, 'approved', '', '2025-07-03 13:25:39', '2025-07-03 13:25:39'),
+(32, 30, 9, 'approved', '', '2025-07-03 13:25:40', '2025-07-03 13:25:40'),
+(33, 29, 9, 'approved', '', '2025-07-03 13:25:42', '2025-07-03 13:25:42'),
+(34, 28, 9, 'approved', '', '2025-07-03 13:25:43', '2025-07-03 13:25:43');
 
 -- --------------------------------------------------------
 
@@ -532,7 +578,7 @@ CREATE TABLE `product_combinations` (
   `image_url` varchar(255) DEFAULT NULL COMMENT 'Hình ảnh tổ hợp',
   `discount_price` decimal(15,2) DEFAULT NULL COMMENT 'Giá ưu đãi của tổ hợp',
   `original_price` decimal(15,2) DEFAULT NULL COMMENT 'Tổng giá gốc của các sản phẩm',
-  `status` enum('active','inactive','pending') DEFAULT 'active' COMMENT 'Trạng thái tổ hợp',
+  `status` enum('active','inactive','pending','rejected') DEFAULT 'active' COMMENT 'Trạng thái tổ hợp',
   `created_by` int(11) NOT NULL COMMENT 'ID của admin/agency tạo tổ hợp',
   `creator_type` enum('admin','agency') NOT NULL COMMENT 'Loại người tạo (admin/agency)',
   `created_at` datetime DEFAULT current_timestamp(),
@@ -544,9 +590,11 @@ CREATE TABLE `product_combinations` (
 --
 
 INSERT INTO `product_combinations` (`id`, `name`, `description`, `image_url`, `discount_price`, `original_price`, `status`, `created_by`, `creator_type`, `created_at`, `updated_at`) VALUES
-(1, 'Combo Áo Thun + Quần Jean', 'Tổ hợp áo thun và quần jean phong cách casual', 'combo_1.jpg', 250000.00, 210000.00, 'active', 6, 'admin', '2025-07-01 13:28:16', '2025-07-01 13:28:16'),
-(2, 'Bộ Đồ Thể Thao Nam', 'Bộ đồ thể thao gồm áo và quần short', 'combo_2.jpg', 180000.00, 300000.00, 'active', 6, 'admin', '2025-07-01 13:28:16', '2025-07-01 13:28:16'),
-(3, 'Combo Áo Khoác + Áo Thun', 'Tổ hợp áo khoác và áo thun mùa đông', 'combo_3.jpg', 400000.00, 330000.00, 'active', 9, 'agency', '2025-07-01 13:28:16', '2025-07-01 13:28:16');
+(4, 'Combo Quần Áo Thời Thượng Sân Bay ', 'Kiểu dáng sân bay ', NULL, 150000.00, 180000.00, 'active', 6, 'admin', '2025-07-02 23:31:29', '2025-07-02 23:31:29'),
+(6, 'Combo đơn giản ', 'basic fashion', NULL, 120000.00, 140000.00, 'active', 6, 'admin', '2025-07-02 23:33:01', '2025-07-02 23:33:01'),
+(7, 'Vừa ăn Vừa ngủ', 'Combo quần áo phục vụ việc ăn lẫn ngủ', NULL, NULL, 110000.00, 'active', 6, 'admin', '2025-07-02 23:34:01', '2025-07-02 23:34:01'),
+(9, 'TEst', 'opt', NULL, 200000.00, 290000.00, 'active', 6, 'admin', '2025-07-03 10:54:04', '2025-07-03 10:54:04'),
+(11, 'Bảo gà', 'AAAAA', NULL, 80000.00, 95677.00, 'inactive', 9, 'agency', '2025-07-03 13:46:50', '2025-07-03 13:46:50');
 
 -- --------------------------------------------------------
 
@@ -566,12 +614,20 @@ CREATE TABLE `product_combination_categories` (
 --
 
 INSERT INTO `product_combination_categories` (`id`, `combination_id`, `category_name`, `created_at`) VALUES
-(1, 1, 'T-Shirts', '2025-07-01 13:28:16'),
-(2, 1, 'Pants', '2025-07-01 13:28:16'),
-(3, 2, 'T-Shirts', '2025-07-01 13:28:16'),
-(4, 2, 'Pants', '2025-07-01 13:28:16'),
-(5, 3, 'T-Shirts', '2025-07-01 13:28:16'),
-(6, 3, 'Suits & Blazers', '2025-07-01 13:28:16');
+(7, 4, 'T-Shirts', '2025-07-02 23:31:29'),
+(8, 4, 'Pants', '2025-07-02 23:31:29'),
+(9, 4, 'Hoodies', '2025-07-02 23:31:29'),
+(13, 6, 'Shirts', '2025-07-02 23:33:01'),
+(14, 6, 'Shorts', '2025-07-02 23:33:01'),
+(15, 6, 'Underwear', '2025-07-02 23:33:01'),
+(16, 7, 'Loungewear', '2025-07-02 23:34:01'),
+(17, 7, 'Pants', '2025-07-02 23:34:01'),
+(18, 7, 'Shirts', '2025-07-02 23:34:01'),
+(22, 9, 'T-Shirts', '2025-07-03 10:54:04'),
+(23, 9, 'Shirts', '2025-07-03 10:54:04'),
+(24, 9, 'Loungewear', '2025-07-03 10:54:04'),
+(27, 11, 'Pants', '2025-07-03 13:46:50'),
+(28, 11, 'Shorts', '2025-07-03 13:46:50');
 
 -- --------------------------------------------------------
 
@@ -594,12 +650,20 @@ CREATE TABLE `product_combination_items` (
 --
 
 INSERT INTO `product_combination_items` (`id`, `combination_id`, `product_id`, `variant_id`, `quantity`, `price_in_combination`, `created_at`) VALUES
-(1, 1, 3, 4, 1, 10000.00, '2025-07-01 13:28:16'),
-(2, 1, 4, 6, 1, 200000.00, '2025-07-01 13:28:16'),
-(3, 2, 3, 5, 1, 110000.00, '2025-07-01 13:28:16'),
-(4, 2, 4, 7, 1, 190000.00, '2025-07-01 13:28:16'),
-(5, 3, 6, 7, 1, 320000.00, '2025-07-01 13:28:16'),
-(6, 3, 3, 4, 1, 10000.00, '2025-07-01 13:28:16');
+(7, 4, 3, 5, 1, NULL, '2025-07-02 23:31:29'),
+(8, 4, 24, 23, 1, NULL, '2025-07-02 23:31:29'),
+(9, 4, 26, 24, 1, NULL, '2025-07-02 23:31:29'),
+(13, 6, 20, 23, 1, NULL, '2025-07-02 23:33:01'),
+(14, 6, 25, 23, 1, NULL, '2025-07-02 23:33:01'),
+(15, 6, 27, 23, 1, NULL, '2025-07-02 23:33:01'),
+(16, 7, 22, 23, 1, NULL, '2025-07-02 23:34:01'),
+(17, 7, 24, 23, 1, NULL, '2025-07-02 23:34:01'),
+(18, 7, 20, 23, 1, NULL, '2025-07-02 23:34:01'),
+(22, 9, 4, 9, 1, NULL, '2025-07-03 10:54:04'),
+(23, 9, 20, 23, 1, NULL, '2025-07-03 10:54:04'),
+(24, 9, 22, 23, 1, NULL, '2025-07-03 10:54:04'),
+(27, 11, 30, 29, 1, NULL, '2025-07-03 13:46:50'),
+(28, 11, 31, 27, 1, NULL, '2025-07-03 13:46:50');
 
 --
 -- Triggers `product_combination_items`
@@ -683,19 +747,40 @@ CREATE TABLE `product_variant` (
 
 INSERT INTO `product_variant` (`product_id`, `variant_id`, `price`, `stock`, `image_url`, `status`) VALUES
 (3, 4, 10000.00, 169, '685fc3208d62a_1751106336.jpg', 'active'),
-(3, 5, 110000.00, 118, '685fc347a1b41_1751106375.jpg', 'active'),
+(3, 5, 110000.00, 117, '685fc347a1b41_1751106375.jpg', 'active'),
 (3, 6, 120000.00, 200, '685fc3698f547_1751106409.jpg', 'active'),
 (4, 6, 200000.00, 87, '685fc4426c6ca_1751106626.jpg', 'active'),
 (4, 7, 190000.00, 95, '685fc44a1726b_1751106634.jpg', 'active'),
-(4, 9, 210000.00, 99, '685fc4571983c_1751106647.jpg', 'active'),
+(4, 9, 210000.00, 95, '685fc4571983c_1751106647.jpg', 'active'),
 (6, 7, 320000.00, 91, '685fc63e59b33_1751107134.jpg', 'active'),
 (6, 10, 300000.00, 207, '685fc65061fbc_1751107152.jpg', 'active'),
 (6, 11, 350000.00, 191, '685fc4b6e7c7f_1751106742.jpg', 'active'),
-(15, 16, 400000.00, 20, '686351ade8d28_1751339437.jpg', 'active'),
-(15, 17, 500000.00, 40, '686351c427a5c_1751339460.jpg', 'active'),
-(18, 20, 500000.00, 40, '68636b1eadc9a_1751345950.jpg', 'active'),
-(18, 21, 600000.00, 20, '68636b411c113_1751345985.jpg', 'active'),
-(19, 22, 789000.00, 20, '68636b8177319_1751346049.jpg', 'active');
+(20, 23, 50000.00, 45, '68655b5c23857_1751472988.jpg', 'active'),
+(20, 24, 55000.00, 50, '68655b74c3ce8_1751473012.jpg', 'active'),
+(20, 25, 60000.00, 50, '68655b97edd19_1751473047.jpg', 'active'),
+(21, 23, 70000.00, 50, '68655c38d9db5_1751473208.jpg', 'active'),
+(21, 24, 60000.00, 50, '68655c506baa7_1751473232.jpg', 'active'),
+(22, 23, 30000.00, 25, '68655c8a30882_1751473290.jpg', 'active'),
+(22, 24, 60000.00, 40, '68655c9e24689_1751473310.jpg', 'active'),
+(23, 23, 50000.00, 40, '68655cf533f28_1751473397.jpg', 'active'),
+(23, 24, 40000.00, 30, '68655d0567c0b_1751473413.jpg', 'active'),
+(23, 25, 50000.00, 50, '68655d1a340a3_1751473434.jpg', 'active'),
+(24, 23, 30000.00, 28, '68655d591feda_1751473497.jpg', 'active'),
+(24, 24, 50000.00, 50, '68655d68aebe7_1751473512.jpg', 'active'),
+(25, 23, 50000.00, 50, '68655d9a3caa5_1751473562.jpg', 'active'),
+(25, 24, 30000.00, 40, '68655da89b566_1751473576.jpg', 'active'),
+(25, 25, 40000.00, 50, '68655db875f4b_1751473592.jpg', 'active'),
+(26, 23, 30000.00, 30, '68655df0365fc_1751473648.jpg', 'active'),
+(26, 24, 40000.00, 39, '68655e00d0d9c_1751473664.jpg', 'active'),
+(26, 25, 60000.00, 40, '68655e133bdf6_1751473683.jpg', 'active'),
+(27, 23, 40000.00, 50, '68655e6c853d2_1751473772.jpg', 'active'),
+(27, 26, 50000.00, 50, '68655e7edeb35_1751473790.jpg', 'active'),
+(28, 32, 55555.00, 66, '6866225025b9a_1751523920.jpg', 'active'),
+(29, 30, 55555.00, 55, '6866220b8b04b_1751523851.jpg', 'active'),
+(29, 31, 4545464.00, 23, '68662231bd8fd_1751523889.jpg', 'active'),
+(30, 29, 45677.00, 444, '686621cf7252b_1751523791.jpg', 'active'),
+(31, 27, 50000.00, 60, '6866218c3a537_1751523724.jpg', 'active'),
+(31, 28, 4444.00, 555, '686621b03b1b2_1751523760.jpg', 'active');
 
 -- --------------------------------------------------------
 
@@ -766,7 +851,11 @@ CREATE TABLE `variants` (
 --
 
 INSERT INTO `variants` (`id`, `sku`) VALUES
+(23, '1'),
+(24, '2'),
 (10, '24'),
+(25, '3'),
+(26, '4'),
 (4, '43'),
 (5, '52'),
 (6, '54'),
@@ -784,6 +873,12 @@ INSERT INTO `variants` (`id`, `sku`) VALUES
 (20, 'AGENCY-18-68636b1eb9196'),
 (21, 'AGENCY-18-68636b41283b2'),
 (22, 'AGENCY-19-68636b8182d9e'),
+(32, 'AGENCY-28-686622503bd2f'),
+(30, 'AGENCY-29-6866220b9aca3'),
+(31, 'AGENCY-29-68662231cb765'),
+(29, 'AGENCY-30-686621cf831ec'),
+(27, 'AGENCY-31-6866218c47746'),
+(28, 'AGENCY-31-686621b04da5b'),
 (12, 'AGENCY-TEST-001'),
 (3, 'JEANS-BLUE-XL-NIKE');
 
@@ -861,7 +956,43 @@ INSERT INTO `variant_attribute_values` (`variant_id`, `attribute_value_id`) VALU
 (21, 18),
 (22, 13),
 (22, 14),
-(22, 18);
+(22, 18),
+(23, 12),
+(23, 14),
+(23, 16),
+(24, 12),
+(24, 14),
+(24, 17),
+(25, 12),
+(25, 14),
+(25, 18),
+(26, 12),
+(26, 14),
+(26, 17),
+(27, 12),
+(27, 15),
+(27, 16),
+(27, 32),
+(28, 12),
+(28, 14),
+(28, 17),
+(28, 31),
+(29, 12),
+(29, 15),
+(29, 16),
+(29, 31),
+(30, 12),
+(30, 14),
+(30, 18),
+(30, 31),
+(31, 12),
+(31, 15),
+(31, 16),
+(31, 31),
+(32, 12),
+(32, 15),
+(32, 16),
+(32, 31);
 
 --
 -- Indexes for dumped tables
@@ -889,7 +1020,8 @@ ALTER TABLE `attribute_values`
 ALTER TABLE `cart_items`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`),
-  ADD KEY `product_id` (`product_id`,`variant_id`);
+  ADD KEY `product_id` (`product_id`,`variant_id`),
+  ADD KEY `combination_id` (`combination_id`);
 
 --
 -- Indexes for table `notifications`
@@ -1020,61 +1152,61 @@ ALTER TABLE `attribute_values`
 -- AUTO_INCREMENT for table `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=87;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=109;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=124;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
 
 --
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=110;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `product_approvals`
 --
 ALTER TABLE `product_approvals`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT for table `product_combinations`
 --
 ALTER TABLE `product_combinations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `product_combination_categories`
 --
 ALTER TABLE `product_combination_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `product_combination_items`
 --
 ALTER TABLE `product_combination_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -1092,7 +1224,7 @@ ALTER TABLE `user_addresses`
 -- AUTO_INCREMENT for table `variants`
 --
 ALTER TABLE `variants`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- Constraints for dumped tables
@@ -1116,7 +1248,8 @@ ALTER TABLE `attribute_values`
 --
 ALTER TABLE `cart_items`
   ADD CONSTRAINT `cart_items_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `cart_items_ibfk_2` FOREIGN KEY (`product_id`,`variant_id`) REFERENCES `product_variant` (`product_id`, `variant_id`);
+  ADD CONSTRAINT `cart_items_ibfk_2` FOREIGN KEY (`product_id`,`variant_id`) REFERENCES `product_variant` (`product_id`, `variant_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `cart_items_ibfk_3` FOREIGN KEY (`combination_id`) REFERENCES `product_combinations` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `notifications`

@@ -87,7 +87,7 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
     if (result['success']) {
       setState(() {
         allProducts = (result['products'] as List)
-          .map((e) => AgencyProduct.fromJson(e))
+          .map((e) => e is AgencyProduct ? e : AgencyProduct.fromJson(e as Map<String, dynamic>))
           .where((p) => p.id != null)
           .toList();
         if (widget.combination != null) {
@@ -318,7 +318,6 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
       final creatorType = user['role'];
       final categories = selectedProducts.map((p) => p.category).toList();
       final items = selectedProducts.map((p) {
-        // Sử dụng selectedVariants nếu có, nếu không lấy variant đầu tiên
         final variant = selectedVariants[p.id] ?? (p.variants.isNotEmpty ? p.variants.first : null);
         return {
           'product_id': p.id,
@@ -329,18 +328,19 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
             },
         };
       }).toList();
+      assert(items.every((e) => e is Map<String, dynamic>), 'Có phần tử không phải Map trong items!');
+      // Truyền status mặc định là 'inactive' khi tạo tổ hợp
       final result = await ProductCombinationService.createCombination(
         name: name,
         description: description,
         imageUrl: imageUrl,
         discountPrice: discountPrice,
-        status: status,
+        status: 'inactive', // luôn là inactive khi tạo mới
         categories: categories,
         items: items,
       );
       setState(() { isLoading = false; });
       if (result['success'] == true) {
-        // Đảm bảo show thông báo thành công
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Tạo tổ hợp thành công!')),
         );
@@ -353,7 +353,7 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
     } catch (e) {
       setState(() { isLoading = false; });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: ${e.toString()}')),
+        SnackBar(content: Text('Lỗi: e.toString()}')),
       );
     }
   }
@@ -721,24 +721,6 @@ class _CreateEditCombinationScreenState extends State<CreateEditCombinationScree
                                         onSaved: (v) => description = v ?? '',
                                       ),
                                       const SizedBox(height: 12),
-                                      DropdownButtonFormField<String>(
-                                        value: status,
-                                        dropdownColor: Colors.grey[900],
-                                        style: const TextStyle(color: Colors.white),
-                                        decoration: InputDecoration(
-                                          labelText: 'Trạng thái',
-                                          labelStyle: const TextStyle(color: Colors.cyanAccent, fontWeight: FontWeight.bold),
-                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                                          filled: true,
-                                          fillColor: Colors.grey[900],
-                                        ),
-                                        items: const [
-                                          DropdownMenuItem(value: 'active', child: Text('Hoạt động', style: TextStyle(color: Colors.cyanAccent))),
-                                          DropdownMenuItem(value: 'inactive', child: Text('Không hoạt động', style: TextStyle(color: Colors.cyanAccent))),
-                                        ],
-                                        onChanged: (v) => setState(() => status = v!),
-                                      ),
-                                      const SizedBox(height: 20),
                                       SizedBox(
                                         width: double.infinity,
                                         child: ElevatedButton(

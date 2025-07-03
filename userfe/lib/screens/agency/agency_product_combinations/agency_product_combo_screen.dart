@@ -271,34 +271,11 @@ class _ProductCombinationsScreenState extends State<ProductCombinationsScreen> {
                         DropdownMenuItem(value: 'active', child: Text('Hoạt động')),
                         DropdownMenuItem(value: 'inactive', child: Text('Không hoạt động')),
                         DropdownMenuItem(value: 'pending', child: Text('Chờ duyệt')),
+                        //DropdownMenuItem(value: 'rejected', child: Text('Từ chối')),
                       ],
                       onChanged: (value) {
                         setState(() {
                           selectedStatus = value!;
-                          currentPage = 1;
-                        });
-                        _loadCombinations();
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-
-                  // Creator type filter
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: selectedCreatorType,
-                      decoration: const InputDecoration(
-                        labelText: 'Loại người tạo',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'all', child: Text('Tất cả')),
-                        DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                        DropdownMenuItem(value: 'agency', child: Text('Agency')),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          selectedCreatorType = value!;
                           currentPage = 1;
                         });
                         _loadCombinations();
@@ -522,6 +499,44 @@ class _ProductCombinationsScreenState extends State<ProductCombinationsScreen> {
                                   onPressed: () => _deleteCombination(combination.id),
                                   tooltip: 'Xóa',
                                 ),
+                                if (combination.status == 'inactive' || combination.status == 'rejected')
+                                  IconButton(
+                                    icon: const Icon(Icons.send, color: Colors.orange),
+                                    tooltip: 'Gửi duyệt',
+                                    onPressed: () async {
+                                      final confirmed = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text('Xác nhận gửi duyệt'),
+                                          content: Text('Bạn có chắc chắn muốn gửi tổ hợp "${combination.name}" để admin duyệt?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context, false),
+                                              child: const Text('Hủy'),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () => Navigator.pop(context, true),
+                                              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                                              child: const Text('Gửi duyệt'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      if (confirmed == true) {
+                                        final result = await ProductCombinationService.submitForApproval(combination.id);
+                                        if (result['success']) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text(result['message'] ?? 'Gửi duyệt thành công'), backgroundColor: Colors.green),
+                                          );
+                                          _loadCombinations();
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text(result['message'] ?? 'Lỗi gửi duyệt'), backgroundColor: Colors.red),
+                                          );
+                                        }
+                                      }
+                                    },
+                                  ),
                               ],
                             ),
                           ),

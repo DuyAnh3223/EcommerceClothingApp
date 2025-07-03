@@ -25,3 +25,6 @@
 {"logTime": "0703/030123", {"lineNo":0,"logLevel":2,"message":"WorkspaceManager: count of workspaces on close: 0","source":"Fluid Local Collaborator","timestamp":"2025-07-03T03:01:23.546Z"}}
 {"logTime": "0703/035409", {"lineNo":0,"logLevel":2,"message":"WorkspaceManager: count of workspaces on close: 0","source":"Fluid Local Collaborator","timestamp":"2025-07-03T03:54:09.138Z"}}
 {"logTime": "0703/040311", {"lineNo":0,"logLevel":2,"message":"WorkspaceManager: count of workspaces on close: 0","source":"Fluid Local Collaborator","timestamp":"2025-07-03T04:03:11.055Z"}}
+{"logTime": "0703/070941", {"lineNo":0,"logLevel":2,"message":"WorkspaceManager: count of workspaces on close: 0","source":"Fluid Local Collaborator","timestamp":"2025-07-03T07:09:41.051Z"}}
+{"logTime": "0703/074629", {"lineNo":0,"logLevel":2,"message":"WorkspaceManager: count of workspaces on close: 0","source":"Fluid Local Collaborator","timestamp":"2025-07-03T07:46:29.060Z"}}
+{"logTime": "0703/075546", {"lineNo":0,"logLevel":2,"message":"WorkspaceManager: count of workspaces on close: 0","source":"Fluid Local Collaborator","timestamp":"2025-07-03T07:55:46.269Z"}}

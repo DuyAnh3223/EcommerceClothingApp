@@ -31,17 +31,25 @@ try {
         exit();
     }
 
-    // Update thông tin chính
+    // Nếu chỉ truyền status (duyệt/từ chối), chỉ update status
+    if (isset($input['status']) && count($input) == 2 && isset($input['id'])) {
+        $stmt = $conn->prepare('UPDATE product_combinations SET status = ? WHERE id = ?');
+        $stmt->bind_param('si', $input['status'], $id);
+        $stmt->execute();
+        $msg = $input['status'] === 'active' ? 'Duyệt tổ hợp thành công' : ($input['status'] === 'rejected' ? 'Từ chối tổ hợp thành công' : 'Cập nhật trạng thái thành công');
+        sendResponse(true, $msg);
+        exit();
+    }
+
+    // Update thông tin chính (chỉ update trường nào truyền lên, giữ nguyên trường cũ nếu không truyền)
+    $name = array_key_exists('name', $input) ? $input['name'] : $old['name'];
+    $description = array_key_exists('description', $input) ? $input['description'] : $old['description'];
+    $image_url = array_key_exists('image_url', $input) ? $input['image_url'] : $old['image_url'];
+    $discount_price = array_key_exists('discount_price', $input) ? $input['discount_price'] : $old['discount_price'];
+    $status = array_key_exists('status', $input) ? $input['status'] : $old['status'];
+
     $stmt = $conn->prepare('UPDATE product_combinations SET name = ?, description = ?, image_url = ?, discount_price = ?, status = ? WHERE id = ?');
-    $stmt->bind_param(
-        'sssssi',
-        $input['name'] ?? $old['name'],
-        $input['description'] ?? $old['description'],
-        $input['image_url'] ?? $old['image_url'],
-        $input['discount_price'] ?? $old['discount_price'],
-        $input['status'] ?? $old['status'],
-        $id
-    );
+    $stmt->bind_param('sssssi', $name, $description, $image_url, $discount_price, $status, $id);
     $stmt->execute();
 
     // Update categories nếu có
