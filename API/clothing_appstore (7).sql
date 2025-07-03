@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Jul 03, 2025 at 05:55 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Máy chủ: 127.0.0.1
+-- Thời gian đã tạo: Th7 03, 2025 lúc 11:24 PM
+-- Phiên bản máy phục vụ: 10.4.32-MariaDB
+-- Phiên bản PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `clothing_appstore`
+-- Cơ sở dữ liệu: `clothing_appstore`
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `attributes`
+-- Cấu trúc bảng cho bảng `attributes`
 --
 
 CREATE TABLE `attributes` (
@@ -35,7 +35,7 @@ CREATE TABLE `attributes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `attributes`
+-- Đang đổ dữ liệu cho bảng `attributes`
 --
 
 INSERT INTO `attributes` (`id`, `name`, `created_by`, `created_at`) VALUES
@@ -47,7 +47,7 @@ INSERT INTO `attributes` (`id`, `name`, `created_by`, `created_at`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `attribute_values`
+-- Cấu trúc bảng cho bảng `attribute_values`
 --
 
 CREATE TABLE `attribute_values` (
@@ -58,7 +58,7 @@ CREATE TABLE `attribute_values` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `attribute_values`
+-- Đang đổ dữ liệu cho bảng `attribute_values`
 --
 
 INSERT INTO `attribute_values` (`id`, `attribute_id`, `value`, `created_by`) VALUES
@@ -76,7 +76,7 @@ INSERT INTO `attribute_values` (`id`, `attribute_id`, `value`, `created_by`) VAL
 -- --------------------------------------------------------
 
 --
--- Table structure for table `bacoin_packages`
+-- Cấu trúc bảng cho bảng `bacoin_packages`
 --
 
 CREATE TABLE `bacoin_packages` (
@@ -87,10 +87,21 @@ CREATE TABLE `bacoin_packages` (
   `description` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `bacoin_packages`
+--
+
+INSERT INTO `bacoin_packages` (`id`, `package_name`, `price_vnd`, `bacoin_amount`, `description`) VALUES
+(1, 'Gói 50K', 50000.00, 55000.00, 'Gói nạp BACoin trị giá 50.000 VNĐ'),
+(2, 'Gói 100K', 100000.00, 115000.00, 'Gói nạp BACoin trị giá 100.000 VNĐ'),
+(3, 'Gói 300K', 300000.00, 380000.00, 'Gói nạp BACoin trị giá 300.000 VNĐ'),
+(4, 'Gói 500K', 500000.00, 620000.00, 'Gói nạp BACoin trị giá 500.000 VNĐ'),
+(5, 'Gói 1 triệu', 1000000.00, 1300000.00, 'Gói nạp BACoin trị giá 1.000.000 VNĐ');
+
 -- --------------------------------------------------------
 
 --
--- Table structure for table `bacoin_transactions`
+-- Cấu trúc bảng cho bảng `bacoin_transactions`
 --
 
 CREATE TABLE `bacoin_transactions` (
@@ -102,10 +113,22 @@ CREATE TABLE `bacoin_transactions` (
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `bacoin_transactions`
+--
+
+INSERT INTO `bacoin_transactions` (`id`, `user_id`, `amount`, `type`, `description`, `created_at`) VALUES
+(1, 4, 115000.00, 'deposit', 'Mua gói BACoin #2', '2025-07-04 00:30:01'),
+(2, 4, 1300000.00, 'deposit', 'Mua gói BACoin #5', '2025-07-04 00:30:26'),
+(3, 4, 115000.00, 'deposit', 'Mua gói BACoin #2', '2025-07-04 01:05:20'),
+(4, 4, 115000.00, 'deposit', 'Mua gói BACoin #2', '2025-07-04 01:05:30'),
+(5, 4, 115000.00, 'deposit', 'Mua gói BACoin #2', '2025-07-04 01:36:37'),
+(6, 4, 380000.00, 'deposit', 'Mua gói BACoin #3', '2025-07-04 01:36:37');
+
 -- --------------------------------------------------------
 
 --
--- Table structure for table `cart_items`
+-- Cấu trúc bảng cho bảng `cart_items`
 --
 
 CREATE TABLE `cart_items` (
@@ -123,7 +146,7 @@ CREATE TABLE `cart_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `cart_items`
+-- Đang đổ dữ liệu cho bảng `cart_items`
 --
 
 INSERT INTO `cart_items` (`id`, `user_id`, `product_id`, `variant_id`, `quantity`, `added_at`, `combination_id`, `combination_name`, `combination_image`, `combination_price`, `combination_items`) VALUES
@@ -132,7 +155,7 @@ INSERT INTO `cart_items` (`id`, `user_id`, `product_id`, `variant_id`, `quantity
 -- --------------------------------------------------------
 
 --
--- Table structure for table `notifications`
+-- Cấu trúc bảng cho bảng `notifications`
 --
 
 CREATE TABLE `notifications` (
@@ -146,7 +169,7 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `notifications`
+-- Đang đổ dữ liệu cho bảng `notifications`
 --
 
 INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `type`, `is_read`, `created_at`) VALUES
@@ -168,7 +191,7 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `type`, `is_re
 -- --------------------------------------------------------
 
 --
--- Table structure for table `orders`
+-- Cấu trúc bảng cho bảng `orders`
 --
 
 CREATE TABLE `orders` (
@@ -180,22 +203,25 @@ CREATE TABLE `orders` (
   `platform_fee` decimal(15,2) DEFAULT 0.00 COMMENT 'Platform fee for agency products',
   `status` enum('pending','confirmed','shipping','delivered','cancelled') DEFAULT 'pending',
   `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `total_amount_bacoin` decimal(15,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `orders`
+-- Đang đổ dữ liệu cho bảng `orders`
 --
 
-INSERT INTO `orders` (`id`, `user_id`, `address_id`, `order_date`, `total_amount`, `platform_fee`, `status`, `created_at`, `updated_at`) VALUES
-(106, 4, 3, '2025-07-03 09:45:50', 180000.00, 0.00, 'pending', '2025-07-03 09:45:50', '2025-07-03 09:45:50'),
-(107, 4, 3, '2025-07-03 09:46:23', 110000.00, 0.00, 'pending', '2025-07-03 09:46:23', '2025-07-03 09:46:23'),
-(108, 4, 3, '2025-07-03 10:56:15', 1160000.00, 0.00, 'pending', '2025-07-03 10:56:15', '2025-07-03 10:56:15');
+INSERT INTO `orders` (`id`, `user_id`, `address_id`, `order_date`, `total_amount`, `platform_fee`, `status`, `created_at`, `updated_at`, `total_amount_bacoin`) VALUES
+(106, 4, 3, '2025-07-03 09:45:50', 180000.00, 0.00, 'pending', '2025-07-03 09:45:50', '2025-07-03 09:45:50', NULL),
+(107, 4, 3, '2025-07-03 09:46:23', 110000.00, 0.00, 'pending', '2025-07-03 09:46:23', '2025-07-03 09:46:23', NULL),
+(108, 4, 3, '2025-07-03 10:56:15', 1160000.00, 0.00, 'pending', '2025-07-03 10:56:15', '2025-07-03 10:56:15', NULL),
+(109, 4, 3, '2025-07-04 04:14:08', 430000.00, 0.00, 'pending', '2025-07-04 04:14:08', '2025-07-04 04:14:08', NULL),
+(110, 4, 3, '2025-07-04 04:14:29', 320000.00, 0.00, 'pending', '2025-07-04 04:14:29', '2025-07-04 04:14:29', NULL);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `order_items`
+-- Cấu trúc bảng cho bảng `order_items`
 --
 
 CREATE TABLE `order_items` (
@@ -205,27 +231,31 @@ CREATE TABLE `order_items` (
   `variant_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
   `price` decimal(15,2) NOT NULL,
-  `platform_fee` decimal(15,2) DEFAULT 0.00 COMMENT 'Platform fee for this item'
+  `platform_fee` decimal(15,2) DEFAULT 0.00 COMMENT 'Platform fee for this item',
+  `price_bacoin` decimal(15,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `order_items`
+-- Đang đổ dữ liệu cho bảng `order_items`
 --
 
-INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `variant_id`, `quantity`, `price`, `platform_fee`) VALUES
-(125, 106, 24, 23, 1, 30000.00, 0.00),
-(126, 106, 26, 24, 1, 40000.00, 0.00),
-(127, 107, 20, 23, 1, 50000.00, 0.00),
-(128, 107, 22, 23, 1, 30000.00, 0.00),
-(129, 107, 24, 23, 1, 30000.00, 0.00),
-(130, 108, 4, 9, 4, 210000.00, 0.00),
-(131, 108, 20, 23, 4, 50000.00, 0.00),
-(132, 108, 22, 23, 4, 30000.00, 0.00);
+INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `variant_id`, `quantity`, `price`, `platform_fee`, `price_bacoin`) VALUES
+(125, 106, 24, 23, 1, 30000.00, 0.00, NULL),
+(126, 106, 26, 24, 1, 40000.00, 0.00, NULL),
+(127, 107, 20, 23, 1, 50000.00, 0.00, NULL),
+(128, 107, 22, 23, 1, 30000.00, 0.00, NULL),
+(129, 107, 24, 23, 1, 30000.00, 0.00, NULL),
+(130, 108, 4, 9, 4, 210000.00, 0.00, NULL),
+(131, 108, 20, 23, 4, 50000.00, 0.00, NULL),
+(132, 108, 22, 23, 4, 30000.00, 0.00, NULL),
+(133, 109, 22, 23, 1, 30000.00, 0.00, NULL),
+(134, 109, 4, 6, 2, 200000.00, 0.00, NULL),
+(135, 110, 6, 7, 1, 320000.00, 0.00, NULL);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `payments`
+-- Cấu trúc bảng cho bảng `payments`
 --
 
 CREATE TABLE `payments` (
@@ -235,22 +265,25 @@ CREATE TABLE `payments` (
   `amount` decimal(15,2) NOT NULL,
   `status` enum('pending','paid','failed','refunded') DEFAULT 'pending',
   `transaction_code` varchar(100) DEFAULT NULL,
-  `paid_at` datetime DEFAULT NULL
+  `paid_at` datetime DEFAULT NULL,
+  `amount_bacoin` decimal(15,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `payments`
+-- Đang đổ dữ liệu cho bảng `payments`
 --
 
-INSERT INTO `payments` (`id`, `order_id`, `payment_method`, `amount`, `status`, `transaction_code`, `paid_at`) VALUES
-(107, 106, 'COD', 180000.00, 'pending', NULL, NULL),
-(108, 107, 'COD', 110000.00, 'pending', NULL, NULL),
-(109, 108, 'COD', 1160000.00, 'pending', NULL, NULL);
+INSERT INTO `payments` (`id`, `order_id`, `payment_method`, `amount`, `status`, `transaction_code`, `paid_at`, `amount_bacoin`) VALUES
+(107, 106, 'COD', 180000.00, 'pending', NULL, NULL, NULL),
+(108, 107, 'COD', 110000.00, 'pending', NULL, NULL, NULL),
+(109, 108, 'COD', 1160000.00, 'pending', NULL, NULL, NULL),
+(110, 109, 'COD', 430000.00, 'pending', NULL, NULL, NULL),
+(111, 110, 'BACoin', 320000.00, 'pending', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `products`
+-- Cấu trúc bảng cho bảng `products`
 --
 
 CREATE TABLE `products` (
@@ -269,11 +302,10 @@ CREATE TABLE `products` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `products`
+-- Đang đổ dữ liệu cho bảng `products`
 --
 
 INSERT INTO `products` (`id`, `name`, `description`, `category`, `gender_target`, `main_image`, `created_by`, `is_agency_product`, `status`, `platform_fee_rate`, `created_at`, `updated_at`) VALUES
-(3, 'Áo thun', 'Thoáng mát , thoải mái', 'T-Shirts', 'unisex', '685fc2a4bf938_1751106212.jpg', 6, 0, 'active', 20.00, '2025-06-27 10:35:00', '2025-06-28 17:23:32'),
 (4, 'Áo đi biển', 'SIêu đẹp , năng động', 'T-Shirts', 'unisex', '685fc2bef398e_1751106238.jpg', 6, 0, 'active', 20.00, '2025-06-28 07:08:07', '2025-06-28 17:23:59'),
 (6, 'Áo khoác', 'Ấm áp , thời trang', 'T-Shirts', 'unisex', '685fc2de852d4_1751106270.jpg', 6, 0, 'active', 20.00, '2025-06-28 17:24:30', '2025-06-28 17:24:50'),
 (20, 'Áo sơ mi tay ngắn', 'Sơ mi basic', 'Shirts', 'unisex', '68655c05c1001_1751473157.jpg', 6, 0, 'active', 20.00, '2025-07-02 23:15:58', '2025-07-02 23:19:17'),
@@ -292,7 +324,7 @@ INSERT INTO `products` (`id`, `name`, `description`, `category`, `gender_target`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `product_approvals`
+-- Cấu trúc bảng cho bảng `product_approvals`
 --
 
 CREATE TABLE `product_approvals` (
@@ -306,7 +338,7 @@ CREATE TABLE `product_approvals` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `product_approvals`
+-- Đang đổ dữ liệu cho bảng `product_approvals`
 --
 
 INSERT INTO `product_approvals` (`id`, `product_id`, `reviewed_by`, `status`, `review_notes`, `reviewed_at`, `created_at`) VALUES
@@ -326,7 +358,7 @@ INSERT INTO `product_approvals` (`id`, `product_id`, `reviewed_by`, `status`, `r
 -- --------------------------------------------------------
 
 --
--- Table structure for table `product_combinations`
+-- Cấu trúc bảng cho bảng `product_combinations`
 --
 
 CREATE TABLE `product_combinations` (
@@ -344,7 +376,7 @@ CREATE TABLE `product_combinations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `product_combinations`
+-- Đang đổ dữ liệu cho bảng `product_combinations`
 --
 
 INSERT INTO `product_combinations` (`id`, `name`, `description`, `image_url`, `discount_price`, `original_price`, `status`, `created_by`, `creator_type`, `created_at`, `updated_at`) VALUES
@@ -359,7 +391,7 @@ INSERT INTO `product_combinations` (`id`, `name`, `description`, `image_url`, `d
 -- --------------------------------------------------------
 
 --
--- Table structure for table `product_combination_categories`
+-- Cấu trúc bảng cho bảng `product_combination_categories`
 --
 
 CREATE TABLE `product_combination_categories` (
@@ -370,7 +402,7 @@ CREATE TABLE `product_combination_categories` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `product_combination_categories`
+-- Đang đổ dữ liệu cho bảng `product_combination_categories`
 --
 
 INSERT INTO `product_combination_categories` (`id`, `combination_id`, `category_name`, `created_at`) VALUES
@@ -396,7 +428,7 @@ INSERT INTO `product_combination_categories` (`id`, `combination_id`, `category_
 -- --------------------------------------------------------
 
 --
--- Table structure for table `product_combination_items`
+-- Cấu trúc bảng cho bảng `product_combination_items`
 --
 
 CREATE TABLE `product_combination_items` (
@@ -410,11 +442,10 @@ CREATE TABLE `product_combination_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `product_combination_items`
+-- Đang đổ dữ liệu cho bảng `product_combination_items`
 --
 
 INSERT INTO `product_combination_items` (`id`, `combination_id`, `product_id`, `variant_id`, `quantity`, `price_in_combination`, `created_at`) VALUES
-(7, 4, 3, 5, 1, NULL, '2025-07-02 23:31:29'),
 (8, 4, 24, 23, 1, NULL, '2025-07-02 23:31:29'),
 (9, 4, 26, 24, 1, NULL, '2025-07-02 23:31:29'),
 (13, 6, 20, 23, 1, NULL, '2025-07-02 23:33:01'),
@@ -434,7 +465,7 @@ INSERT INTO `product_combination_items` (`id`, `combination_id`, `product_id`, `
 (32, 13, 28, 32, 1, NULL, '2025-07-03 14:54:43');
 
 --
--- Triggers `product_combination_items`
+-- Bẫy `product_combination_items`
 --
 DELIMITER $$
 CREATE TRIGGER `calculate_combination_original_price_delete` AFTER DELETE ON `product_combination_items` FOR EACH ROW BEGIN
@@ -497,7 +528,7 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `product_variant`
+-- Cấu trúc bảng cho bảng `product_variant`
 --
 
 CREATE TABLE `product_variant` (
@@ -506,54 +537,53 @@ CREATE TABLE `product_variant` (
   `price` decimal(15,2) NOT NULL,
   `stock` int(11) NOT NULL DEFAULT 0,
   `image_url` varchar(255) DEFAULT NULL,
-  `status` enum('active','inactive','out_of_stock') DEFAULT 'active'
+  `status` enum('active','inactive','out_of_stock') DEFAULT 'active',
+  `price_bacoin` decimal(15,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `product_variant`
+-- Đang đổ dữ liệu cho bảng `product_variant`
 --
 
-INSERT INTO `product_variant` (`product_id`, `variant_id`, `price`, `stock`, `image_url`, `status`) VALUES
-(3, 4, 10000.00, 169, '685fc3208d62a_1751106336.jpg', 'active'),
-(3, 5, 110000.00, 117, '685fc347a1b41_1751106375.jpg', 'active'),
-(3, 6, 120000.00, 200, '685fc3698f547_1751106409.jpg', 'active'),
-(4, 6, 200000.00, 87, '685fc4426c6ca_1751106626.jpg', 'active'),
-(4, 7, 190000.00, 95, '685fc44a1726b_1751106634.jpg', 'active'),
-(4, 9, 210000.00, 95, '685fc4571983c_1751106647.jpg', 'active'),
-(6, 7, 320000.00, 91, '685fc63e59b33_1751107134.jpg', 'active'),
-(6, 10, 300000.00, 207, '685fc65061fbc_1751107152.jpg', 'active'),
-(6, 11, 350000.00, 191, '685fc4b6e7c7f_1751106742.jpg', 'active'),
-(20, 23, 50000.00, 45, '68655b5c23857_1751472988.jpg', 'active'),
-(20, 24, 55000.00, 50, '68655b74c3ce8_1751473012.jpg', 'active'),
-(20, 25, 60000.00, 50, '68655b97edd19_1751473047.jpg', 'active'),
-(21, 23, 70000.00, 50, '68655c38d9db5_1751473208.jpg', 'active'),
-(21, 24, 60000.00, 50, '68655c506baa7_1751473232.jpg', 'active'),
-(22, 23, 30000.00, 25, '68655c8a30882_1751473290.jpg', 'active'),
-(22, 24, 60000.00, 40, '68655c9e24689_1751473310.jpg', 'active'),
-(23, 23, 50000.00, 40, '68655cf533f28_1751473397.jpg', 'active'),
-(23, 24, 40000.00, 30, '68655d0567c0b_1751473413.jpg', 'active'),
-(23, 25, 50000.00, 50, '68655d1a340a3_1751473434.jpg', 'active'),
-(24, 23, 30000.00, 28, '68655d591feda_1751473497.jpg', 'active'),
-(24, 24, 50000.00, 50, '68655d68aebe7_1751473512.jpg', 'active'),
-(25, 23, 50000.00, 50, '68655d9a3caa5_1751473562.jpg', 'active'),
-(25, 24, 30000.00, 40, '68655da89b566_1751473576.jpg', 'active'),
-(25, 25, 40000.00, 50, '68655db875f4b_1751473592.jpg', 'active'),
-(26, 23, 30000.00, 30, '68655df0365fc_1751473648.jpg', 'active'),
-(26, 24, 40000.00, 39, '68655e00d0d9c_1751473664.jpg', 'active'),
-(26, 25, 60000.00, 40, '68655e133bdf6_1751473683.jpg', 'active'),
-(27, 23, 40000.00, 50, '68655e6c853d2_1751473772.jpg', 'active'),
-(27, 26, 50000.00, 50, '68655e7edeb35_1751473790.jpg', 'active'),
-(28, 32, 55555.00, 66, '6866225025b9a_1751523920.jpg', 'active'),
-(29, 30, 55555.00, 55, '6866220b8b04b_1751523851.jpg', 'active'),
-(29, 31, 4545464.00, 23, '68662231bd8fd_1751523889.jpg', 'active'),
-(30, 29, 45677.00, 444, '686621cf7252b_1751523791.jpg', 'active'),
-(31, 27, 50000.00, 60, '6866218c3a537_1751523724.jpg', 'active'),
-(31, 28, 4444.00, 555, '686621b03b1b2_1751523760.jpg', 'active');
+INSERT INTO `product_variant` (`product_id`, `variant_id`, `price`, `stock`, `image_url`, `status`, `price_bacoin`) VALUES
+(4, 6, 200000.00, 877, '685fc4426c6ca_1751106626.jpg', 'active', 180000.00),
+(4, 7, 190000.00, 95, '685fc44a1726b_1751106634.jpg', 'active', 170000.00),
+(4, 9, 210000.00, 95, '685fc4571983c_1751106647.jpg', 'active', 190000.00),
+(4, 33, 63.00, 543, '6866f38085921_1751577472.jpg', 'active', 534.00),
+(6, 7, 320000.00, 90, '685fc63e59b33_1751107134.jpg', 'active', 300000.00),
+(6, 10, 300000.00, 207, '685fc65061fbc_1751107152.jpg', 'active', 1.00),
+(6, 11, 350000.00, 191, '685fc4b6e7c7f_1751106742.jpg', 'active', 1.00),
+(20, 23, 50000.00, 45, '68655b5c23857_1751472988.jpg', 'active', 30000.00),
+(20, 24, 55000.00, 50, '68655b74c3ce8_1751473012.jpg', 'active', NULL),
+(20, 25, 60000.00, 50, '68655b97edd19_1751473047.jpg', 'active', NULL),
+(21, 23, 70000.00, 50, '68655c38d9db5_1751473208.jpg', 'active', 1.00),
+(21, 24, 60000.00, 50, '68655c506baa7_1751473232.jpg', 'active', 1.00),
+(22, 23, 30000.00, 24, '68655c8a30882_1751473290.jpg', 'active', NULL),
+(22, 24, 60000.00, 40, '68655c9e24689_1751473310.jpg', 'active', NULL),
+(23, 23, 50000.00, 40, '68655cf533f28_1751473397.jpg', 'active', NULL),
+(23, 24, 40000.00, 30, '68655d0567c0b_1751473413.jpg', 'active', NULL),
+(23, 25, 50000.00, 50, '68655d1a340a3_1751473434.jpg', 'active', NULL),
+(24, 23, 30000.00, 28, '68655d591feda_1751473497.jpg', 'active', NULL),
+(24, 24, 50000.00, 50, '68655d68aebe7_1751473512.jpg', 'active', NULL),
+(25, 23, 50000.00, 50, '68655d9a3caa5_1751473562.jpg', 'active', NULL),
+(25, 24, 30000.00, 40, '68655da89b566_1751473576.jpg', 'active', NULL),
+(25, 25, 40000.00, 50, '68655db875f4b_1751473592.jpg', 'active', NULL),
+(26, 23, 30000.00, 30, '68655df0365fc_1751473648.jpg', 'active', NULL),
+(26, 24, 40000.00, 39, '68655e00d0d9c_1751473664.jpg', 'active', NULL),
+(26, 25, 60000.00, 40, '68655e133bdf6_1751473683.jpg', 'active', NULL),
+(27, 23, 40000.00, 50, '68655e6c853d2_1751473772.jpg', 'active', NULL),
+(27, 26, 50000.00, 50, '68655e7edeb35_1751473790.jpg', 'active', NULL),
+(28, 32, 55555.00, 66, '6866225025b9a_1751523920.jpg', 'active', NULL),
+(29, 30, 55555.00, 55, '6866220b8b04b_1751523851.jpg', 'active', NULL),
+(29, 31, 4545464.00, 23, '68662231bd8fd_1751523889.jpg', 'active', NULL),
+(30, 29, 45677.00, 444, '686621cf7252b_1751523791.jpg', 'active', NULL),
+(31, 27, 50000.00, 60, '6866218c3a537_1751523724.jpg', 'active', NULL),
+(31, 28, 4444.00, 555, '686621b03b1b2_1751523760.jpg', 'active', NULL);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `promotion`
+-- Cấu trúc bảng cho bảng `promotion`
 --
 
 CREATE TABLE `promotion` (
@@ -564,7 +594,7 @@ CREATE TABLE `promotion` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `promotion`
+-- Đang đổ dữ liệu cho bảng `promotion`
 --
 
 INSERT INTO `promotion` (`id`, `name`, `original_price`, `converted_price`) VALUES
@@ -575,7 +605,7 @@ INSERT INTO `promotion` (`id`, `name`, `original_price`, `converted_price`) VALU
 -- --------------------------------------------------------
 
 --
--- Table structure for table `users`
+-- Cấu trúc bảng cho bảng `users`
 --
 
 CREATE TABLE `users` (
@@ -589,22 +619,22 @@ CREATE TABLE `users` (
   `role` enum('user','admin','agency') DEFAULT 'user',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `balance` decimal(10,0) DEFAULT NULL
+  `balance` double(10,0) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `users`
+-- Đang đổ dữ liệu cho bảng `users`
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `phone`, `password`, `gender`, `dob`, `role`, `created_at`, `updated_at`, `balance`) VALUES
-(4, 'user', 'user@gmail.com', '0967586754', '6ad14ba9986e3615423dfca256d04e3f', 'male', '2025-06-05', 'user', '2025-06-27 10:36:13', '2025-06-27 11:57:17', NULL),
+(4, 'user', 'user@gmail.com', '0967586754', '6ad14ba9986e3615423dfca256d04e3f', 'male', '2025-06-05', 'user', '2025-06-27 10:36:13', '2025-07-04 01:36:37', 2140000),
 (6, 'admin', 'admin@gmail.com', '09675867543', '0192023a7bbd73250516f069df18b500', 'male', NULL, 'admin', '2025-06-27 10:38:00', '2025-06-27 10:38:00', NULL),
 (9, 'agency', 'agency@gmail.com', '0123456788', 'ca08cd773aac01eb003a9d50dedce7fa', 'male', NULL, 'agency', '2025-06-30 23:30:57', '2025-06-30 23:30:57', NULL);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `user_addresses`
+-- Cấu trúc bảng cho bảng `user_addresses`
 --
 
 CREATE TABLE `user_addresses` (
@@ -619,7 +649,7 @@ CREATE TABLE `user_addresses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `user_addresses`
+-- Đang đổ dữ liệu cho bảng `user_addresses`
 --
 
 INSERT INTO `user_addresses` (`id`, `user_id`, `address_line`, `city`, `province`, `postal_code`, `is_default`, `created_at`) VALUES
@@ -629,7 +659,7 @@ INSERT INTO `user_addresses` (`id`, `user_id`, `address_line`, `city`, `province
 -- --------------------------------------------------------
 
 --
--- Table structure for table `variants`
+-- Cấu trúc bảng cho bảng `variants`
 --
 
 CREATE TABLE `variants` (
@@ -638,7 +668,7 @@ CREATE TABLE `variants` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `variants`
+-- Đang đổ dữ liệu cho bảng `variants`
 --
 
 INSERT INTO `variants` (`id`, `sku`) VALUES
@@ -651,6 +681,7 @@ INSERT INTO `variants` (`id`, `sku`) VALUES
 (5, '52'),
 (6, '54'),
 (8, '543'),
+(33, '5454'),
 (9, '56'),
 (7, '65'),
 (11, '87'),
@@ -676,7 +707,7 @@ INSERT INTO `variants` (`id`, `sku`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `variant_attribute_values`
+-- Cấu trúc bảng cho bảng `variant_attribute_values`
 --
 
 CREATE TABLE `variant_attribute_values` (
@@ -685,7 +716,7 @@ CREATE TABLE `variant_attribute_values` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `variant_attribute_values`
+-- Đang đổ dữ liệu cho bảng `variant_attribute_values`
 --
 
 INSERT INTO `variant_attribute_values` (`variant_id`, `attribute_value_id`) VALUES
@@ -783,12 +814,15 @@ INSERT INTO `variant_attribute_values` (`variant_id`, `attribute_value_id`) VALU
 (32, 12),
 (32, 15),
 (32, 16),
-(32, 31);
+(32, 31),
+(33, 13),
+(33, 14),
+(33, 17);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `withdraw_requests`
+-- Cấu trúc bảng cho bảng `withdraw_requests`
 --
 
 CREATE TABLE `withdraw_requests` (
@@ -804,7 +838,7 @@ CREATE TABLE `withdraw_requests` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `withdraw_requests`
+-- Đang đổ dữ liệu cho bảng `withdraw_requests`
 --
 
 INSERT INTO `withdraw_requests` (`id`, `agency_id`, `amount`, `note`, `status`, `admin_note`, `reviewed_by`, `reviewed_at`, `created_at`) VALUES
@@ -813,11 +847,11 @@ INSERT INTO `withdraw_requests` (`id`, `agency_id`, `amount`, `note`, `status`, 
 (19, 9, 320000.00, '', 'approved', '', 6, '2025-07-03 12:52:27', '2025-07-03 12:52:22');
 
 --
--- Indexes for dumped tables
+-- Chỉ mục cho các bảng đã đổ
 --
 
 --
--- Indexes for table `attributes`
+-- Chỉ mục cho bảng `attributes`
 --
 ALTER TABLE `attributes`
   ADD PRIMARY KEY (`id`),
@@ -825,7 +859,7 @@ ALTER TABLE `attributes`
   ADD KEY `created_by` (`created_by`);
 
 --
--- Indexes for table `attribute_values`
+-- Chỉ mục cho bảng `attribute_values`
 --
 ALTER TABLE `attribute_values`
   ADD PRIMARY KEY (`id`),
@@ -833,20 +867,20 @@ ALTER TABLE `attribute_values`
   ADD KEY `created_by` (`created_by`);
 
 --
--- Indexes for table `bacoin_packages`
+-- Chỉ mục cho bảng `bacoin_packages`
 --
 ALTER TABLE `bacoin_packages`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `bacoin_transactions`
+-- Chỉ mục cho bảng `bacoin_transactions`
 --
 ALTER TABLE `bacoin_transactions`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `cart_items`
+-- Chỉ mục cho bảng `cart_items`
 --
 ALTER TABLE `cart_items`
   ADD PRIMARY KEY (`id`),
@@ -855,14 +889,14 @@ ALTER TABLE `cart_items`
   ADD KEY `combination_id` (`combination_id`);
 
 --
--- Indexes for table `notifications`
+-- Chỉ mục cho bảng `notifications`
 --
 ALTER TABLE `notifications`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `orders`
+-- Chỉ mục cho bảng `orders`
 --
 ALTER TABLE `orders`
   ADD PRIMARY KEY (`id`),
@@ -870,7 +904,7 @@ ALTER TABLE `orders`
   ADD KEY `address_id` (`address_id`);
 
 --
--- Indexes for table `order_items`
+-- Chỉ mục cho bảng `order_items`
 --
 ALTER TABLE `order_items`
   ADD PRIMARY KEY (`id`),
@@ -878,21 +912,21 @@ ALTER TABLE `order_items`
   ADD KEY `product_id` (`product_id`,`variant_id`);
 
 --
--- Indexes for table `payments`
+-- Chỉ mục cho bảng `payments`
 --
 ALTER TABLE `payments`
   ADD PRIMARY KEY (`id`),
   ADD KEY `order_id` (`order_id`);
 
 --
--- Indexes for table `products`
+-- Chỉ mục cho bảng `products`
 --
 ALTER TABLE `products`
   ADD PRIMARY KEY (`id`),
   ADD KEY `created_by` (`created_by`);
 
 --
--- Indexes for table `product_approvals`
+-- Chỉ mục cho bảng `product_approvals`
 --
 ALTER TABLE `product_approvals`
   ADD PRIMARY KEY (`id`),
@@ -900,7 +934,7 @@ ALTER TABLE `product_approvals`
   ADD KEY `reviewed_by` (`reviewed_by`);
 
 --
--- Indexes for table `product_combinations`
+-- Chỉ mục cho bảng `product_combinations`
 --
 ALTER TABLE `product_combinations`
   ADD PRIMARY KEY (`id`),
@@ -909,7 +943,7 @@ ALTER TABLE `product_combinations`
   ADD KEY `status` (`status`);
 
 --
--- Indexes for table `product_combination_categories`
+-- Chỉ mục cho bảng `product_combination_categories`
 --
 ALTER TABLE `product_combination_categories`
   ADD PRIMARY KEY (`id`),
@@ -917,7 +951,7 @@ ALTER TABLE `product_combination_categories`
   ADD KEY `combination_id` (`combination_id`);
 
 --
--- Indexes for table `product_combination_items`
+-- Chỉ mục cho bảng `product_combination_items`
 --
 ALTER TABLE `product_combination_items`
   ADD PRIMARY KEY (`id`),
@@ -927,20 +961,20 @@ ALTER TABLE `product_combination_items`
   ADD KEY `variant_id` (`variant_id`);
 
 --
--- Indexes for table `product_variant`
+-- Chỉ mục cho bảng `product_variant`
 --
 ALTER TABLE `product_variant`
   ADD PRIMARY KEY (`product_id`,`variant_id`),
   ADD KEY `variant_id` (`variant_id`);
 
 --
--- Indexes for table `promotion`
+-- Chỉ mục cho bảng `promotion`
 --
 ALTER TABLE `promotion`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `users`
+-- Chỉ mục cho bảng `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
@@ -949,176 +983,176 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `phone` (`phone`);
 
 --
--- Indexes for table `user_addresses`
+-- Chỉ mục cho bảng `user_addresses`
 --
 ALTER TABLE `user_addresses`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `variants`
+-- Chỉ mục cho bảng `variants`
 --
 ALTER TABLE `variants`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `sku` (`sku`);
 
 --
--- Indexes for table `variant_attribute_values`
+-- Chỉ mục cho bảng `variant_attribute_values`
 --
 ALTER TABLE `variant_attribute_values`
   ADD PRIMARY KEY (`variant_id`,`attribute_value_id`),
   ADD KEY `attribute_value_id` (`attribute_value_id`);
 
 --
--- Indexes for table `withdraw_requests`
+-- Chỉ mục cho bảng `withdraw_requests`
 --
 ALTER TABLE `withdraw_requests`
   ADD PRIMARY KEY (`id`),
   ADD KEY `agency_id` (`agency_id`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT cho các bảng đã đổ
 --
 
 --
--- AUTO_INCREMENT for table `attributes`
+-- AUTO_INCREMENT cho bảng `attributes`
 --
 ALTER TABLE `attributes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
--- AUTO_INCREMENT for table `attribute_values`
+-- AUTO_INCREMENT cho bảng `attribute_values`
 --
 ALTER TABLE `attribute_values`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
--- AUTO_INCREMENT for table `bacoin_packages`
+-- AUTO_INCREMENT cho bảng `bacoin_packages`
 --
 ALTER TABLE `bacoin_packages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `bacoin_transactions`
+-- AUTO_INCREMENT cho bảng `bacoin_transactions`
 --
 ALTER TABLE `bacoin_transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- AUTO_INCREMENT for table `cart_items`
+-- AUTO_INCREMENT cho bảng `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=98;
 
 --
--- AUTO_INCREMENT for table `notifications`
+-- AUTO_INCREMENT cho bảng `notifications`
 --
 ALTER TABLE `notifications`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=91;
 
 --
--- AUTO_INCREMENT for table `orders`
+-- AUTO_INCREMENT cho bảng `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=109;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=111;
 
 --
--- AUTO_INCREMENT for table `order_items`
+-- AUTO_INCREMENT cho bảng `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
 
 --
--- AUTO_INCREMENT for table `payments`
+-- AUTO_INCREMENT cho bảng `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=110;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
 
 --
--- AUTO_INCREMENT for table `products`
+-- AUTO_INCREMENT cho bảng `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
--- AUTO_INCREMENT for table `product_approvals`
+-- AUTO_INCREMENT cho bảng `product_approvals`
 --
 ALTER TABLE `product_approvals`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
--- AUTO_INCREMENT for table `product_combinations`
+-- AUTO_INCREMENT cho bảng `product_combinations`
 --
 ALTER TABLE `product_combinations`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
--- AUTO_INCREMENT for table `product_combination_categories`
+-- AUTO_INCREMENT cho bảng `product_combination_categories`
 --
 ALTER TABLE `product_combination_categories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
--- AUTO_INCREMENT for table `product_combination_items`
+-- AUTO_INCREMENT cho bảng `product_combination_items`
 --
 ALTER TABLE `product_combination_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
--- AUTO_INCREMENT for table `promotion`
+-- AUTO_INCREMENT cho bảng `promotion`
 --
 ALTER TABLE `promotion`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `users`
+-- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
--- AUTO_INCREMENT for table `user_addresses`
+-- AUTO_INCREMENT cho bảng `user_addresses`
 --
 ALTER TABLE `user_addresses`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
--- AUTO_INCREMENT for table `variants`
+-- AUTO_INCREMENT cho bảng `variants`
 --
 ALTER TABLE `variants`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
--- AUTO_INCREMENT for table `withdraw_requests`
+-- AUTO_INCREMENT cho bảng `withdraw_requests`
 --
 ALTER TABLE `withdraw_requests`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
--- Constraints for dumped tables
+-- Các ràng buộc cho các bảng đã đổ
 --
 
 --
--- Constraints for table `attributes`
+-- Các ràng buộc cho bảng `attributes`
 --
 ALTER TABLE `attributes`
   ADD CONSTRAINT `attributes_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `attribute_values`
+-- Các ràng buộc cho bảng `attribute_values`
 --
 ALTER TABLE `attribute_values`
   ADD CONSTRAINT `attribute_values_ibfk_1` FOREIGN KEY (`attribute_id`) REFERENCES `attributes` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `attribute_values_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `bacoin_transactions`
+-- Các ràng buộc cho bảng `bacoin_transactions`
 --
 ALTER TABLE `bacoin_transactions`
   ADD CONSTRAINT `bacoin_transactions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `cart_items`
+-- Các ràng buộc cho bảng `cart_items`
 --
 ALTER TABLE `cart_items`
   ADD CONSTRAINT `cart_items_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
@@ -1126,58 +1160,58 @@ ALTER TABLE `cart_items`
   ADD CONSTRAINT `cart_items_ibfk_3` FOREIGN KEY (`combination_id`) REFERENCES `product_combinations` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `notifications`
+-- Các ràng buộc cho bảng `notifications`
 --
 ALTER TABLE `notifications`
   ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `orders`
+-- Các ràng buộc cho bảng `orders`
 --
 ALTER TABLE `orders`
   ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`address_id`) REFERENCES `user_addresses` (`id`);
 
 --
--- Constraints for table `order_items`
+-- Các ràng buộc cho bảng `order_items`
 --
 ALTER TABLE `order_items`
   ADD CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `order_items_ibfk_2` FOREIGN KEY (`product_id`,`variant_id`) REFERENCES `product_variant` (`product_id`, `variant_id`);
 
 --
--- Constraints for table `payments`
+-- Các ràng buộc cho bảng `payments`
 --
 ALTER TABLE `payments`
   ADD CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `products`
+-- Các ràng buộc cho bảng `products`
 --
 ALTER TABLE `products`
   ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `product_approvals`
+-- Các ràng buộc cho bảng `product_approvals`
 --
 ALTER TABLE `product_approvals`
   ADD CONSTRAINT `product_approvals_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `product_approvals_ibfk_2` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `product_combinations`
+-- Các ràng buộc cho bảng `product_combinations`
 --
 ALTER TABLE `product_combinations`
   ADD CONSTRAINT `product_combinations_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `product_combination_categories`
+-- Các ràng buộc cho bảng `product_combination_categories`
 --
 ALTER TABLE `product_combination_categories`
   ADD CONSTRAINT `product_combination_categories_ibfk_1` FOREIGN KEY (`combination_id`) REFERENCES `product_combinations` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `product_combination_items`
+-- Các ràng buộc cho bảng `product_combination_items`
 --
 ALTER TABLE `product_combination_items`
   ADD CONSTRAINT `product_combination_items_ibfk_1` FOREIGN KEY (`combination_id`) REFERENCES `product_combinations` (`id`) ON DELETE CASCADE,
@@ -1185,27 +1219,27 @@ ALTER TABLE `product_combination_items`
   ADD CONSTRAINT `product_combination_items_ibfk_3` FOREIGN KEY (`variant_id`) REFERENCES `variants` (`id`) ON DELETE SET NULL;
 
 --
--- Constraints for table `product_variant`
+-- Các ràng buộc cho bảng `product_variant`
 --
 ALTER TABLE `product_variant`
   ADD CONSTRAINT `product_variant_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `product_variant_ibfk_2` FOREIGN KEY (`variant_id`) REFERENCES `variants` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `user_addresses`
+-- Các ràng buộc cho bảng `user_addresses`
 --
 ALTER TABLE `user_addresses`
   ADD CONSTRAINT `user_addresses_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `variant_attribute_values`
+-- Các ràng buộc cho bảng `variant_attribute_values`
 --
 ALTER TABLE `variant_attribute_values`
   ADD CONSTRAINT `variant_attribute_values_ibfk_1` FOREIGN KEY (`variant_id`) REFERENCES `variants` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `variant_attribute_values_ibfk_2` FOREIGN KEY (`attribute_value_id`) REFERENCES `attribute_values` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `withdraw_requests`
+-- Các ràng buộc cho bảng `withdraw_requests`
 --
 ALTER TABLE `withdraw_requests`
   ADD CONSTRAINT `withdraw_requests_ibfk_1` FOREIGN KEY (`agency_id`) REFERENCES `users` (`id`);

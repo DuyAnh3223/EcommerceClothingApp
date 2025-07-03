@@ -27,6 +27,7 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
   late TextEditingController priceController;
   late TextEditingController stockController;
   late TextEditingController imageUrlController;
+  late TextEditingController priceBacoinController;
   String? selectedStatus;
   bool isLoading = false;
   bool isDropdownLoading = true;
@@ -50,6 +51,7 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
     stockController = TextEditingController(text: widget.variant?.stock.toString() ?? '');
     imageUrlController = TextEditingController(text: widget.variant?.imageUrl ?? '');
     selectedStatus = widget.variant?.status ?? statuses.first;
+    priceBacoinController = TextEditingController(text: widget.variant?.priceBacoin?.toString() ?? '');
     _loadAttributesAndValues();
   }
 
@@ -177,6 +179,8 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
         imageUrl = widget.variant?.imageUrl;
       }
 
+      final priceBacoin = double.tryParse(priceBacoinController.text);
+
       final url = widget.variant == null
           ? 'http://127.0.0.1/EcommerceClothingApp/API/admin/variants_attributes/add_variant.php'
           : 'http://127.0.0.1/EcommerceClothingApp/API/admin/variants_attributes/update_variant.php';
@@ -189,6 +193,7 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
         'stock': int.parse(stockController.text),
         'image_url': imageUrl,
         'status': selectedStatus,
+        'price_bacoin': priceBacoin,
       };
       final response = await http.post(
         Uri.parse(url),
@@ -280,6 +285,7 @@ class _AddEditVariantScreenState extends State<AddEditVariantScreen> {
                       if (int.parse(value) < 0) return "Tồn kho không được âm";
                       return null;
                     }),
+                    _buildTextField(priceBacoinController, "Giá coin (BACoin)"),
                     
                     // Image Upload Section
                     const SizedBox(height: 20),

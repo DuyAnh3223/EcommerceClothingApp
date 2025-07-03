@@ -37,6 +37,7 @@ $price = (float)$data['price'];
 $stock = (int)$data['stock'];
 $image_url = isset($data['image_url']) ? trim($data['image_url']) : null;
 $status = isset($data['status']) ? trim($data['status']) : 'active';
+$price_bacoin = $data['price_bacoin'] ?? null;
 
 // Validate product_id exists
 $check_stmt = $conn->prepare("SELECT id FROM products WHERE id = ?");
@@ -100,8 +101,8 @@ try {
     $link_check->close();
 
     // Thêm vào bảng product_variant
-    $link_stmt = $conn->prepare("INSERT INTO product_variant (product_id, variant_id, price, stock, image_url, status) VALUES (?, ?, ?, ?, ?, ?)");
-    $link_stmt->bind_param("iidiss", $product_id, $variant_id, $price, $stock, $image_url, $status);
+    $link_stmt = $conn->prepare("INSERT INTO product_variant (product_id, variant_id, price, stock, image_url, status, price_bacoin) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $link_stmt->bind_param("iiddsss", $product_id, $variant_id, $price, $stock, $image_url, $status, $price_bacoin);
     $link_stmt->execute();
     $link_stmt->close();
 

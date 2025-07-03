@@ -19,7 +19,7 @@ if (!$product_id) {
 }
 
 // Lấy tất cả variant của sản phẩm này
-$sql = "SELECT v.id as variant_id, v.sku, pv.price, pv.stock, pv.image_url, pv.status
+$sql = "SELECT v.id as variant_id, v.sku, pv.price, pv.stock, pv.image_url, pv.status, pv.price_bacoin
         FROM product_variant pv
         JOIN variants v ON pv.variant_id = v.id
         WHERE pv.product_id = ?";
@@ -57,7 +57,8 @@ while ($row = $result->fetch_assoc()) {
         'stock' => (int)$row['stock'],
         'image_url' => $row['image_url'] ?? '',
         'status' => $row['status'],
-        'attribute_values' => $attribute_values
+        'attribute_values' => $attribute_values,
+        'price_bacoin' => (float)$row['price_bacoin']
     ];
 }
 $stmt->close();

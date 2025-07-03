@@ -270,6 +270,26 @@ class _CartScreenState extends State<CartScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text('Thành tiền: ${item['total_price'].toStringAsFixed(0)} VNĐ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('Giá BACoin: '
+                  '${item['price_bacoin'] != null
+                      ? (item['price_bacoin'] is num
+                          ? item['price_bacoin'].toInt()
+                          : int.tryParse(item['price_bacoin'].toString()) ?? 0
+                        )
+                      : 0
+                  } Coin',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                ),
+                Text('Thành tiền BACoin: '
+                  '${item['price_bacoin'] != null
+                      ? ((item['price_bacoin'] is num
+                            ? item['price_bacoin']
+                            : int.tryParse(item['price_bacoin'].toString()) ?? 0
+                          ) * (item['quantity'] ?? 1)).toInt()
+                      : 0
+                  } Coin',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
+                ),
               ],
             ),
           ],
@@ -494,6 +514,26 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text('Thành tiền: ${(item['total_price']).toStringAsFixed(0)} VNĐ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Giá BACoin: '
+                        '${item['price_bacoin'] != null
+                            ? (item['price_bacoin'] is num
+                                ? item['price_bacoin'].toInt()
+                                : int.tryParse(item['price_bacoin'].toString()) ?? 0
+                              )
+                            : 0
+                        } Coin',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                      ),
+                      Text('Thành tiền BACoin: '
+                        '${item['price_bacoin'] != null
+                            ? ((item['price_bacoin'] is num
+                                  ? item['price_bacoin']
+                                  : int.tryParse(item['price_bacoin'].toString()) ?? 0
+                                ) * (item['quantity'] ?? 1)).toInt()
+                            : 0
+                        } Coin',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
+                      ),
                     ],
                   ),
                 ],
@@ -543,6 +583,24 @@ class _CartScreenState extends State<CartScreen> {
                         ],
                       ),
                     ),
+                    if (cartItems.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        child: Text(
+                          'Tổng BACoin: '
+                          '${cartItems.fold<int>(0, (sum, item) {
+                            final price = item['price_bacoin'] != null
+                                ? (item['price_bacoin'] is num
+                                    ? (item['price_bacoin'] as num).toInt()
+                                    : int.tryParse(item['price_bacoin'].toString()) ?? 0)
+                                : 0;
+                            final qty = (item['quantity'] ?? 1) is num ? (item['quantity'] as num).toInt() : int.tryParse(item['quantity'].toString()) ?? 1;
+                            return sum + (price * qty);
+                          })} Coin',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo, fontSize: 16),
+                        ),
+                      ),
+                    ],
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Row(
@@ -951,9 +1009,8 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
                 isExpanded: true,
                 items: const [
                   DropdownMenuItem(value: 'COD', child: Text('Thanh toán khi nhận hàng (COD)')),
-                 // DropdownMenuItem(value: 'Bank', child: Text('Chuyển khoản ngân hàng')),
-                 // DropdownMenuItem(value: 'Momo', child: Text('Ví Momo')),
                   DropdownMenuItem(value: 'VNPAY', child: Text('VNPAY')),
+                  DropdownMenuItem(value: 'BACoin', child: Text('Thanh toán bằng BACoin')),
                 ],
                 onChanged: (v) => setState(() => paymentMethod = v ?? 'COD'),
               ),
@@ -968,6 +1025,28 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
                   Text('${widget.totalPrice.toStringAsFixed(0)} VNĐ', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
                 ],
               ),
+              if (paymentMethod == 'Coin')
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Tổng BACoin:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        '${widget.cartItems.fold<int>(0, (sum, item) {
+                          final price = item['price_bacoin'] != null
+                              ? (item['price_bacoin'] is num
+                                  ? (item['price_bacoin'] as num).toInt()
+                                  : int.tryParse(item['price_bacoin'].toString()) ?? 0)
+                              : 0;
+                          final qty = (item['quantity'] ?? 1) is num ? (item['quantity'] as num).toInt() : int.tryParse(item['quantity'].toString()) ?? 1;
+                          return sum + (price * qty);
+                        })} Coin',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
+                      ),
+                    ],
+                  ),
+                ),
               
               const SizedBox(height: 16),
               

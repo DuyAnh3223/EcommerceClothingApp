@@ -37,6 +37,7 @@ $price = isset($data['price']) ? (float)$data['price'] : null;
 $stock = isset($data['stock']) ? (int)$data['stock'] : null;
 $image_url = isset($data['image_url']) ? trim($data['image_url']) : null;
 $status = isset($data['status']) ? trim($data['status']) : null;
+$price_bacoin = $data['price_bacoin'] ?? null;
 
 $conn->begin_transaction();
 try {
@@ -80,6 +81,11 @@ try {
         $fields[] = 'status = ?';
         $params[] = $status;
         $types .= 's';
+    }
+    if ($price_bacoin !== null) {
+        $fields[] = 'price_bacoin = ?';
+        $params[] = $price_bacoin;
+        $types .= 'd';
     }
     if (!empty($fields)) {
         $params[] = $product_id;

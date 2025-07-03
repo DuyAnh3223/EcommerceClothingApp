@@ -8,6 +8,7 @@ class Product {
   final String createdAt;
   final String updatedAt;
   final List<ProductVariant> variants;
+  final double? coinPrice;
 
   Product({
     required this.id,
@@ -19,6 +20,7 @@ class Product {
     required this.createdAt,
     required this.updatedAt,
     required this.variants,
+    this.coinPrice,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,7 @@ class Product {
       variants: (json['variants'] as List)
           .map((variant) => ProductVariant.fromJson(variant))
           .toList(),
+      coinPrice: json['coin_price'] != null ? double.parse(json['coin_price'].toString()) : null,
     );
   }
 
@@ -60,6 +63,7 @@ class ProductVariant {
   final String status;
   final String? imageUrl;
   final List<AttributeValue> attributeValues;
+  final double? priceBacoin;
 
   ProductVariant({
     required this.variantId,
@@ -69,9 +73,10 @@ class ProductVariant {
     required this.status,
     this.imageUrl,
     required this.attributeValues,
+    this.priceBacoin,
   });
 
-  factory ProductVariant.fromJson(Map<String, dynamic> json) {
+  factory ProductVariant.fromJson(Map<String, dynamic> json, [int? productId]) {
     return ProductVariant(
       variantId: json['variant_id'],
       sku: json['sku'],
@@ -82,6 +87,7 @@ class ProductVariant {
       attributeValues: (json['attribute_values'] as List)
           .map((attr) => AttributeValue.fromJson(attr))
           .toList(),
+      priceBacoin: json['price_bacoin'] != null ? double.tryParse(json['price_bacoin'].toString()) : null,
     );
   }
 

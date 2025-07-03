@@ -108,6 +108,7 @@ class ProductVariant {
   final String imageUrl;
   final String status;
   final List<AttributeValue> attributeValues;
+  final double? priceBacoin;
 
   ProductVariant({
     required this.id,
@@ -118,6 +119,7 @@ class ProductVariant {
     required this.imageUrl,
     required this.status,
     required this.attributeValues,
+    this.priceBacoin,
   });
 
   factory ProductVariant.fromJson(Map<String, dynamic> json, int productId) {
@@ -136,6 +138,7 @@ class ProductVariant {
       imageUrl: json['image_url'] ?? '',
       status: json['status'] ?? '',
       attributeValues: attrs,
+      priceBacoin: json['price_bacoin'] != null ? double.tryParse(json['price_bacoin'].toString()) : null,
     );
   }
 

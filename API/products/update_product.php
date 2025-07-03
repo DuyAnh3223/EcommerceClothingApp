@@ -28,6 +28,7 @@ $description = isset($data['description']) ? trim($data['description']) : null;
 $category = isset($data['category']) ? trim($data['category']) : null;
 $gender_target = isset($data['gender_target']) ? trim($data['gender_target']) : null;
 $main_image = isset($data['main_image']) ? trim($data['main_image']) : null;
+$coin_price = $_POST['coin_price'] ?? null;
 
 // Check if product exists
 $check_stmt = $conn->prepare("SELECT id FROM products WHERE id = ?");
@@ -72,6 +73,11 @@ if ($gender_target !== null) {
 if ($main_image !== null) {
     $fields[] = 'main_image = ?';
     $params[] = $main_image;
+    $types .= 's';
+}
+if ($coin_price !== null) {
+    $fields[] = 'coin_price = ?';
+    $params[] = $coin_price;
     $types .= 's';
 }
 if (empty($fields)) {

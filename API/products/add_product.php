@@ -67,8 +67,9 @@ if ($check_stmt->num_rows > 0) {
 $check_stmt->close();
 
 // Insert product
-$stmt = $conn->prepare("INSERT INTO products (name, description, category, gender_target, main_image, created_by, is_agency_product, platform_fee_rate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("sssssiid", $name, $description, $category, $gender_target, $main_image, $created_by, $is_agency_product, $platform_fee_rate);
+$coin_price = $_POST['coin_price'] ?? null;
+$stmt = $conn->prepare("INSERT INTO products (name, description, category, gender_target, main_image, created_by, is_agency_product, platform_fee_rate, coin_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("sssssiidf", $name, $description, $category, $gender_target, $main_image, $created_by, $is_agency_product, $platform_fee_rate, $coin_price);
 
 if ($stmt->execute()) {
     http_response_code(200);

@@ -221,6 +221,7 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
                       DataColumn(label: Text('SKU')),
                       DataColumn(label: Text('Thuộc tính')),
                       DataColumn(label: Text('Giá')),
+                      DataColumn(label: Text('Giá coin')),
                       DataColumn(label: Text('Tồn kho')),
                       DataColumn(label: Text('Trạng thái')),
                       DataColumn(label: Text('Hành động')),
@@ -333,6 +334,7 @@ class _ProductVariantScreenState extends State<ProductVariantScreen> {
                           DataCell(Text(variant.sku)),
                           DataCell(Text(variant.attributesDisplay)),
                           DataCell(Text(variant.priceFormatted)),
+                          DataCell(Text(variant.priceBacoin != null ? variant.priceBacoin!.toStringAsFixed(0) : '-')),
                           DataCell(
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
