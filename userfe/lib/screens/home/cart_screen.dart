@@ -44,11 +44,18 @@ class _CartScreenState extends State<CartScreen> {
         // Debug: In ra thông tin giỏ hàng để kiểm tra
         print('=== DEBUG CART ===');
         for (var item in cartItems) {
-          print('Product: ${item['product_name']}');
-          print('Product Image: ${item['product_image']}');
-          print('Variant Image: ${item['variant_image']}');
-          print('Final Image URL: ${item['image_url']}');
-          print('Attributes: ${item['attributes']}');
+          print('Type: ${item['type']}');
+          if (item['type'] == 'combination') {
+            print('Combination: ${item['combination_name']}');
+            print('Combination Image: ${item['combination_image']}');
+            print('Combination Items: ${item['combination_items']}');
+          } else {
+            print('Product: ${item['product_name']}');
+            print('Product Image: ${item['product_image']}');
+            print('Variant Image: ${item['variant_image']}');
+            print('Final Image URL: ${item['image_url']}');
+            print('Attributes: ${item['attributes']}');
+          }
           print('---');
         }
       }
@@ -114,6 +121,394 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
+  Widget _buildCartItem(Map<String, dynamic> item) {
+    if (item['type'] == 'combination') {
+      return _buildCombinationItem(item);
+    } else {
+      return _buildProductItem(item);
+    }
+  }
+
+  Widget _buildCombinationItem(Map<String, dynamic> item) {
+    // Xác định hình ảnh cho combo: ưu tiên combination_image, nếu không có thì dùng image_url (sản phẩm đầu tiên)
+    final comboImage = item['combination_image'] ?? item['image_url'] ?? '';
+    
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: ExpansionTile(
+        leading: GestureDetector(
+          onTap: () {
+            if (comboImage.isNotEmpty) {
+              showDialog(
+                context: context,
+                builder: (context) => Dialog(
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.9,
+                      maxHeight: MediaQuery.of(context).size.height * 0.8,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppBar(
+                          title: Text('Hình ảnh: ${item['combination_name']}'),
+                          backgroundColor: Colors.transparent,
+                          elevation: 0,
+                          actions: [
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ],
+                        ),
+                        Expanded(
+                          child: CachedNetworkImage(
+                            imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=$comboImage',
+                            fit: BoxFit.contain,
+                            placeholder: (context, url) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                            errorWidget: (context, url, error) => const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.error, size: 64, color: Colors.red),
+                                  SizedBox(height: 8),
+                                  Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+          },
+          child: Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Stack(
+              children: [
+                comboImage.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=$comboImage',
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                          errorWidget: (context, url, error) => const Icon(
+                            Icons.image,
+                            size: 30,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      )
+                    : const Icon(
+                        Icons.image,
+                        size: 30,
+                        color: Colors.grey,
+                      ),
+                // Icon zoom khi có hình ảnh
+                if (comboImage.isNotEmpty)
+                  Positioned(
+                    top: 2,
+                    right: 2,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: const Icon(
+                        Icons.zoom_in,
+                        color: Colors.white,
+                        size: 12,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        title: Text(
+          item['combination_name'] ?? 'Combo',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Giá combo: ${item['combination_price'].toStringAsFixed(0)} VNĐ',
+              style: TextStyle(
+                color: Colors.orange.shade700,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: item['quantity'] > 1
+                      ? () => _updateQuantity(item['cart_item_id'], item['quantity'] - 1)
+                      : null,
+                ),
+                Text('${item['quantity']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: () => _updateQuantity(item['cart_item_id'], item['quantity'] + 1),
+                ),
+                const SizedBox(width: 8),
+                Text('Thành tiền: ${item['total_price'].toStringAsFixed(0)} VNĐ', style: const TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ],
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete, color: Colors.red),
+          onPressed: () => _deleteItem(item['cart_item_id']),
+        ),
+        children: [
+          // Hiển thị danh sách sản phẩm trong combo
+          if (item['combination_items'] != null && item['combination_items'] is List)
+            ...(item['combination_items'] as List).map<Widget>((comboItem) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: comboItem['image_url'] != null && comboItem['image_url'] != ''
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: CachedNetworkImage(
+                                imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${comboItem['image_url']}',
+                                width: 40,
+                                height: 40,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                errorWidget: (context, url, error) => const Icon(
+                                  Icons.image,
+                                  size: 20,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.inventory,
+                              size: 20,
+                              color: Colors.grey,
+                            ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            comboItem['product_name'] ?? 'Sản phẩm ID: ${comboItem['product_id']}',
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                          if (comboItem['attributes'] != null && comboItem['attributes'] is Map)
+                            Text(
+                              (comboItem['attributes'] as Map).entries.map((e) => '${e.key}: ${e.value}').join(' / '),
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          Text(
+                            'Số lượng: ${comboItem['quantity']}',
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductItem(Map<String, dynamic> item) {
+    final attrs = (item['attributes'] as Map).entries.map((e) => '${e.key}: ${e.value}').join(' / ');
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: () {
+                if (item['image_url'] != null && item['image_url'] != '') {
+                  showDialog(
+                    context: context,
+                    builder: (context) => Dialog(
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.9,
+                          maxHeight: MediaQuery.of(context).size.height * 0.8,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AppBar(
+                              title: Text('Hình ảnh: ${item['product_name']}'),
+                              backgroundColor: Colors.transparent,
+                              elevation: 0,
+                              actions: [
+                                IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ],
+                            ),
+                            Expanded(
+                              child: CachedNetworkImage(
+                                imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${item['image_url']}',
+                                fit: BoxFit.contain,
+                                placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                errorWidget: (context, url, error) => const Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.error, size: 64, color: Colors.red),
+                                      SizedBox(height: 8),
+                                      Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Stack(
+                  children: [
+                    item['image_url'] != null && item['image_url'] != ''
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: CachedNetworkImage(
+                              imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${item['image_url']}',
+                              width: 64,
+                              height: 64,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                              errorWidget: (context, url, error) => const Icon(
+                                Icons.image,
+                                size: 30,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.image,
+                            size: 30,
+                            color: Colors.grey,
+                          ),
+                    // Icon zoom khi có hình ảnh
+                    if (item['image_url'] != null && item['image_url'] != '')
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                          child: const Icon(
+                            Icons.zoom_in,
+                            color: Colors.white,
+                            size: 12,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item['product_name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(attrs, style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                  const SizedBox(height: 4),
+                  // Hiển thị giá và thông tin phí sàn
+                  if (item['is_agency_product'] == true && item['platform_fee'] > 0) ...[
+                    Text('Giá gốc: ${item['base_price'].toStringAsFixed(0)} VNĐ', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                    Text('Phí sàn (${item['platform_fee_rate']}%): +${item['platform_fee'].toStringAsFixed(0)} VNĐ', style: TextStyle(fontSize: 12, color: Colors.blue.shade700)),
+                    Text('Giá cuối: ${item['price'].toStringAsFixed(0)} VNĐ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700)),
+                  ] else ...[
+                    Text('Giá: ${item['price'].toStringAsFixed(0)} VNĐ'),
+                  ],
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: item['quantity'] > 1
+                            ? () => _updateQuantity(item['cart_item_id'], item['quantity'] - 1)
+                            : null,
+                      ),
+                      Text('${item['quantity']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: item['quantity'] < item['stock']
+                            ? () => _updateQuantity(item['cart_item_id'], item['quantity'] + 1)
+                            : null,
+                      ),
+                      const SizedBox(width: 8),
+                      Text('Thành tiền: ${(item['total_price']).toStringAsFixed(0)} VNĐ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _deleteItem(item['cart_item_id']),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,165 +529,7 @@ class _CartScreenState extends State<CartScreen> {
                         separatorBuilder: (_, __) => const Divider(),
                         itemBuilder: (context, index) {
                           final item = cartItems[index];
-                          final attrs = (item['attributes'] as Map).entries.map((e) => '${e.key}: ${e.value}').join(' / ');
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      if (item['image_url'] != null && item['image_url'] != '') {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) => Dialog(
-                                            child: Container(
-                                              constraints: BoxConstraints(
-                                                maxWidth: MediaQuery.of(context).size.width * 0.9,
-                                                maxHeight: MediaQuery.of(context).size.height * 0.8,
-                                              ),
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  AppBar(
-                                                    title: Text('Hình ảnh: ${item['product_name']}'),
-                                                    backgroundColor: Colors.transparent,
-                                                    elevation: 0,
-                                                    actions: [
-                                                      IconButton(
-                                                        icon: const Icon(Icons.close),
-                                                        onPressed: () => Navigator.of(context).pop(),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Expanded(
-                                                    child: CachedNetworkImage(
-                                                      imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${item['image_url']}',
-                                                      fit: BoxFit.contain,
-                                                      placeholder: (context, url) => const Center(
-                                                        child: CircularProgressIndicator(),
-                                                      ),
-                                                      errorWidget: (context, url, error) => const Center(
-                                                        child: Column(
-                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                          children: [
-                                                            Icon(Icons.error, size: 64, color: Colors.red),
-                                                            SizedBox(height: 8),
-                                                            Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Container(
-                                      width: 64,
-                                      height: 64,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(color: Colors.grey.shade300),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Stack(
-                                        children: [
-                                          item['image_url'] != null && item['image_url'] != ''
-                                              ? ClipRRect(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  child: CachedNetworkImage(
-                                                    imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${item['image_url']}',
-                                                    width: 64,
-                                                    height: 64,
-                                                    fit: BoxFit.cover,
-                                                    placeholder: (context, url) => const Center(
-                                                      child: CircularProgressIndicator(),
-                                                    ),
-                                                    errorWidget: (context, url, error) => const Icon(
-                                                      Icons.image,
-                                                      size: 30,
-                                                      color: Colors.grey,
-                                                    ),
-                                                  ),
-                                                )
-                                              : const Icon(
-                                                  Icons.image,
-                                                  size: 30,
-                                                  color: Colors.grey,
-                                                ),
-                                          // Icon zoom khi có hình ảnh
-                                          if (item['image_url'] != null && item['image_url'] != '')
-                                            Positioned(
-                                              top: 2,
-                                              right: 2,
-                                              child: Container(
-                                                padding: const EdgeInsets.all(2),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black.withOpacity(0.6),
-                                                  borderRadius: BorderRadius.circular(2),
-                                                ),
-                                                child: const Icon(
-                                                  Icons.zoom_in,
-                                                  color: Colors.white,
-                                                  size: 12,
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(item['product_name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                        Text(attrs, style: const TextStyle(fontSize: 13, color: Colors.grey)),
-                                        const SizedBox(height: 4),
-                                        // Hiển thị giá và thông tin phí sàn
-                                        if (item['is_agency_product'] == true && item['platform_fee'] > 0) ...[
-                                          Text('Giá gốc: ${item['base_price'].toStringAsFixed(0)} VNĐ', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                                          Text('Phí sàn (${item['platform_fee_rate']}%): +${item['platform_fee'].toStringAsFixed(0)} VNĐ', style: TextStyle(fontSize: 12, color: Colors.blue.shade700)),
-                                          Text('Giá cuối: ${item['price'].toStringAsFixed(0)} VNĐ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700)),
-                                        ] else ...[
-                                          Text('Giá: ${item['price'].toStringAsFixed(0)} VNĐ'),
-                                        ],
-                                        Row(
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.remove_circle_outline),
-                                              onPressed: item['quantity'] > 1
-                                                  ? () => _updateQuantity(item['cart_item_id'], item['quantity'] - 1)
-                                                  : null,
-                                            ),
-                                            Text('${item['quantity']}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                            IconButton(
-                                              icon: const Icon(Icons.add_circle_outline),
-                                              onPressed: item['quantity'] < item['stock']
-                                                  ? () => _updateQuantity(item['cart_item_id'], item['quantity'] + 1)
-                                                  : null,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text('Thành tiền: ${(item['total_price']).toStringAsFixed(0)} VNĐ', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () => _deleteItem(item['cart_item_id']),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
+                          return _buildCartItem(item);
                         },
                       ),
                     ),
@@ -386,16 +623,11 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
     setState(() { isLoading = true; });
     
     try {
-      final items = widget.cartItems.map((item) => {
-        'product_id': item['product_id'],
-        'variant_id': item['variant_id'],
-        'quantity': item['quantity'],
-      }).toList();
-      final result = await AuthService.placeOrderMulti(
+      final result = await AuthService.placeOrderWithCombinations(
         userId: userId,
         addressId: selectedAddressId!,
         paymentMethod: paymentMethod,
-        items: items,
+        cartItems: widget.cartItems.cast<Map<String, dynamic>>(),
       );
       
       if (result['success'] == true) {
@@ -549,77 +781,147 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
                   itemCount: widget.cartItems.length,
                   itemBuilder: (context, index) {
                     final item = widget.cartItems[index];
-                    final attrs = (item['attributes'] as Map).entries.map((e) => '${e.key}: ${e.value}').join(' / ');
                     
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: item['image_url'] != null && item['image_url'] != ''
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(4),
-                                      child: CachedNetworkImage(
-                                        imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${item['image_url']}',
-                                        width: 50,
-                                        height: 50,
-                                        fit: BoxFit.cover,
-                                        placeholder: (context, url) => const Center(
-                                          child: CircularProgressIndicator(),
+                    if (item['type'] == 'combination') {
+                      // Xác định hình ảnh cho combo trong dialog
+                      final comboImage = item['combination_image'] ?? item['image_url'] ?? '';
+                      
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: comboImage.isNotEmpty
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: CachedNetworkImage(
+                                          imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=$comboImage',
+                                          width: 50,
+                                          height: 50,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => const Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                          errorWidget: (context, url, error) => const Icon(
+                                            Icons.image,
+                                            size: 20,
+                                            color: Colors.grey,
+                                          ),
                                         ),
-                                        errorWidget: (context, url, error) => const Icon(
-                                          Icons.image,
-                                          size: 20,
-                                          color: Colors.grey,
-                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.image,
+                                        size: 20,
+                                        color: Colors.grey,
                                       ),
-                                    )
-                                  : const Icon(
-                                      Icons.image,
-                                      size: 20,
-                                      color: Colors.grey,
-                                    ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item['product_name'] ?? '',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    attrs,
-                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    'SL: ${item['quantity']} x ${item['price']} VNĐ',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ],
                               ),
-                            ),
-                            Text(
-                              '${(item['total_price']).toStringAsFixed(0)} VNĐ',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['combination_name'] ?? 'Combo',
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'SL: ${item['quantity']} x ${item['combination_price']} VNĐ',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${(item['total_price']).toStringAsFixed(0)} VNĐ',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    } else {
+                      final attrs = (item['attributes'] as Map).entries.map((e) => '${e.key}: ${e.value}').join(' / ');
+                      
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: item['image_url'] != null && item['image_url'] != ''
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: CachedNetworkImage(
+                                          imageUrl: 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${item['image_url']}',
+                                          width: 50,
+                                          height: 50,
+                                          fit: BoxFit.cover,
+                                          placeholder: (context, url) => const Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                          errorWidget: (context, url, error) => const Icon(
+                                            Icons.image,
+                                            size: 20,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.image,
+                                        size: 20,
+                                        color: Colors.grey,
+                                      ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['product_name'] ?? '',
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      attrs,
+                                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      'SL: ${item['quantity']} x ${item['price']} VNĐ',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${(item['total_price']).toStringAsFixed(0)} VNĐ',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
                   },
                 ),
               ),

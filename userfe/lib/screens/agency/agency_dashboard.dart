@@ -3,6 +3,7 @@ import '../../models/agency_product_model.dart';
 import '../../services/agency_service.dart';
 import 'agency_product_screen.dart';
 import 'agency_attribute_manager_screen.dart';
+import 'agency_product_combinations/agency_product_combo_screen.dart';
 
 class AgencyDashboard extends StatefulWidget {
   const AgencyDashboard({Key? key}) : super(key: key);
@@ -20,11 +21,13 @@ class _AgencyDashboardState extends State<AgencyDashboard> {
   final List<Widget> _screens = [
     const AgencyProductScreen(),
     const AgencyAttributeManagerScreen(),
+    const ProductCombinationsScreen(),
   ];
 
   final List<String> _titles = [
     'Quản lý sản phẩm',
     'Quản lý thuộc tính',
+    'Quản lý tổ hợp',
   ];
 
   @override
@@ -96,6 +99,10 @@ class _AgencyDashboardState extends State<AgencyDashboard> {
           BottomNavigationBarItem(
             icon: Icon(Icons.category),
             label: 'Thuộc tính',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.inventory_2),
+            label: 'Tổ hợp',
           ),
         ],
       ),

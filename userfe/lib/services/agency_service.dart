@@ -586,4 +586,10 @@ class AgencyService {
       };
     }
   }
+
+  // Lấy sản phẩm theo user ID (alias for getProducts for agency users)
+  static Future<Map<String, dynamic>> getProductsByUser(int userId) async {
+    // For agency users, they can only see their own products
+    return getProducts();
+  }
 } 

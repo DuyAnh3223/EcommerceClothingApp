@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/product_combination_model.dart';
 import '../../services/product_combination_service.dart';
 import 'create_edit_combination_screen.dart';
@@ -20,6 +21,84 @@ class _ProductCombinationsScreenState extends State<ProductCombinationsScreen> {
   int currentPage = 1;
   int totalPages = 1;
   int totalItems = 0;
+
+  String buildImageUrl(String fileName) {
+    // Nếu chạy trên thiết bị/emulator, thay 127.0.0.1 bằng IP LAN của máy chủ
+    return 'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=$fileName';
+  }
+
+  String? getCombinationImageUrl(ProductCombination combination) {
+    // Ưu tiên hình ảnh tổ hợp nếu có
+    if (combination.imageUrl != null && combination.imageUrl!.isNotEmpty) {
+      return buildImageUrl(combination.imageUrl!);
+    }
+    
+    // Nếu không có hình ảnh tổ hợp, lấy hình ảnh của sản phẩm đầu tiên
+    if (combination.items != null && combination.items.isNotEmpty) {
+      final firstItem = combination.items.first;
+      
+      // Ưu tiên hình ảnh variant nếu có
+      if (firstItem.variantImage != null && firstItem.variantImage!.isNotEmpty) {
+        return buildImageUrl(firstItem.variantImage!);
+      }
+      
+      // Fallback về hình ảnh sản phẩm
+      if (firstItem.productImage != null && firstItem.productImage!.isNotEmpty) {
+        return buildImageUrl(firstItem.productImage!);
+      }
+    }
+    
+    return null;
+  }
+
+  void showImageDialog(BuildContext context, String imageUrl, String title) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppBar(
+                title: Text('Hình ảnh: $title'),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.contain,
+                  placeholder: (context, url) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                  errorWidget: (context, url, error) => const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error, size: 64, color: Colors.red),
+                        SizedBox(height: 8),
+                        Text('Lỗi tải hình ảnh', style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -301,31 +380,66 @@ class _ProductCombinationsScreenState extends State<ProductCombinationsScreen> {
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
                           child: ListTile(
-                            leading: Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: (combination.imageUrl != null && combination.imageUrl!.isNotEmpty)
-                                  ? ClipRRect(
+                            leading: GestureDetector(
+                              onTap: () {
+                                final imageUrl = getCombinationImageUrl(combination);
+                                if (imageUrl != null) {
+                                  showImageDialog(context, imageUrl, combination.name);
+                                }
+                              },
+                              child: Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Stack(
+                                  children: [
+                                    ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(
-                                        'http://127.0.0.1/EcommerceClothingApp/API/uploads/serve_image.php?file=${combination.imageUrl}',
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) => const Icon(
-                                          Icons.image,
-                                          size: 30,
-                                          color: Colors.grey,
+                                      child: getCombinationImageUrl(combination) != null
+                                          ? CachedNetworkImage(
+                                              imageUrl: getCombinationImageUrl(combination)!,
+                                              width: 60,
+                                              height: 60,
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) => const Center(
+                                                child: CircularProgressIndicator(),
+                                              ),
+                                              errorWidget: (context, url, error) => const Icon(
+                                                Icons.image,
+                                                size: 30,
+                                                color: Colors.grey,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.image,
+                                              size: 30,
+                                              color: Colors.grey,
+                                            ),
+                                    ),
+                                    // Icon zoom khi có hình ảnh
+                                    if (getCombinationImageUrl(combination) != null)
+                                      Positioned(
+                                        top: 2,
+                                        right: 2,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withOpacity(0.6),
+                                            borderRadius: BorderRadius.circular(2),
+                                          ),
+                                          child: const Icon(
+                                            Icons.zoom_in,
+                                            color: Colors.white,
+                                            size: 12,
+                                          ),
                                         ),
                                       ),
-                                    )
-                                  : const Icon(
-                                      Icons.image,
-                                      size: 30,
-                                      color: Colors.grey,
-                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                             title: Text(combination.name),
                             subtitle: Column(

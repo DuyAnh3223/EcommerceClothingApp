@@ -135,6 +135,15 @@ class AuthService {
     return userData != null;
   }
 
+  // Get current user data as a User object
+  static Future<Map<String, dynamic>> getCurrentUser() async {
+    final userData = await getUserData();
+    if (userData != null) {
+      return userData;
+    }
+    throw Exception('User not logged in');
+  }
+
   static Future<Map<String, dynamic>> register(String username, String email, String password, String phone) async {
     try {
       final response = await http.post(
@@ -392,6 +401,39 @@ class AuthService {
           'address_id': addressId,
           'payment_method': paymentMethod,
           'items': items,
+        }),
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        return {
+          'success': false,
+          'message': 'Lỗi kết nối server: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Lỗi kết nối: $e',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> placeOrderWithCombinations({
+    required int userId,
+    required int addressId,
+    required String paymentMethod,
+    required List<Map<String, dynamic>> cartItems,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/orders/place_order_with_combinations.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'user_id': userId,
+          'address_id': addressId,
+          'payment_method': paymentMethod,
+          'cart_items': cartItems,
         }),
       );
       if (response.statusCode == 200) {

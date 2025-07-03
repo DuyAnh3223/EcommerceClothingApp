@@ -401,7 +401,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         SizedBox(
                           height: 300,
-                          child: ComboCarouselSection(),
+                          child: ComboCarouselSection(onCartUpdated: _updateCartCount),
                         ),
                         const SizedBox(height: 16),
                         // Danh sách sản phẩm
