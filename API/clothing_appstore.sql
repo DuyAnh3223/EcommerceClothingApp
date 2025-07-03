@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th7 03, 2025 lúc 08:10 AM
+-- Thời gian đã tạo: Th7 03, 2025 lúc 12:22 PM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -72,6 +72,65 @@ INSERT INTO `attribute_values` (`id`, `attribute_id`, `value`, `created_by`) VAL
 (30, 22, 'fit', 9),
 (31, 22, 'big', 9),
 (32, 22, 'fashion', 9);
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `card`
+--
+
+CREATE TABLE `card` (
+  `id` int(11) NOT NULL,
+  `serial_number` varchar(50) NOT NULL,
+  `card_code` varchar(50) DEFAULT NULL,
+  `promotion_id` int(11) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `crypto_coin` varchar(50) DEFAULT NULL,
+  `status` enum('unused','used') DEFAULT 'unused',
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `card`
+--
+
+INSERT INTO `card` (`id`, `serial_number`, `card_code`, `promotion_id`, `price`, `crypto_coin`, `status`, `created_at`) VALUES
+(6, 'PPUICP7XJC2P', '6YZBPGW0H5', 1, 100000.00, '130000', 'unused', '2025-07-03 15:59:57'),
+(7, 'Z65P649HV3GV', 'T9KDMD4MQW', 1, 100000.00, '130000', 'unused', '2025-07-03 15:59:57'),
+(8, '8HZ0K65BSJLQ', 'Q1JFQ8JB1F', 1, 100000.00, '130000', 'unused', '2025-07-03 15:59:57'),
+(9, 'UN02GFJ5XGIW', '2JLH7FCBDV', 1, 100000.00, '130000', 'unused', '2025-07-03 15:59:57'),
+(10, 'QW68PLKUWA35', 'WWZWCP1WEZ', 1, 100000.00, '130000', 'unused', '2025-07-03 15:59:57'),
+(11, 'INIUA4VBT2R6', '2KFZDLWOZQ', 2, 500000.00, '570000', 'unused', '2025-07-03 16:00:44'),
+(12, 'MLRZM0TFI6CQ', 'KNBV9N7OC5', 2, 500000.00, '570000', 'unused', '2025-07-03 16:00:44'),
+(13, '1RB4V1CDKOED', '8NA47N7AUJ', 2, 500000.00, '570000', 'unused', '2025-07-03 16:00:44'),
+(14, 'GP2FR29Q4M30', '27Z3TXQJWW', 2, 500000.00, '570000', 'unused', '2025-07-03 16:00:44'),
+(15, '41K07BGL2UGA', '53YURBPMFO', 2, 500000.00, '570000', 'unused', '2025-07-03 16:00:44'),
+(16, 'DD6AN5HPFNIS', 'HHRVJCPFAK', 3, 1000000.00, '1200000', 'unused', '2025-07-03 16:00:50'),
+(17, 'HM0IK6NA95UA', '6E77ZEQ0F7', 3, 1000000.00, '1200000', 'unused', '2025-07-03 16:00:50'),
+(18, '94OVEC7GLEUN', 'OIXGEUCHGE', 3, 1000000.00, '1200000', 'unused', '2025-07-03 16:00:50'),
+(19, '3JTJB494XRWD', 'JIM839EA83', 3, 1000000.00, '1200000', 'used', '2025-07-03 16:00:50'),
+(20, 'BHTO0GGNA9SC', 'GVAWKRF37S', 3, 1000000.00, '1200000', 'used', '2025-07-03 16:00:50');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `card_transaction`
+--
+
+CREATE TABLE `card_transaction` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `card_id` int(11) NOT NULL,
+  `used_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `card_transaction`
+--
+
+INSERT INTO `card_transaction` (`id`, `user_id`, `card_id`, `used_at`) VALUES
+(1, 4, 20, '2025-07-03 16:01:54'),
+(2, 4, 19, '2025-07-03 16:08:31');
 
 -- --------------------------------------------------------
 
@@ -781,6 +840,28 @@ INSERT INTO `product_variant` (`product_id`, `variant_id`, `price`, `stock`, `im
 -- --------------------------------------------------------
 
 --
+-- Cấu trúc bảng cho bảng `promotion`
+--
+
+CREATE TABLE `promotion` (
+  `id` int(11) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `original_price` decimal(10,2) NOT NULL,
+  `converted_price` decimal(10,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `promotion`
+--
+
+INSERT INTO `promotion` (`id`, `name`, `original_price`, `converted_price`) VALUES
+(1, 'Promotion 1', 100000.00, 130000.00),
+(2, 'Promotion 2', 500000.00, 570000.00),
+(3, 'Promotion 3', 1000000.00, 1200000.00);
+
+-- --------------------------------------------------------
+
+--
 -- Cấu trúc bảng cho bảng `users`
 --
 
@@ -831,6 +912,46 @@ INSERT INTO `user_addresses` (`id`, `user_id`, `address_line`, `city`, `province
 (3, 4, 'Ben tre', 'Mo cay', 'Ben Tre', '42', 1, '2025-06-27 11:50:00'),
 (8, 4, 'TPHCM', 'QUAN 8', 'CAO LO', '123', 0, '2025-06-27 12:04:51'),
 (13, 9, 'ffw', 'fwq', 'fwq', 'fw', 0, '2025-07-02 15:56:38');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `user_cash_wallet`
+--
+
+CREATE TABLE `user_cash_wallet` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `balance` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `last_updated` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `user_cash_wallet`
+--
+
+INSERT INTO `user_cash_wallet` (`id`, `user_id`, `balance`, `last_updated`) VALUES
+(1, 4, 99999999.00, '2025-07-03 17:19:15');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `user_coin_wallet`
+--
+
+CREATE TABLE `user_coin_wallet` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `balance` decimal(15,2) NOT NULL DEFAULT 0.00,
+  `last_updated` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `user_coin_wallet`
+--
+
+INSERT INTO `user_coin_wallet` (`id`, `user_id`, `balance`, `last_updated`) VALUES
+(2, 4, 1200000.00, '2025-07-03 16:08:31');
 
 -- --------------------------------------------------------
 
@@ -1030,6 +1151,23 @@ ALTER TABLE `attribute_values`
   ADD KEY `created_by` (`created_by`);
 
 --
+-- Chỉ mục cho bảng `card`
+--
+ALTER TABLE `card`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `serial_number` (`serial_number`),
+  ADD UNIQUE KEY `card_code` (`card_code`),
+  ADD KEY `promotion_id` (`promotion_id`);
+
+--
+-- Chỉ mục cho bảng `card_transaction`
+--
+ALTER TABLE `card_transaction`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `card_id` (`card_id`);
+
+--
 -- Chỉ mục cho bảng `cart_items`
 --
 ALTER TABLE `cart_items`
@@ -1117,6 +1255,12 @@ ALTER TABLE `product_variant`
   ADD KEY `variant_id` (`variant_id`);
 
 --
+-- Chỉ mục cho bảng `promotion`
+--
+ALTER TABLE `promotion`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Chỉ mục cho bảng `users`
 --
 ALTER TABLE `users`
@@ -1131,6 +1275,20 @@ ALTER TABLE `users`
 ALTER TABLE `user_addresses`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Chỉ mục cho bảng `user_cash_wallet`
+--
+ALTER TABLE `user_cash_wallet`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_id` (`user_id`);
+
+--
+-- Chỉ mục cho bảng `user_coin_wallet`
+--
+ALTER TABLE `user_coin_wallet`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_id` (`user_id`);
 
 --
 -- Chỉ mục cho bảng `variants`
@@ -1182,6 +1340,18 @@ ALTER TABLE `attributes`
 --
 ALTER TABLE `attribute_values`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+
+--
+-- AUTO_INCREMENT cho bảng `card`
+--
+ALTER TABLE `card`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- AUTO_INCREMENT cho bảng `card_transaction`
+--
+ALTER TABLE `card_transaction`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT cho bảng `cart_items`
@@ -1244,6 +1414,12 @@ ALTER TABLE `product_combination_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
+-- AUTO_INCREMENT cho bảng `promotion`
+--
+ALTER TABLE `promotion`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
@@ -1254,6 +1430,18 @@ ALTER TABLE `users`
 --
 ALTER TABLE `user_addresses`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT cho bảng `user_cash_wallet`
+--
+ALTER TABLE `user_cash_wallet`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT cho bảng `user_coin_wallet`
+--
+ALTER TABLE `user_coin_wallet`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT cho bảng `variants`
@@ -1295,6 +1483,19 @@ ALTER TABLE `attributes`
 ALTER TABLE `attribute_values`
   ADD CONSTRAINT `attribute_values_ibfk_1` FOREIGN KEY (`attribute_id`) REFERENCES `attributes` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `attribute_values_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Các ràng buộc cho bảng `card`
+--
+ALTER TABLE `card`
+  ADD CONSTRAINT `card_ibfk_1` FOREIGN KEY (`promotion_id`) REFERENCES `promotion` (`id`);
+
+--
+-- Các ràng buộc cho bảng `card_transaction`
+--
+ALTER TABLE `card_transaction`
+  ADD CONSTRAINT `card_transaction_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `card_transaction_ibfk_2` FOREIGN KEY (`card_id`) REFERENCES `card` (`id`);
 
 --
 -- Các ràng buộc cho bảng `cart_items`
@@ -1374,6 +1575,18 @@ ALTER TABLE `product_variant`
 --
 ALTER TABLE `user_addresses`
   ADD CONSTRAINT `user_addresses_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `user_cash_wallet`
+--
+ALTER TABLE `user_cash_wallet`
+  ADD CONSTRAINT `user_cash_wallet_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `user_coin_wallet`
+--
+ALTER TABLE `user_coin_wallet`
+  ADD CONSTRAINT `user_coin_wallet_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Các ràng buộc cho bảng `variant_attribute_values`

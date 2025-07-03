@@ -25,7 +25,7 @@ class AuthService {
         
         // Lưu thông tin user nếu đăng nhập thành công
         if (result['success'] == true && result['user'] != null) {
-          await _saveUserData(result['user']);
+          await saveUserData(result['user']);
         }
         
         return result;
@@ -61,7 +61,7 @@ class AuthService {
         
         // Lưu thông tin user nếu đăng nhập thành công
         if (result['success'] == true && result['user'] != null) {
-          await _saveUserData(result['user']);
+          await saveUserData(result['user']);
         }
         
         return result;
@@ -79,7 +79,7 @@ class AuthService {
     }
   }
 
-  static Future<void> _saveUserData(Map<String, dynamic> user) async {
+  static Future<void> saveUserData(Map<String, dynamic> user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userKey, json.encode(user));
     await prefs.setString(_roleKey, user['role'] ?? 'user');
@@ -440,7 +440,7 @@ class AuthService {
         
         // Update local user data if successful
         if (result['success'] == true && result['data'] != null) {
-          await _saveUserData(result['data']);
+          await saveUserData(result['data']);
         }
         
         return result;
@@ -599,5 +599,23 @@ class AuthService {
         'message': 'Lỗi kết nối: $e',
       };
     }
+  }
+
+  static Future<double> getCoinBalance({required int userId}) async {
+    final response = await http.get(Uri.parse('http://localhost/EcommerceClothingApp/API/coin/get_balance.php?user_id=$userId'));
+    final data = json.decode(response.body);
+    if (data['success'] == true && data['balance'] != null) {
+      return double.tryParse(data['balance'].toString()) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  static Future<List<Map<String, dynamic>>> getCoinTransactions({required int userId}) async {
+    final response = await http.get(Uri.parse('http://localhost/EcommerceClothingApp/API/coin/get_card_transactions.php?user_id=$userId'));
+    final data = json.decode(response.body);
+    if (data['success'] == true && data['transactions'] != null) {
+      return List<Map<String, dynamic>>.from(data['transactions']);
+    }
+    return [];
   }
 } 

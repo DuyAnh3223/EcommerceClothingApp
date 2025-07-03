@@ -86,24 +86,6 @@ class SideMenu extends StatelessWidget {
               }
             },
           ),
-          // DrawerListTile(
-          //   title: "Chi tiết đơn hàng",
-          //   svgSrc: "assets/icons/chitietdonhang.svg",
-          //   press: () {
-          //     if (onMenuSelected != null) {
-          //       onMenuSelected!("Chi tiết đơn hàng");
-          //     }
-          //   },
-          // ),
-          // DrawerListTile(
-          //   title: "Giỏ hàng",
-          //   svgSrc: "assets/icons/giohang.svg",
-          //   press: () {
-          //     if (onMenuSelected != null) {
-          //       onMenuSelected!("Giỏ hàng");
-          //     }
-          //   },
-          // ),
           DrawerListTile(
             title: "Người dùng",
             svgSrc: "assets/icons/nguoidung.svg",
@@ -113,15 +95,6 @@ class SideMenu extends StatelessWidget {
               }
             },
           ),
-          // DrawerListTile(
-          //   title: "Địa chỉ",
-          //   svgSrc: "assets/icons/diachi.svg",
-          //   press: () {
-          //     if (onMenuSelected != null) {
-          //       onMenuSelected!("Địa chỉ");
-          //     }
-          //   },
-          // ),
           DrawerListTile(
             title: "Kiểm duyệt sản phẩm",
             svgSrc: "assets/icons/danhgia.svg",
@@ -146,6 +119,16 @@ class SideMenu extends StatelessWidget {
             press: () {
               if (onMenuSelected != null) {
                 onMenuSelected!("Quản lý thuộc tính");
+              }
+            },
+          ),
+          DrawerListTile(
+            title: "Quản lý rút tiền",
+            svgSrc:
+                "assets/icons/widgets.svg", // hoặc chọn icon phù hợp hơn nếu có
+            press: () {
+              if (onMenuSelected != null) {
+                onMenuSelected!("Quản lý rút tiền");
               }
             },
           ),
