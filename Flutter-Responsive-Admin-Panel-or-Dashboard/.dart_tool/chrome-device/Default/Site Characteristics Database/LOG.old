@@ -1,10 +1,10 @@
-<<<<<<< HEAD
-2025/07/03-14:40:00.514 5c48 Reusing MANIFEST C:\Users\duyan\AppData\Local\Temp\flutter_tools.98f7a0c1\flutter_tools_chrome_device.361adbe2\Default\Site Characteristics Database/MANIFEST-000001
-2025/07/03-14:40:00.515 5c48 Recovering log #3
-2025/07/03-14:40:00.515 5c48 Reusing old log C:\Users\duyan\AppData\Local\Temp\flutter_tools.98f7a0c1\flutter_tools_chrome_device.361adbe2\Default\Site Characteristics Database/000003.log 
-=======
-2025/07/03-10:28:58.578 ff4 Reusing MANIFEST C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.d796aabb\flutter_tools_chrome_device.acb2ca92\Default\Site Characteristics Database/MANIFEST-000001
-2025/07/03-10:28:58.579 ff4 Recovering log #6
-2025/07/03-10:28:58.581 ff4 Reusing old log C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.d796aabb\flutter_tools_chrome_device.acb2ca92\Default\Site Characteristics Database/000006.log 
-2025/07/03-10:28:58.581 ff4 Delete type=0 #3
->>>>>>> 3c1fbcb07cd1e262c4b348cb849f77c022b8e4d7
+2025/07/03-23:50:34.202 6334 Log #3: 410 ops saved to Table #7 OK
+2025/07/03-23:50:34.206 6334 Archiving C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.b5d6539b\flutter_tools_chrome_device.2311486e\Default\Site Characteristics Database/000003.log: OK
+2025/07/03-23:50:34.210 6334 Log #6: 384 ops saved to Table #8 OK
+2025/07/03-23:50:34.210 6334 Archiving C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.b5d6539b\flutter_tools_chrome_device.2311486e\Default\Site Characteristics Database/000006.log: OK
+2025/07/03-23:50:34.211 6334 Table #4: 29 entries OK
+2025/07/03-23:50:34.211 6334 Table #6: 29 entries OK
+2025/07/03-23:50:34.212 6334 Table #7: 410 entries OK
+2025/07/03-23:50:34.212 6334 Table #8: 384 entries OK
+2025/07/03-23:50:34.215 6334 Archiving C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.b5d6539b\flutter_tools_chrome_device.2311486e\Default\Site Characteristics Database/MANIFEST-000001: OK
+2025/07/03-23:50:34.219 6334 **** Repaired leveldb C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.b5d6539b\flutter_tools_chrome_device.2311486e\Default\Site Characteristics Database; recovered 4 files; 30642 bytes. Some data may have been lost. ****
