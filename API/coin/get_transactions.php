@@ -8,11 +8,11 @@ if (!$user_id) {
     exit;
 }
 
-$sql = "SELECT balance FROM users WHERE id = $user_id";
+$sql = "SELECT * FROM bacoin_transactions WHERE user_id = $user_id ORDER BY created_at DESC";
 $result = $conn->query($sql);
-if ($row = $result->fetch_assoc()) {
-    echo json_encode(['success' => true, 'balance' => $row['balance'] ?? 0]);
-} else {
-    echo json_encode(['success' => false, 'message' => 'Không tìm thấy user']);
+$transactions = [];
+while ($row = $result->fetch_assoc()) {
+    $transactions[] = $row;
 }
+echo json_encode(['success' => true, 'data' => $transactions]);
 ?>
