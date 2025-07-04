@@ -38,23 +38,32 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param('sisi', $status, $admin_id, $admin_note, $request_id);
 
 if ($stmt->execute() && $stmt->affected_rows > 0) {
-    // Nếu duyệt, trừ số dư agency
-    // if ($status === 'approved') {
-    //     $amountSql = "SELECT amount, agency_id FROM withdraw_requests WHERE id = ?";
-    //     $amountStmt = $conn->prepare($amountSql);
-    //     $amountStmt->bind_param('i', $request_id);
-    //     $amountStmt->execute();
-    //     $amountResult = $amountStmt->get_result();
-    //     if ($row = $amountResult->fetch_assoc()) {
-    //         $amount = $row['amount'];
-    //         $agency_id = $row['agency_id'];
-    //         // Trừ số dư
-    //         $updateBalanceSql = "UPDATE users SET balance = balance - ? WHERE id = ?";
-    //         $updateBalanceStmt = $conn->prepare($updateBalanceSql);
-    //         $updateBalanceStmt->bind_param('di', $amount, $agency_id);
-    //         $updateBalanceStmt->execute();
-    //     }
-    // }
+    if ($status === 'approved') {
+        // Lấy thông tin rút tiền và agency
+        $amountSql = "SELECT amount, agency_id FROM withdraw_requests WHERE id = ?";
+        $amountStmt = $conn->prepare($amountSql);
+        $amountStmt->bind_param('i', $request_id);
+        $amountStmt->execute();
+        $amountResult = $amountStmt->get_result();
+        if ($row = $amountResult->fetch_assoc()) {
+            $amount = (float)$row['amount'];
+            $agency_id = $row['agency_id'];
+            // Cộng số tiền này vào personal_account_balance
+            $updateBalanceSql = "UPDATE withdraw_agency SET personal_account_balance = personal_account_balance + ? WHERE agency_id = ?";
+            $updateBalanceStmt = $conn->prepare($updateBalanceSql);
+            $updateBalanceStmt->bind_param('di', $amount, $agency_id);
+            $updateBalanceStmt->execute();
+            $updateBalanceStmt->close();
+            // Trừ số tiền này khỏi available_balance
+            $updateAvailableSql = "UPDATE withdraw_agency SET available_balance = GREATEST(available_balance - ?, 0) WHERE agency_id = ?";
+            $updateAvailableStmt = $conn->prepare($updateAvailableSql);
+            $updateAvailableStmt->bind_param('di', $amount, $agency_id);
+            $updateAvailableStmt->execute();
+            $updateAvailableStmt->close();
+            sendResponse(true, 'Withdraw request approved. Admin sẽ nhận được phí là: ' . $amount, ['platform_fee' => $amount]);
+            exit;
+        }
+    }
     sendResponse(true, 'Withdraw request updated successfully');
 } else {
     sendResponse(false, 'Update failed or request already reviewed');

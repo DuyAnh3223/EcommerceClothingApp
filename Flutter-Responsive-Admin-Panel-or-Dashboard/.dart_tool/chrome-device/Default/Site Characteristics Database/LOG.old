@@ -1,20 +1,11 @@
-2025/07/04-12:29:11.264 4e80 Reusing MANIFEST C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.76415b96\flutter_tools_chrome_device.610d15d0\Default\Site Characteristics Database/MANIFEST-000001
-2025/07/04-12:29:11.265 4e80 Recovering log #3
-2025/07/04-12:29:11.265 4e80 Level-0 table #22: started
-2025/07/04-12:29:11.268 4e80 Level-0 table #22: 14740 bytes OK
-2025/07/04-12:29:11.268 4e80 Recovering log #6
-2025/07/04-12:29:11.268 4e80 Level-0 table #23: started
-2025/07/04-12:29:11.270 4e80 Level-0 table #23: 14548 bytes OK
-2025/07/04-12:29:11.270 4e80 Recovering log #10
-2025/07/04-12:29:11.271 4e80 Level-0 table #24: started
-2025/07/04-12:29:11.273 4e80 Level-0 table #24: 13534 bytes OK
-2025/07/04-12:29:11.273 4e80 Recovering log #19
-2025/07/04-12:29:11.274 4e80 Reusing old log C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.76415b96\flutter_tools_chrome_device.610d15d0\Default\Site Characteristics Database/000019.log 
-2025/07/04-12:29:11.277 4e80 Delete type=0 #3
-2025/07/04-12:29:11.277 4e80 Delete type=2 #4
-2025/07/04-12:29:11.277 4e80 Delete type=2 #6
-2025/07/04-12:29:11.277 4e80 Delete type=0 #6
-2025/07/04-12:29:11.277 4e80 Delete type=0 #10
-2025/07/04-12:29:11.277 4e80 Delete type=2 #11
-2025/07/04-12:29:11.277 4e80 Delete type=2 #13
-2025/07/04-12:29:11.277 4e80 Delete type=2 #14
+2025/07/04-20:13:52.200 33d8 Reusing MANIFEST C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.20e141c3\flutter_tools_chrome_device.b9a3225a\Default\Site Characteristics Database/MANIFEST-000001
+2025/07/04-20:13:52.203 33d8 Recovering log #19
+2025/07/04-20:13:52.203 33d8 Reusing old log C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.20e141c3\flutter_tools_chrome_device.b9a3225a\Default\Site Characteristics Database/000019.log 
+2025/07/04-20:13:52.204 33d8 Delete type=0 #3
+2025/07/04-20:13:52.205 33d8 Delete type=2 #4
+2025/07/04-20:13:52.205 33d8 Delete type=2 #6
+2025/07/04-20:13:52.205 33d8 Delete type=0 #6
+2025/07/04-20:13:52.205 33d8 Delete type=0 #10
+2025/07/04-20:13:52.205 33d8 Delete type=2 #11
+2025/07/04-20:13:52.205 33d8 Delete type=2 #13
+2025/07/04-20:13:52.205 33d8 Delete type=2 #14

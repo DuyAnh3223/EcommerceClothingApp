@@ -1,158 +1,3 @@
-// import 'package:flutter/material.dart';
-// import 'dart:convert';
-// import 'package:http/http.dart' as http;
-// import 'package:userfe/services/auth_service.dart';
-
-// class WithdrawScreen extends StatefulWidget {
-//   @override
-//   _WithdrawScreenState createState() => _WithdrawScreenState();
-// }
-
-// class _WithdrawScreenState extends State<WithdrawScreen> {
-//   final TextEditingController _amountController = TextEditingController();
-//   final TextEditingController _noteController = TextEditingController();
-//   double totalSales = 0;
-//   bool isLoading = false;
-//   bool isFetching = true;
-//   int? userId;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _fetchWithdrawInfo();
-//   }
-
-//   Future<void> _fetchWithdrawInfo() async {
-//     setState(() { isFetching = true; });
-//     final userData = await AuthService.getUserData();
-//     userId = userData?['id'];
-//     if (userId == null) {
-//       _showMessage('Không xác định được tài khoản.');
-//       Navigator.pop(context);
-//       return;
-//     }
-//     try {
-//       final res = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/agency/get_withdraw_agency.php?agency_id=$userId'));
-//       if (res.statusCode == 200) {
-//         final data = json.decode(res.body);
-//         if (data['success'] == true) {
-//           setState(() {
-//             totalSales = (data['data']['total_withdrawable'] ?? 0).toDouble();
-//           });
-//         } else {
-//           _showMessage(data['message'] ?? 'Không lấy được số dư');
-//         }
-//       } else {
-//         _showMessage('Lỗi server khi lấy số dư');
-//       }
-//     } catch (e) {
-//       _showMessage('Lỗi kết nối: $e');
-//     }
-//     setState(() { isFetching = false; });
-//   }
-
-//   Future<void> _submitWithdraw() async {
-//     final amountText = _amountController.text.trim();
-//     final note = _noteController.text.trim();
-//     if (amountText.isEmpty) {
-//       _showMessage('Vui lòng nhập số tiền muốn rút');
-//       return;
-//     }
-//     final amount = double.tryParse(amountText);
-//     if (amount == null || amount <= 0) {
-//       _showMessage('Số tiền không hợp lệ');
-//       return;
-//     }
-//     if (amount > totalSales) {
-//       _showMessage('Số tiền rút vượt quá tổng tiền sản phẩm');
-//       return;
-//     }
-//     setState(() { isLoading = true; });
-//     try {
-//       final res = await http.post(
-//         Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/agency/request_withdraw.php'),
-//         headers: {'Content-Type': 'application/json'},
-//         body: json.encode({
-//           'agency_id': userId,
-//           'amount': amount,
-//           'note': note,
-//         }),
-//       );
-//       if (res.statusCode == 200) {
-//         final data = json.decode(res.body);
-//         if (data['success'] == true) {
-//           _showMessage('Yêu cầu rút tiền đã được gửi tới admin!');
-//           Navigator.pop(context);
-//         } else {
-//           _showMessage(data['message'] ?? 'Có lỗi xảy ra');
-//         }
-//       } else {
-//         _showMessage('Lỗi server khi gửi yêu cầu');
-//       }
-//     } catch (e) {
-//       _showMessage('Lỗi kết nối: $e');
-//     }
-//     setState(() { isLoading = false; });
-//   }
-
-//   void _showMessage(String msg) {
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text(msg)),
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Rút tiền')),
-//       body: isFetching
-//           ? Center(child: CircularProgressIndicator())
-//           : Padding(
-//               padding: const EdgeInsets.all(16.0),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Text('Tổng tiền sản phẩm:', style: TextStyle(fontSize: 16)),
-//                   SizedBox(height: 4),
-//                   Text(
-//                     '${totalSales.toStringAsFixed(0)} VNĐ',
-//                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green),
-//                   ),
-//                   SizedBox(height: 24),
-//                   TextField(
-//                     controller: _amountController,
-//                     keyboardType: TextInputType.number,
-//                     decoration: InputDecoration(
-//                       labelText: 'Số tiền muốn rút',
-//                       border: OutlineInputBorder(),
-//                     ),
-//                   ),
-//                   SizedBox(height: 16),
-//                   TextField(
-//                     controller: _noteController,
-//                     decoration: InputDecoration(
-//                       labelText: 'Ghi chú (tuỳ chọn)',
-//                       border: OutlineInputBorder(),
-//                     ),
-//                     maxLines: 2,
-//                   ),
-//                   SizedBox(height: 24),
-//                   SizedBox(
-//                     width: double.infinity,
-//                     child: ElevatedButton(
-//                       onPressed: isLoading ? null : _submitWithdraw,
-//                       child: isLoading
-//                           ? CircularProgressIndicator(color: Colors.white)
-//                           : Text('Gửi yêu cầu rút tiền'),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//     );
-//   }
-// } 
-
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -165,9 +10,9 @@ class WithdrawScreen extends StatefulWidget {
 
 class _WithdrawScreenState extends State<WithdrawScreen> {
   double totalSales = 0;
+  double personalAccountBalance = 0;
   double totalFee = 0;
-  double totalWithdrawable = 0;
-  String lastUpdated = '';
+  double availableBalance = 0;
   bool isLoading = false;
   bool isFetching = true;
   final TextEditingController _amountController = TextEditingController();
@@ -192,33 +37,65 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
       setState(() => isFetching = false);
       return;
     }
+    // Gọi API update trước
+    final updateUrl = 'http://localhost/EcommerceClothingApp/API/agency/update_withdraw_agency.php?agency_id=$userId';
+    try {
+      await http.get(Uri.parse(updateUrl));
+    } catch (e) {
+      // Có thể log lỗi nếu cần
+    }
+    // Sau đó mới gọi API get
     final url = 'http://localhost/EcommerceClothingApp/API/agency/get_withdraw_agency.php?agency_id=$userId';
     final res = await http.get(Uri.parse(url));
     final data = json.decode(res.body);
     if (data['success']) {
       setState(() {
-        totalSales = double.tryParse(data['data']['total_sales'] ?? '0') ?? 0;
-        totalFee = double.tryParse(data['data']['total_fee'] ?? '0') ?? 0;
-        totalWithdrawable = double.tryParse(data['data']['total_withdrawable'] ?? '0') ?? 0;
-        lastUpdated = data['data']['last_updated'] ?? '';
+        totalSales = double.tryParse(data['data']['total_sales'].toString()) ?? 0;
+        personalAccountBalance = double.tryParse(data['data']['personal_account_balance'].toString()) ?? 0;
+        totalFee = double.tryParse(data['data']['total_fee'].toString()) ?? 0;
+        availableBalance = double.tryParse(data['data']['available_balance'].toString()) ?? 0;
         isFetching = false;
       });
     } else {
       setState(() => isFetching = false);
-      // Hiển thị lỗi nếu cần
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['message'] ?? 'Có lỗi xảy ra khi lấy thông tin rút tiền!')),
+      );
     }
+  }
+
+  void _onWithdrawAll() {
+    _amountController.text = totalSales.toStringAsFixed(0);
   }
 
   Future<void> _submitWithdraw() async {
     final amountText = _amountController.text.trim();
     final note = _noteController.text.trim();
     final amount = double.tryParse(amountText) ?? 0;
-    if (amount <= 0 || amount > totalWithdrawable) {
+    if (amount <= 0 || amount > totalSales) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Số tiền rút không hợp lệ!')),
       );
       return;
     }
+    // Hiển thị dialog xác nhận phí
+    final fee = totalFee;
+    final realAmount = amount - fee;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Xác nhận rút tiền'),
+        content: Text(
+          'Bạn sẽ bị trừ phí $fee VNĐ.\nSố tiền thực nhận là ${realAmount > 0 ? realAmount : 0} VNĐ.\nBạn có chắc chắn muốn gửi yêu cầu rút tiền không?'
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Huỷ')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: Text('Xác nhận')),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
     setState(() => isLoading = true);
     final url = 'http://localhost/EcommerceClothingApp/API/agency/request_withdraw.php';
     final res = await http.post(
@@ -235,7 +112,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gửi yêu cầu rút tiền thành công!')),
       );
-      _fetchWithdrawInfo(); // Cập nhật lại số dư
+      _fetchWithdrawInfo();
       _amountController.clear();
       _noteController.clear();
     } else {
@@ -256,15 +133,27 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Tổng tiền bán: ${totalSales.toStringAsFixed(2)} VNĐ'),
-                  Text('Tổng phí: ${totalFee.toStringAsFixed(2)} VNĐ'),
-                  Text('Số tiền có thể rút: ${totalWithdrawable.toStringAsFixed(2)} VNĐ'),
-                  Text('Cập nhật: $lastUpdated'),
+                  Text('Tổng tiền sản phẩm: ${totalSales.toStringAsFixed(2)} VNĐ', style: TextStyle(fontSize: 16)),
+                  SizedBox(height: 8),
+                  Text('Số dư khả dụng: ${availableBalance.toStringAsFixed(2)} VNĐ', style: TextStyle(fontSize: 16, color: Colors.green)),
+                  SizedBox(height: 8),
+                  Text('Tài khoản cá nhân: ${personalAccountBalance.toStringAsFixed(2)} VNĐ', style: TextStyle(fontSize: 16)),
                   SizedBox(height: 16),
-                  TextField(
-                    controller: _amountController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: 'Số tiền muốn rút'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _amountController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(labelText: 'Số tiền muốn rút'),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: _onWithdrawAll,
+                        child: Text('Rút tất cả'),
+                      ),
+                    ],
                   ),
                   TextField(
                     controller: _noteController,

@@ -288,10 +288,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 backgroundColor: Colors.green,
                                 foregroundColor: Colors.white,
                               ),
-                              onPressed: () async {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AgencyWithdrawDialog(agencyId: userData!['id']),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => WithdrawScreen()),
                                 );
                               },
                             ),
@@ -1508,10 +1508,6 @@ class _AgencyWithdrawDialogState extends State<AgencyWithdrawDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildBalanceColumn('Tổng tiền bán được', totalSales, Colors.blue, width: 200, fontSize: 28),
-                            _buildDivider(height: 110),
-                            _buildBalanceColumn('Phí nền tảng', platformFeeTotal, Colors.red, isNegative: true, width: 200, fontSize: 28),
-                            _buildDivider(height: 110),
-                            _buildBalanceColumn('Số dư khả dụng', availableBalance, Colors.green, width: 200, fontSize: 28),
                             _buildDivider(height: 110),
                             _buildBalanceColumn('Tài khoản cá nhân', personalAccountBalance, Colors.deepPurple, width: 200, fontSize: 28),
                           ],

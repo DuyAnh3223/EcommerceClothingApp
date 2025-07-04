@@ -22,7 +22,6 @@ JOIN products p ON oi.product_id = p.id
 WHERE p.created_by = ?
   AND p.is_agency_product = 1
   AND o.status IN ('confirmed', 'delivered')
-  and oi.status = 1;
 ";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $agency_id);
