@@ -13,3 +13,157 @@ thì khi thanh toán bằng BACoin sẽ tự động -200K vào số dư BACoin 
 3/ trừ tiền xong thì các bước sau y hệt như thanh toán COD: cập nhập table orders, order_items, payments,... và cập nhập lại cột user.balance
 ghi lại giao dịch bằng BACoin trong bacoin_transactions,....
   
+// import 'package:flutter/material.dart';
+// import 'dart:convert';
+// import 'package:http/http.dart' as http;
+// import 'package:userfe/services/auth_service.dart';
+
+// class WithdrawScreen extends StatefulWidget {
+//   @override
+//   _WithdrawScreenState createState() => _WithdrawScreenState();
+// }
+
+// class _WithdrawScreenState extends State<WithdrawScreen> {
+//   final TextEditingController _amountController = TextEditingController();
+//   final TextEditingController _noteController = TextEditingController();
+//   double totalSales = 0;
+//   bool isLoading = false;
+//   bool isFetching = true;
+//   int? userId;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _fetchWithdrawInfo();
+//   }
+
+//   Future<void> _fetchWithdrawInfo() async {
+//     setState(() { isFetching = true; });
+//     final userData = await AuthService.getUserData();
+//     userId = userData?['id'];
+//     if (userId == null) {
+//       _showMessage('Không xác định được tài khoản.');
+//       Navigator.pop(context);
+//       return;
+//     }
+//     try {
+//       final res = await http.get(Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/agency/get_withdraw_agency.php?agency_id=$userId'));
+//       if (res.statusCode == 200) {
+//         final data = json.decode(res.body);
+//         if (data['success'] == true) {
+//           setState(() {
+//             totalSales = (data['data']['total_withdrawable'] ?? 0).toDouble();
+//           });
+//         } else {
+//           _showMessage(data['message'] ?? 'Không lấy được số dư');
+//         }
+//       } else {
+//         _showMessage('Lỗi server khi lấy số dư');
+//       }
+//     } catch (e) {
+//       _showMessage('Lỗi kết nối: $e');
+//     }
+//     setState(() { isFetching = false; });
+//   }
+
+//   Future<void> _submitWithdraw() async {
+//     final amountText = _amountController.text.trim();
+//     final note = _noteController.text.trim();
+//     if (amountText.isEmpty) {
+//       _showMessage('Vui lòng nhập số tiền muốn rút');
+//       return;
+//     }
+//     final amount = double.tryParse(amountText);
+//     if (amount == null || amount <= 0) {
+//       _showMessage('Số tiền không hợp lệ');
+//       return;
+//     }
+//     if (amount > totalSales) {
+//       _showMessage('Số tiền rút vượt quá tổng tiền sản phẩm');
+//       return;
+//     }
+//     setState(() { isLoading = true; });
+//     try {
+//       final res = await http.post(
+//         Uri.parse('http://127.0.0.1/EcommerceClothingApp/API/agency/request_withdraw.php'),
+//         headers: {'Content-Type': 'application/json'},
+//         body: json.encode({
+//           'agency_id': userId,
+//           'amount': amount,
+//           'note': note,
+//         }),
+//       );
+//       if (res.statusCode == 200) {
+//         final data = json.decode(res.body);
+//         if (data['success'] == true) {
+//           _showMessage('Yêu cầu rút tiền đã được gửi tới admin!');
+//           Navigator.pop(context);
+//         } else {
+//           _showMessage(data['message'] ?? 'Có lỗi xảy ra');
+//         }
+//       } else {
+//         _showMessage('Lỗi server khi gửi yêu cầu');
+//       }
+//     } catch (e) {
+//       _showMessage('Lỗi kết nối: $e');
+//     }
+//     setState(() { isLoading = false; });
+//   }
+
+//   void _showMessage(String msg) {
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text(msg)),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: Text('Rút tiền')),
+//       body: isFetching
+//           ? Center(child: CircularProgressIndicator())
+//           : Padding(
+//               padding: const EdgeInsets.all(16.0),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   Text('Tổng tiền sản phẩm:', style: TextStyle(fontSize: 16)),
+//                   SizedBox(height: 4),
+//                   Text(
+//                     '${totalSales.toStringAsFixed(0)} VNĐ',
+//                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green),
+//                   ),
+//                   SizedBox(height: 24),
+//                   TextField(
+//                     controller: _amountController,
+//                     keyboardType: TextInputType.number,
+//                     decoration: InputDecoration(
+//                       labelText: 'Số tiền muốn rút',
+//                       border: OutlineInputBorder(),
+//                     ),
+//                   ),
+//                   SizedBox(height: 16),
+//                   TextField(
+//                     controller: _noteController,
+//                     decoration: InputDecoration(
+//                       labelText: 'Ghi chú (tuỳ chọn)',
+//                       border: OutlineInputBorder(),
+//                     ),
+//                     maxLines: 2,
+//                   ),
+//                   SizedBox(height: 24),
+//                   SizedBox(
+//                     width: double.infinity,
+//                     child: ElevatedButton(
+//                       onPressed: isLoading ? null : _submitWithdraw,
+//                       child: isLoading
+//                           ? CircularProgressIndicator(color: Colors.white)
+//                           : Text('Gửi yêu cầu rút tiền'),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+//     );
+//   }
+// } 

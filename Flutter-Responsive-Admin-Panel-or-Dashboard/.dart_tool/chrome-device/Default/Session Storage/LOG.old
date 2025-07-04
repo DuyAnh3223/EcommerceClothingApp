@@ -1,8 +1,14 @@
-2025/07/04-02:39:39.897 928 Reusing MANIFEST C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.7c1d7a6c\flutter_tools_chrome_device.d91584a9\Default\Session Storage/MANIFEST-000001
-2025/07/04-02:39:39.900 928 Recovering log #18
-2025/07/04-02:39:39.904 928 Reusing old log C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.7c1d7a6c\flutter_tools_chrome_device.d91584a9\Default\Session Storage/000018.log 
-2025/07/04-02:39:39.905 928 Delete type=0 #3
-2025/07/04-02:39:39.906 928 Delete type=2 #5
-2025/07/04-02:39:39.906 928 Delete type=0 #14
-2025/07/04-02:39:39.906 928 Delete type=2 #16
-2025/07/04-02:39:39.906 928 Delete type=2 #19
+2025/07/04-12:29:11.406 6be4 Reusing MANIFEST C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.76415b96\flutter_tools_chrome_device.610d15d0\Default\Session Storage/MANIFEST-000001
+2025/07/04-12:29:11.408 6be4 Recovering log #3
+2025/07/04-12:29:11.408 6be4 Level-0 table #3: started
+2025/07/04-12:29:11.412 6be4 Level-0 table #3: 247 bytes OK
+2025/07/04-12:29:11.412 6be4 Recovering log #14
+2025/07/04-12:29:11.412 6be4 Level-0 table #4: started
+2025/07/04-12:29:11.418 6be4 Level-0 table #4: 26059 bytes OK
+2025/07/04-12:29:11.419 6be4 Recovering log #18
+2025/07/04-12:29:11.422 6be4 Reusing old log C:\Users\TONBAO~1\AppData\Local\Temp\flutter_tools.76415b96\flutter_tools_chrome_device.610d15d0\Default\Session Storage/000018.log 
+2025/07/04-12:29:11.424 6be4 Delete type=0 #3
+2025/07/04-12:29:11.425 6be4 Delete type=2 #5
+2025/07/04-12:29:11.426 6be4 Delete type=0 #14
+2025/07/04-12:29:11.426 6be4 Delete type=2 #16
+2025/07/04-12:29:11.426 6be4 Delete type=2 #19

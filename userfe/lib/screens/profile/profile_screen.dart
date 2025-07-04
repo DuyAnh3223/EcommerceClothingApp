@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:userfe/screens/profile/buy_coin_screen.dart';
 import 'package:userfe/screens/profile/buy_coin_history_screen.dart';
+import 'package:userfe/screens/withdraw/withdraw_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -421,6 +422,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ...addresses.map((address) => _buildAddressCard(address)),
             
             const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => WithdrawScreen()),
+                );
+              },
+              child: Text('Rút tiền'),
+            ),
           ],
         ),
       ),

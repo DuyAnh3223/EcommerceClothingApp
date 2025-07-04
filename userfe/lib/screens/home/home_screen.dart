@@ -668,7 +668,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 const SizedBox(height: 4),
                                                 Text(
                                                   (firstVariant != null && firstVariant['price'] != null)
-                                                      ? 'Giá từ: ${firstVariant['price'].toStringAsFixed(0)} VNĐ'
+                                                      ? 'Giá từ: ${firstVariant['price'].toStringAsFixed(0)} VNĐ <=> BACoin'
                                                       : '0 VNĐ',
                                                   style: TextStyle(
                                                     color: Colors.orange.shade700,
@@ -677,21 +677,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   ),
                                                 ),
                                                 const SizedBox(height: 4),
-                                                Text(
-                                                  'Giá BACoin: '
-                                                  '${firstVariant != null && firstVariant['price_bacoin'] != null
-                                                      ? (firstVariant['price_bacoin'] is num
-                                                          ? firstVariant['price_bacoin'].toInt()
-                                                          : int.tryParse(firstVariant['price_bacoin'].toString()) ?? 0
-                                                        )
-                                                      : 0
-                                                  } Coin',
-                                                  style: TextStyle(
-                                                    color: Colors.blue.shade700,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
+                                                // Text(
+                                                //   'Giá BACoin: '
+                                                //   '${firstVariant != null && firstVariant['price_bacoin'] != null
+                                                //       ? (firstVariant['price_bacoin'] is num
+                                                //           ? firstVariant['price_bacoin'].toInt()
+                                                //           : int.tryParse(firstVariant['price_bacoin'].toString()) ?? 0
+                                                //         )
+                                                //       : 0
+                                                //   } Coin',
+                                                //   style: TextStyle(
+                                                //     color: Colors.blue.shade700,
+                                                //     fontWeight: FontWeight.bold,
+                                                //     fontSize: 14,
+                                                //   ),
+                                                // ),
                                                 // Hiển thị thông tin sản phẩm agency
                                                 if (product['is_agency_product'] == true) ...[
                                                   const SizedBox(height: 4),
@@ -1080,19 +1080,19 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
                     Row(
                       children: [
                         Text('Giá: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text('${selectedVariant!['price'].toStringAsFixed(0)} VNĐ', style: TextStyle(color: Colors.orange.shade700, fontWeight: FontWeight.bold)),
+                        Text('${selectedVariant!['price'].toStringAsFixed(0)} VNĐ <=> BACoin', style: TextStyle(color: Colors.orange.shade700, fontWeight: FontWeight.bold)),
                         const SizedBox(width: 24),
-                        Text('Giá BACoin: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(
-                          '${selectedVariant!['price_bacoin'] != null
-                              ? (selectedVariant!['price_bacoin'] is num
-                                  ? selectedVariant!['price_bacoin'].toInt()
-                                  : int.tryParse(selectedVariant!['price_bacoin'].toString()) ?? 0
-                                )
-                              : 0
-                          } Coin',
-                          style: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.bold),
-                        ),
+                        // Text('Giá BACoin: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                        // Text(
+                        //   '${selectedVariant!['price_bacoin'] != null
+                        //       ? (selectedVariant!['price_bacoin'] is num
+                        //           ? selectedVariant!['price_bacoin'].toInt()
+                        //           : int.tryParse(selectedVariant!['price_bacoin'].toString()) ?? 0
+                        //         )
+                        //       : 0
+                        //   } Coin',
+                        //   style: TextStyle(color: Colors.blue.shade700, fontWeight: FontWeight.bold),
+                        // ),
                         const SizedBox(width: 24),
                         Text('Tồn kho: ', style: TextStyle(fontWeight: FontWeight.bold)),
                         Text('${selectedVariant!['stock']}', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),

@@ -68,7 +68,7 @@ try {
     switch ($status) {
         case 'confirmed':
             $title = 'Đơn hàng đã được xác nhận';
-            $content = "Đơn hàng #$orderId của bạn đã được xác nhận và đang được xử lý. Tổng tiền: " . number_format($totalAmount) . " VNĐ";
+            $content = "Đơn hàng #$orderId của bạn đã được xác nhận và đang được xử lý. Tổng tiền: " . number_format($totalAmount) . " VNĐ <=> BACoin";
             break;
         case 'shipping':
             $title = 'Đơn hàng đang được giao';
