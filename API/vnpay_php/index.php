@@ -225,9 +225,5 @@
                 <p>&copy; VNPAY <?php echo date('Y')?></p>
             </footer>
         </div>  
-       
-         
-
-
     </body>
 </html>

@@ -265,19 +265,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           },
                         ),
                         const SizedBox(width: 12),
-                        // ElevatedButton.icon(
-                        //   onPressed: isCoinLoading ? null : _loadCoinBalance,
-                        //   icon: const Icon(Icons.account_balance_wallet),
-                        //   label: Text(isCoinLoading ? 'Đang tải...' : 'Số dư coin: ${coinBalance?.toStringAsFixed(0) ?? "-"}'),
-                        //   style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                        // ),
+
                       ],
                     ),
                     Row(
                       children: [
                         OutlinedButton(
                           onPressed: _showCoinHistory,
-                          child: const Text('Xem lịch sử nạp coin'),
+                          child: const Text('Xem lịch sử giao dịch BACoin'),
                         ),
                       ],
                     ),

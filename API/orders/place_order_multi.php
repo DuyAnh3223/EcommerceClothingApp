@@ -174,6 +174,126 @@ if ($payment_method === 'VNPAY') {
             "requires_payment" => false
         ]);
     }
+} 
+// Nếu là thanh toán BACoin, thực hiện trừ coin
+else if ($payment_method === 'BACoin') {
+    try {
+        // Bắt đầu transaction
+        $conn->begin_transaction();
+        
+        // Kiểm tra số dư BACoin
+        $balance_sql = "SELECT balance FROM users WHERE id = ? FOR UPDATE";
+        $balance_stmt = $conn->prepare($balance_sql);
+        $balance_stmt->bind_param("i", $user_id);
+        $balance_stmt->execute();
+        $balance_result = $balance_stmt->get_result();
+        $user_balance = $balance_result->fetch_assoc();
+        $balance_stmt->close();
+        
+        if (!$user_balance) {
+            throw new Exception('Không tìm thấy user');
+        }
+        
+        $current_balance = $user_balance['balance'] ?? 0;
+        
+        if ($current_balance < $total_amount) {
+            throw new Exception('Số dư BACoin không đủ. Hiện tại: ' . $current_balance . ', Cần: ' . $total_amount);
+        }
+        
+        // Trừ BACoin
+        $new_balance = $current_balance - $total_amount;
+        $update_balance_sql = "UPDATE users SET balance = ? WHERE id = ?";
+        $update_balance_stmt = $conn->prepare($update_balance_sql);
+        $update_balance_stmt->bind_param("di", $new_balance, $user_id);
+        $update_balance_stmt->execute();
+        $update_balance_stmt->close();
+        
+        // Ghi nhận giao dịch BACoin
+        $transaction_sql = "INSERT INTO bacoin_transactions (user_id, amount, type, description) VALUES (?, ?, 'spend', ?)";
+        $transaction_stmt = $conn->prepare($transaction_sql);
+        $desc = "Thanh toán đơn hàng #$order_id";
+        $transaction_stmt->bind_param("ids", $user_id, $total_amount, $desc);
+        $transaction_stmt->execute();
+        $transaction_stmt->close();
+        
+        // Tạo mã giao dịch cho BACoin
+        function generateTransactionCode($paymentMethod) {
+            $prefix = '';
+            switch ($paymentMethod) {
+                case 'Momo':
+                    $prefix = 'MOMO';
+                    break;
+                case 'VNPAY':
+                    $prefix = 'VNPAY';
+                    break;
+                case 'Bank':
+                    $prefix = 'BANK';
+                    break;
+                case 'COD':
+                    $prefix = 'COD';
+                    break;
+                case 'BACoin':
+                    $prefix = 'BACOIN';
+                    break;
+                default:
+                    $prefix = 'TXN';
+            }
+            
+            // Tạo 8 số ngẫu nhiên
+            $randomNumbers = str_pad(mt_rand(1, 99999999), 8, '0', STR_PAD_LEFT);
+            
+            // Thêm timestamp để đảm bảo unique
+            $timestamp = date('YmdHis');
+            
+            return $prefix . $timestamp . $randomNumbers;
+        }
+        
+        $transaction_code = generateTransactionCode('BACoin');
+        
+        // Cập nhật trạng thái thanh toán và mã giao dịch
+        $update_payment_sql = "UPDATE payments SET status = 'paid', paid_at = NOW(), payment_method = 'BACoin', amount_bacoin = ?, transaction_code = ? WHERE order_id = ?";
+        $update_payment_stmt = $conn->prepare($update_payment_sql);
+        $update_payment_stmt->bind_param("dsi", $total_amount, $transaction_code, $order_id);
+        $update_payment_stmt->execute();
+        $update_payment_stmt->close();
+        
+        // Cập nhật trạng thái đơn hàng thành confirmed
+        $update_order_sql = "UPDATE orders SET status = 'confirmed', updated_at = NOW() WHERE id = ?";
+        $update_order_stmt = $conn->prepare($update_order_sql);
+        $update_order_stmt->bind_param("i", $order_id);
+        $update_order_stmt->execute();
+        $update_order_stmt->close();
+        
+        // Commit transaction
+        $conn->commit();
+        $conn->close();
+        
+        http_response_code(200);
+        echo json_encode([
+            "success" => true,
+            "message" => "Đặt hàng thành công! Đã trừ " . $total_amount . " BACoin từ tài khoản. Đơn hàng đã được xác nhận.",
+            "order_id" => $order_id,
+            "payment_method" => "BACoin",
+            "requires_payment" => false,
+            "order_status" => "confirmed",
+            "new_balance" => $new_balance,
+            "amount_deducted" => $total_amount,
+            "transaction_code" => $transaction_code
+        ]);
+        
+    } catch (Exception $e) {
+        // Rollback nếu có lỗi
+        $conn->rollback();
+        $conn->close();
+        
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Lỗi thanh toán BACoin: " . $e->getMessage(),
+            "order_id" => $order_id,
+            "payment_method" => "BACoin"
+        ]);
+    }
 } else {
     $conn->close();
     

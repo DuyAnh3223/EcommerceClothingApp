@@ -38,6 +38,9 @@ function generateTransactionCode($paymentMethod) {
         case 'COD':
             $prefix = 'COD';
             break;
+        case 'BACoin':
+            $prefix = 'BACOIN';
+            break;
         default:
             $prefix = 'TXN';
     }

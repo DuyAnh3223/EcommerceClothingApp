@@ -27,6 +27,9 @@ function generateTransactionCode($paymentMethod) {
         case 'COD':
             $prefix = 'COD';
             break;
+        case 'BACoin':
+            $prefix = 'BACOIN';
+            break;
         default:
             $prefix = 'TXN';
     }
@@ -42,7 +45,7 @@ function generateTransactionCode($paymentMethod) {
 
 try {
     // Test tạo mã giao dịch cho các phương thức khác nhau
-    $testMethods = ['Momo', 'VNPAY', 'Bank', 'COD', 'Other'];
+    $testMethods = ['Momo', 'VNPAY', 'Bank', 'COD', 'BACoin', 'Other'];
     $testResults = [];
     
     foreach ($testMethods as $method) {
