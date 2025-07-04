@@ -10,5 +10,6 @@ khi chọn BACoin và nhấn nút thanh toán ->
 Nếu có thì tự động trừ số BACoin tương ứng trong user.balance
 VD: Khi mua 3 sản phẩm: A:50k - B:70K - C:80k thì tổng tiền phải trả là 200k 
 thì khi thanh toán bằng BACoin sẽ tự động -200K vào số dư BACoin của user nếu user.balance >= order.total_amount
-3/ trừ tiền xong thì các bước sau y hệt như thanh toán COD: cập nhập table orders, order_items, payments,... 
+3/ trừ tiền xong thì các bước sau y hệt như thanh toán COD: cập nhập table orders, order_items, payments,... và cập nhập lại cột user.balance
+ghi lại giao dịch bằng BACoin trong bacoin_transactions,....
   
