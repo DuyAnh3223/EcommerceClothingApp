@@ -1,0 +1,14 @@
+Dậy trễ quá, sắp đi làm rồi chưa chỉnh dc
+Mới xem sơ qua thì cảm thấy m chưa hiểu lắm ý tao nói
+Ý là không cần phải tạo thêm cột BACoin bên sản phẩm admin hay là giá của nó bên userfe
+mà là lấy luôn giá của sản phẩm để tính tiền 
+VD sản phẩm A có giá 200000 thì m dùng giá đó để tính tiền luôn
+Ở bước thanh toán thì thêm 1 option nữa là BACoin (ngoài COD, VNPAY,MOMO) 
+khi chọn BACoin và nhấn nút thanh toán ->  
+1/ Gọi API thanh toán bằng BACoin (chưa có thì viết ) 
+2/ API sẽ: kiểm tra user.balance >= order.total_amount ( cột tổng tiền trong order) 
+Nếu có thì tự động trừ số BACoin tương ứng trong user.balance
+VD: Khi mua 3 sản phẩm: A:50k - B:70K - C:80k thì tổng tiền phải trả là 200k 
+thì khi thanh toán bằng BACoin sẽ tự động -200K vào số dư BACoin của user nếu user.balance >= order.total_amount
+3/ trừ tiền xong thì các bước sau y hệt như thanh toán COD: cập nhập table orders, order_items, payments,... 
+  
