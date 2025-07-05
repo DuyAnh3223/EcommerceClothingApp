@@ -14,8 +14,8 @@ if (!$agency_id) {
 
 // Tổng tiền bán được (tất cả sản phẩm đã bán của agency, đơn đã xác nhận hoặc đã giao)
 $sql = "
-SELECT SUM(oi.price * oi.quantity) AS total_sales,
-       SUM(oi.platform_fee * oi.quantity) AS platform_fee_total
+SELECT SUM(o.total_amount) AS total_sales,
+       SUM(o.platform_fee) AS platform_fee_total
 FROM orders o
 JOIN order_items oi ON o.id = oi.order_id
 JOIN products p ON oi.product_id = p.id

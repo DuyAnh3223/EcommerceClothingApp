@@ -200,7 +200,7 @@ else if ($payment_method === 'BACoin') {
             throw new Exception('Số dư BACoin không đủ. Hiện tại: ' . $current_balance . ', Cần: ' . $total_amount);
         }
         
-        // Trừ BACoin
+        // 1. Trừ BACoin từ user mua hàng
         $new_balance = $current_balance - $total_amount;
         $update_balance_sql = "UPDATE users SET balance = ? WHERE id = ?";
         $update_balance_stmt = $conn->prepare($update_balance_sql);
@@ -208,13 +208,82 @@ else if ($payment_method === 'BACoin') {
         $update_balance_stmt->execute();
         $update_balance_stmt->close();
         
-        // Ghi nhận giao dịch BACoin
+        // 2. Ghi nhận giao dịch trừ BACoin của user
         $transaction_sql = "INSERT INTO bacoin_transactions (user_id, amount, type, description) VALUES (?, ?, 'spend', ?)";
         $transaction_stmt = $conn->prepare($transaction_sql);
         $desc = "Thanh toán đơn hàng #$order_id";
         $transaction_stmt->bind_param("ids", $user_id, $total_amount, $desc);
         $transaction_stmt->execute();
         $transaction_stmt->close();
+        
+        // 3. Phân bổ BACoin cho admin/agency
+        $admin_balance = 0;
+        $agency_balance = 0;
+        
+        // Lấy thông tin chi tiết các sản phẩm trong đơn hàng để phân bổ
+        $order_items_sql = "SELECT oi.product_id, oi.quantity, oi.price, p.is_agency_product, p.agency_id, p.platform_fee_rate
+                           FROM order_items oi 
+                           JOIN products p ON oi.product_id = p.id 
+                           WHERE oi.order_id = ?";
+        $order_items_stmt = $conn->prepare($order_items_sql);
+        $order_items_stmt->bind_param("i", $order_id);
+        $order_items_stmt->execute();
+        $order_items_result = $order_items_stmt->get_result();
+        
+        while ($item = $order_items_result->fetch_assoc()) {
+            $item_total = $item['price'] * $item['quantity'];
+            
+            if ($item['is_agency_product']) {
+                // Sản phẩm của agency: Agency nhận giá gốc, Admin nhận phí sàn
+                $platform_fee_rate = $item['platform_fee_rate'] ?? AGENCY_PLATFORM_FEE_RATE;
+                $agency_amount = $item_total / (1 + $platform_fee_rate / 100); // Giá gốc
+                $admin_amount = $item_total - $agency_amount; // Phí sàn
+                
+                $agency_balance += $agency_amount;
+                $admin_balance += $admin_amount;
+                
+                // Cộng BACoin cho agency
+                $agency_id = $item['agency_id'];
+                $agency_update_sql = "UPDATE users SET balance = IFNULL(balance, 0) + ? WHERE id = ?";
+                $agency_update_stmt = $conn->prepare($agency_update_sql);
+                $agency_update_stmt->bind_param("di", $agency_amount, $agency_id);
+                $agency_update_stmt->execute();
+                $agency_update_stmt->close();
+                
+                // Ghi nhận giao dịch cho agency
+                $agency_transaction_sql = "INSERT INTO bacoin_transactions (user_id, amount, type, description) VALUES (?, ?, 'receive', ?)";
+                $agency_transaction_stmt = $conn->prepare($agency_transaction_sql);
+                $agency_desc = "Nhận thanh toán đơn hàng #$order_id (giá gốc)";
+                $agency_transaction_stmt->bind_param("ids", $agency_id, $agency_amount, $agency_desc);
+                $agency_transaction_stmt->execute();
+                $agency_transaction_stmt->close();
+                
+            } else {
+                // Sản phẩm của admin: 100% cho admin
+                $admin_balance += $item_total;
+            }
+        }
+        $order_items_stmt->close();
+        
+        // 4. Cộng BACoin cho admin (nếu có)
+        if ($admin_balance > 0) {
+            // Lấy admin_id từ config
+            $admin_id = ADMIN_USER_ID;
+            
+            $admin_update_sql = "UPDATE users SET balance = IFNULL(balance, 0) + ? WHERE id = ?";
+            $admin_update_stmt = $conn->prepare($admin_update_sql);
+            $admin_update_stmt->bind_param("di", $admin_balance, $admin_id);
+            $admin_update_stmt->execute();
+            $admin_update_stmt->close();
+            
+            // Ghi nhận giao dịch cho admin
+            $admin_transaction_sql = "INSERT INTO bacoin_transactions (user_id, amount, type, description) VALUES (?, ?, 'receive', ?)";
+            $admin_transaction_stmt = $conn->prepare($admin_transaction_sql);
+            $admin_desc = "Nhận thanh toán đơn hàng #$order_id";
+            $admin_transaction_stmt->bind_param("ids", $admin_id, $admin_balance, $admin_desc);
+            $admin_transaction_stmt->execute();
+            $admin_transaction_stmt->close();
+        }
         
         // Tạo mã giao dịch cho BACoin
         function generateTransactionCode($paymentMethod) {
@@ -257,6 +326,13 @@ else if ($payment_method === 'BACoin') {
         $update_payment_stmt->execute();
         $update_payment_stmt->close();
         
+        // Chỉ cập nhật total_amount_bacoin khi thanh toán bằng BACoin
+        $update_order_bacoin_sql = "UPDATE orders SET total_amount_bacoin = ? WHERE id = ?";
+        $update_order_bacoin_stmt = $conn->prepare($update_order_bacoin_sql);
+        $update_order_bacoin_stmt->bind_param("di", $total_amount, $order_id);
+        $update_order_bacoin_stmt->execute();
+        $update_order_bacoin_stmt->close();
+        
         // Cập nhật trạng thái đơn hàng thành confirmed
         $update_order_sql = "UPDATE orders SET status = 'confirmed', updated_at = NOW() WHERE id = ?";
         $update_order_stmt = $conn->prepare($update_order_sql);
@@ -278,7 +354,12 @@ else if ($payment_method === 'BACoin') {
             "order_status" => "confirmed",
             "new_balance" => $new_balance,
             "amount_deducted" => $total_amount,
-            "transaction_code" => $transaction_code
+            "transaction_code" => $transaction_code,
+            "bacoin_distribution" => [
+                "admin_received" => $admin_balance,
+                "agency_received" => $agency_balance,
+                "total_distributed" => $admin_balance + $agency_balance
+            ]
         ]);
         
     } catch (Exception $e) {
@@ -295,6 +376,13 @@ else if ($payment_method === 'BACoin') {
         ]);
     }
 } else {
+    // Thanh toán bằng COD hoặc VNPAY - cập nhật total_amount
+    $update_order_amount_sql = "UPDATE orders SET total_amount = ? WHERE id = ?";
+    $update_order_amount_stmt = $conn->prepare($update_order_amount_sql);
+    $update_order_amount_stmt->bind_param("di", $total_amount, $order_id);
+    $update_order_amount_stmt->execute();
+    $update_order_amount_stmt->close();
+    
     $conn->close();
     
     http_response_code(200);

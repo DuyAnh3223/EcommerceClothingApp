@@ -3,6 +3,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 require_once '../config/db_connect.php';
 
+// Kiểm tra method
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode([
         "success" => false,
@@ -23,53 +24,27 @@ if (!$agency_id || $amount <= 0) {
     exit();
 }
 
-// Lấy available_balance và fee rate
-$sql = "SELECT available_balance, total_fee, total_sales FROM withdraw_agency WHERE agency_id = ?";
-$stmt2 = $conn->prepare($sql);
-$stmt2->bind_param("i", $agency_id);
-$stmt2->execute();
-$result = $stmt2->get_result();
-$row = $result->fetch_assoc();
-$stmt2->close();
-if (!$row) {
+// Kiểm tra bảng withdraw_requests tồn tại chưa
+$table_check = $conn->query("SHOW TABLES LIKE 'withdraw_requests'");
+if ($table_check->num_rows == 0) {
     echo json_encode([
         "success" => false,
-        "message" => "Không tìm thấy thông tin agency."
+        "message" => "Bảng withdraw_requests chưa tồn tại.\n\nHãy tạo bảng bằng lệnh SQL sau:\n\nCREATE TABLE `withdraw_requests` (\n  `id` int(11) NOT NULL AUTO_INCREMENT,\n  `agency_id` int(11) NOT NULL,\n  `amount` decimal(15,2) NOT NULL,\n  `note` text,\n  `status` enum('pending','approved','rejected') DEFAULT 'pending',\n  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,\n  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`)\n);"
     ]);
     exit();
 }
-$available_balance = (float)$row['available_balance'];
-$total_sales = (float)$row['total_sales'];
-$fee_rate = 0.2; // 20%
-// Tính phí cho số tiền rút
-$fee = $amount * $fee_rate;
-$real_amount = $amount - $fee;
-if ($amount > $available_balance) {
-    echo json_encode([
-        "success" => false,
-        "message" => "Số tiền rút vượt quá số dư khả dụng!"
-    ]);
-    exit();
-}
-if ($real_amount <= 0) {
-    echo json_encode([
-        "success" => false,
-        "message" => "Số tiền rút sau khi trừ phí phải lớn hơn 0!"
-    ]);
-    exit();
-}
-// Gửi yêu cầu rút tiền
+
+// Thêm yêu cầu rút tiền
 $stmt = $conn->prepare("INSERT INTO withdraw_requests (agency_id, amount, note, status) VALUES (?, ?, ?, 'pending')");
 $stmt->bind_param("ids", $agency_id, $amount, $note);
 $success = $stmt->execute();
 $stmt->close();
 $conn->close();
+//  avai - amount 
 if ($success) {
     echo json_encode([
         "success" => true,
-        "message" => "Gửi yêu cầu rút tiền thành công!",
-        "fee" => $fee,
-        "real_amount" => $real_amount
+        "message" => "Gửi yêu cầu rút tiền thành công!"
     ]);
 } else {
     echo json_encode([
