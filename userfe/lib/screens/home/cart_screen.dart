@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:userfe/services/auth_service.dart';
+import 'package:userfe/services/notification_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/vnpay_service.dart';
 
@@ -101,6 +102,18 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
+  Future<void> _loadNotificationCount() async {
+    final userData = await AuthService.getUserData();
+    final userId = userData?['id'];
+    if (userId == null) return;
+    
+    final result = await NotificationService.getUnreadCount(userId: userId);
+    if (result['success'] == true && result['data'] != null && mounted) {
+      // Notification count will be updated in parent widget
+      print('DEBUG: Notification count refreshed after order placement');
+    }
+  }
+
   void _showOrderConfirmDialog() {
     if (cartItems.isEmpty) return;
     
@@ -116,6 +129,8 @@ class _CartScreenState extends State<CartScreen> {
           // Notify parent screen to update cart count
           print('DEBUG: Calling onCartUpdated callback after order placement');
           widget.onCartUpdated?.call();
+          // Refresh notification count after successful order
+          _loadNotificationCount();
         },
       ),
     );

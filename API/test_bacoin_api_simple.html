@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test BACoin Packages API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        .package-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .package-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+        }
+        .package-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .package-info {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .price {
+            font-weight: bold;
+            color: #28a745;
+        }
+        .bacoin {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test BACoin Packages API</h1>
+    
+    <div class="container">
+        <h2>Get All Packages</h2>
+        <button class="btn" onclick="getPackages()">Get Packages</button>
+        <div id="packagesResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Add New Package</h2>
+        <div class="form-group">
+            <label for="packageName">Package Name:</label>
+            <input type="text" id="packageName" placeholder="e.g., Gói 200K">
+        </div>
+        <div class="form-group">
+            <label for="priceVnd">Price VND:</label>
+            <input type="number" id="priceVnd" placeholder="e.g., 200000">
+        </div>
+        <div class="form-group">
+            <label for="bacoinAmount">BACoin Amount:</label>
+            <input type="number" id="bacoinAmount" placeholder="e.g., 250000">
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea id="description" placeholder="e.g., Gói nạp BACoin trị giá 200.000 VNĐ"></textarea>
+        </div>
+        <button class="btn btn-success" onclick="addPackage()">Add Package</button>
+        <div id="addResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Update Package</h2>
+        <div class="form-group">
+            <label for="updateId">Package ID:</label>
+            <input type="number" id="updateId" placeholder="e.g., 1">
+        </div>
+        <div class="form-group">
+            <label for="updateName">Package Name:</label>
+            <input type="text" id="updateName" placeholder="e.g., Gói Updated">
+        </div>
+        <div class="form-group">
+            <label for="updatePrice">Price VND:</label>
+            <input type="number" id="updatePrice" placeholder="e.g., 55000">
+        </div>
+        <div class="form-group">
+            <label for="updateBacoin">BACoin Amount:</label>
+            <input type="number" id="updateBacoin" placeholder="e.g., 65000">
+        </div>
+        <div class="form-group">
+            <label for="updateDescription">Description:</label>
+            <textarea id="updateDescription" placeholder="e.g., Gói đã được cập nhật"></textarea>
+        </div>
+        <button class="btn" onclick="updatePackage()">Update Package</button>
+        <div id="updateResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Delete Package</h2>
+        <div class="form-group">
+            <label for="deleteId">Package ID:</label>
+            <input type="number" id="deleteId" placeholder="e.g., 6">
+        </div>
+        <button class="btn btn-danger" onclick="deletePackage()">Delete Package</button>
+        <div id="deleteResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>Packages List</h2>
+        <div id="packagesList" class="package-list"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost/EcommerceClothingApp/API/admin/bacoin_packages';
+
+        async function makeRequest(url, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(url, options);
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                return { error: error.message };
+            }
+        }
+
+        async function getPackages() {
+            const result = await makeRequest(`${API_BASE}/get_packages.php`);
+            const resultDiv = document.getElementById('packagesResult');
+            
+            if (result.error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${result.error}`;
+            } else {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+                displayPackages(result.data || []);
+            }
+        }
+
+        async function addPackage() {
+            const data = {
+                package_name: document.getElementById('packageName').value,
+                price_vnd: parseFloat(document.getElementById('priceVnd').value),
+                bacoin_amount: parseFloat(document.getElementById('bacoinAmount').value),
+                description: document.getElementById('description').value
+            };
+
+            const result = await makeRequest(`${API_BASE}/add_package.php`, 'POST', data);
+            const resultDiv = document.getElementById('addResult');
+            
+            if (result.error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${result.error}`;
+            } else {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+                // Refresh packages list
+                getPackages();
+            }
+        }
+
+        async function updatePackage() {
+            const data = {
+                id: parseInt(document.getElementById('updateId').value),
+                package_name: document.getElementById('updateName').value,
+                price_vnd: parseFloat(document.getElementById('updatePrice').value),
+                bacoin_amount: parseFloat(document.getElementById('updateBacoin').value),
+                description: document.getElementById('updateDescription').value
+            };
+
+            const result = await makeRequest(`${API_BASE}/update_package.php`, 'PUT', data);
+            const resultDiv = document.getElementById('updateResult');
+            
+            if (result.error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${result.error}`;
+            } else {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+                // Refresh packages list
+                getPackages();
+            }
+        }
+
+        async function deletePackage() {
+            const data = {
+                id: parseInt(document.getElementById('deleteId').value)
+            };
+
+            const result = await makeRequest(`${API_BASE}/delete_package.php`, 'DELETE', data);
+            const resultDiv = document.getElementById('deleteResult');
+            
+            if (result.error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${result.error}`;
+            } else {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+                // Refresh packages list
+                getPackages();
+            }
+        }
+
+        function displayPackages(packages) {
+            const container = document.getElementById('packagesList');
+            container.innerHTML = '';
+
+            packages.forEach(package => {
+                const card = document.createElement('div');
+                card.className = 'package-card';
+                card.innerHTML = `
+                    <h3>${package.package_name}</h3>
+                    <div class="package-info">
+                        <span class="price">Price: ${parseFloat(package.price_vnd).toLocaleString()} VNĐ</span>
+                    </div>
+                    <div class="package-info">
+                        <span class="bacoin">BACoin: ${parseFloat(package.bacoin_amount).toLocaleString()}</span>
+                    </div>
+                    <div class="package-info">
+                        <strong>ID:</strong> ${package.id}
+                    </div>
+                    ${package.description ? `<div class="package-info"><strong>Description:</strong> ${package.description}</div>` : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Load packages on page load
+        window.onload = function() {
+            getPackages();
+        };
+    </script>
+</body>
+</html> 

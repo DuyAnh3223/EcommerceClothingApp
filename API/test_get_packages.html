@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test BACoin Packages API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .package {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            color: green;
+            background: #e6ffe6;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test BACoin Packages API</h1>
+    
+    <button onclick="testGetPackages()">Test Get Packages</button>
+    <button onclick="testAddPackage()">Test Add Package</button>
+    <button onclick="testUpdatePackage()">Test Update Package</button>
+    <button onclick="testDeletePackage()">Test Delete Package</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'http://localhost/EcommerceClothingApp/API';
+        
+        function showResult(message, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="${isError ? 'error' : 'success'}">${message}</div>`;
+        }
+
+        async function testGetPackages() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/bacoin_packages/get_packages.php`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (data.status === 200) {
+                    let html = '<h3>Packages:</h3>';
+                    data.data.forEach(pkg => {
+                        html += `
+                            <div class="package">
+                                <h4>${pkg.package_name}</h4>
+                                <p><strong>Price:</strong> ${pkg.price_vnd} VNĐ</p>
+                                <p><strong>BACoin:</strong> ${pkg.bacoin_amount}</p>
+                                <p><strong>Description:</strong> ${pkg.description || 'N/A'}</p>
+                            </div>
+                        `;
+                    });
+                    showResult(html);
+                } else {
+                    showResult(`Error: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult(`Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testAddPackage() {
+            const newPackage = {
+                package_name: 'Test Package',
+                price_vnd: 75000,
+                bacoin_amount: 85000,
+                description: 'Test package for API testing'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/bacoin_packages/add_package.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newPackage)
+                });
+                
+                const data = await response.json();
+                console.log('Add Response:', data);
+                
+                if (data.status === 201) {
+                    showResult(`Package added successfully! ID: ${data.data.id}`);
+                } else {
+                    showResult(`Error: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult(`Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testUpdatePackage() {
+            const updatePackage = {
+                id: 1,
+                package_name: 'Updated Test Package',
+                price_vnd: 80000,
+                bacoin_amount: 90000,
+                description: 'Updated test package'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/bacoin_packages/update_package.php`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatePackage)
+                });
+                
+                const data = await response.json();
+                console.log('Update Response:', data);
+                
+                if (data.status === 200) {
+                    showResult('Package updated successfully!');
+                } else {
+                    showResult(`Error: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult(`Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testDeletePackage() {
+            const packageId = 1; // Test with ID 1
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/bacoin_packages/delete_package.php`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: packageId })
+                });
+                
+                const data = await response.json();
+                console.log('Delete Response:', data);
+                
+                if (data.status === 200) {
+                    showResult('Package deleted successfully!');
+                } else {
+                    showResult(`Error: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult(`Network Error: ${error.message}`, true);
+            }
+        }
+
+        // Auto test on page load
+        window.onload = function() {
+            testGetPackages();
+        };
+    </script>
+</body>
+</html> 

@@ -94,6 +94,17 @@ $pay_stmt->bind_param("isd", $order_id, $payment_method, $total_amount);
 $pay_stmt->execute();
 $pay_stmt->close();
 
+// Tạo thông báo cho khách hàng khi đặt hàng thành công
+$notification_title = 'Đặt hàng thành công';
+$notification_content = "Đơn hàng #$order_id đã được đặt thành công. Tổng tiền: " . number_format($total_amount) . " VNĐ";
+$notification_type = 'order_status';
+
+$notification_sql = "INSERT INTO notifications (user_id, title, content, type, is_read) VALUES (?, ?, ?, ?, 0)";
+$notification_stmt = $conn->prepare($notification_sql);
+$notification_stmt->bind_param("isss", $user_id, $notification_title, $notification_content, $notification_type);
+$notification_stmt->execute();
+$notification_stmt->close();
+
 // Nếu là thanh toán VNPAY, tạo URL thanh toán
 if ($payment_method === 'VNPAY') {
     // Lấy thông tin user

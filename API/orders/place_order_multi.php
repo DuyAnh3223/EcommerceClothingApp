@@ -340,6 +340,17 @@ else if ($payment_method === 'BACoin') {
         $update_order_stmt->execute();
         $update_order_stmt->close();
         
+        // Tạo thông báo cho khách hàng khi đặt hàng thành công
+        $notification_title = 'Đặt hàng thành công';
+        $notification_content = "Đơn hàng #$order_id đã được đặt thành công. Tổng tiền: " . number_format($total_amount) . " BACoin";
+        $notification_type = 'order_status';
+        
+        $notification_sql = "INSERT INTO notifications (user_id, title, content, type, is_read) VALUES (?, ?, ?, ?, 0)";
+        $notification_stmt = $conn->prepare($notification_sql);
+        $notification_stmt->bind_param("isss", $user_id, $notification_title, $notification_content, $notification_type);
+        $notification_stmt->execute();
+        $notification_stmt->close();
+        
         // Commit transaction
         $conn->commit();
         $conn->close();
@@ -382,6 +393,17 @@ else if ($payment_method === 'BACoin') {
     $update_order_amount_stmt->bind_param("di", $total_amount, $order_id);
     $update_order_amount_stmt->execute();
     $update_order_amount_stmt->close();
+    
+    // Tạo thông báo cho khách hàng khi đặt hàng thành công
+    $notification_title = 'Đặt hàng thành công';
+    $notification_content = "Đơn hàng #$order_id đã được đặt thành công. Tổng tiền: " . number_format($total_amount) . " VNĐ";
+    $notification_type = 'order_status';
+    
+    $notification_sql = "INSERT INTO notifications (user_id, title, content, type, is_read) VALUES (?, ?, ?, ?, 0)";
+    $notification_stmt = $conn->prepare($notification_sql);
+    $notification_stmt->bind_param("isss", $user_id, $notification_title, $notification_content, $notification_type);
+    $notification_stmt->execute();
+    $notification_stmt->close();
     
     $conn->close();
     

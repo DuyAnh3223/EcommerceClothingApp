@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Test for BACoin API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            color: green;
+            background: #e6ffe6;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>CORS Test for BACoin API</h1>
+    
+    <div class="test-section">
+        <h3>Test GET Request</h3>
+        <button onclick="testGet()">Test GET</button>
+        <div id="get-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test POST Request</h3>
+        <button onclick="testPost()">Test POST</button>
+        <div id="post-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test PUT Request</h3>
+        <button onclick="testPut()">Test PUT</button>
+        <div id="put-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test DELETE Request</h3>
+        <button onclick="testDelete()">Test DELETE</button>
+        <div id="delete-result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost/EcommerceClothingApp/API';
+
+        function showResult(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${isError ? 'error' : 'success'}">${message}</div>`;
+        }
+
+        async function testGet() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/bacoin_packages/get_packages.php`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                console.log('GET Response:', data);
+                
+                if (data.success === 200) {
+                    showResult('get-result', `✓ GET Success! Found ${data.data.length} packages`);
+                } else {
+                    showResult('get-result', `✗ GET Error: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult('get-result', `✗ GET Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testPost() {
+            const newPackage = {
+                package_name: 'Test Package CORS',
+                price_vnd: 75000,
+                bacoin_amount: 85000,
+                description: 'Test package for CORS testing'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/bacoin_packages/add_package.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newPackage)
+                });
+                
+                const data = await response.json();
+                console.log('POST Response:', data);
+                
+                if (data.success === 201) {
+                    showResult('post-result', `✓ POST Success! Package ID: ${data.data.id}`);
+                } else {
+                    showResult('post-result', `✗ POST Error: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult('post-result', `✗ POST Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testPut() {
+            const updatePackage = {
+                id: 1,
+                package_name: 'Updated Package CORS',
+                price_vnd: 80000,
+                bacoin_amount: 90000,
+                description: 'Updated package for CORS testing'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/bacoin_packages/update_package.php`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatePackage)
+                });
+                
+                const data = await response.json();
+                console.log('PUT Response:', data);
+                
+                if (data.success === 200) {
+                    showResult('put-result', `✓ PUT Success! Package updated`);
+                } else {
+                    showResult('put-result', `✗ PUT Error: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult('put-result', `✗ PUT Network Error: ${error.message}`, true);
+            }
+        }
+
+        async function testDelete() {
+            const packageId = 1; // Test with ID 1
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/bacoin_packages/delete_package.php`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: packageId })
+                });
+                
+                const data = await response.json();
+                console.log('DELETE Response:', data);
+                
+                if (data.success === 200) {
+                    showResult('delete-result', `✓ DELETE Success! Package deleted`);
+                } else {
+                    showResult('delete-result', `✗ DELETE Error: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult('delete-result', `✗ DELETE Network Error: ${error.message}`, true);
+            }
+        }
+
+        // Auto test on page load
+        window.onload = function() {
+            testGet();
+        };
+    </script>
+</body>
+</html> 

@@ -38,8 +38,8 @@ function authenticate() {
             include_once __DIR__ . '/../config/db_connect.php';
         }
         
-        // Find first agency user
-        $result = $conn->query("SELECT id, role FROM users WHERE role = 'agency' LIMIT 1");
+        // Find first admin user
+        $result = $conn->query("SELECT id, role FROM users WHERE role = 'admin' LIMIT 1");
         if ($result && $result->num_rows > 0) {
             $user = $result->fetch_assoc();
             return [
@@ -48,8 +48,8 @@ function authenticate() {
             ];
         }
         
-        // Fallback: find any user with role 'agency' or 'admin'
-        $result = $conn->query("SELECT id, role FROM users WHERE role IN ('agency', 'admin') LIMIT 1");
+        // Fallback: find any user with role 'admin'
+        $result = $conn->query("SELECT id, role FROM users WHERE role = 'admin' LIMIT 1");
         if ($result && $result->num_rows > 0) {
             $user = $result->fetch_assoc();
             return [
@@ -59,14 +59,14 @@ function authenticate() {
         }
     }
     
-    // For development, if no Authorization header, still return agency user
+    // For development, if no Authorization header, still return admin user
     // This allows testing without proper authentication
     global $conn;
     if (!$conn) {
         include_once __DIR__ . '/../config/db_connect.php';
     }
     
-    $result = $conn->query("SELECT id, role FROM users WHERE role = 'agency' LIMIT 1");
+    $result = $conn->query("SELECT id, role FROM users WHERE role = 'admin' LIMIT 1");
     if ($result && $result->num_rows > 0) {
         $user = $result->fetch_assoc();
         return [

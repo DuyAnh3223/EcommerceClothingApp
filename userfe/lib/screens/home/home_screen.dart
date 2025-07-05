@@ -719,7 +719,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     onPressed: () {
                                                       showDialog(
                                                         context: context,
-                                                        builder: (context) => ProductDetailDialog(product: product, onCartChanged: _updateCartCount),
+                                                        builder: (context) => ProductDetailDialog(product: product, onCartChanged: _updateCartCount, onNotificationRefresh: _loadNotificationCount),
                                                       );
                                                     },
                                                     style: ElevatedButton.styleFrom(
@@ -757,7 +757,8 @@ class _HomeScreenState extends State<HomeScreen> {
 class ProductDetailDialog extends StatefulWidget {
   final Map<String, dynamic> product;
   final VoidCallback? onCartChanged;
-  const ProductDetailDialog({Key? key, required this.product, this.onCartChanged}) : super(key: key);
+  final VoidCallback? onNotificationRefresh;
+  const ProductDetailDialog({Key? key, required this.product, this.onCartChanged, this.onNotificationRefresh}) : super(key: key);
 
   @override
   State<ProductDetailDialog> createState() => _ProductDetailDialogState();
@@ -1240,6 +1241,10 @@ class _ProductDetailDialogState extends State<ProductDetailDialog> {
                           builder: (context) => OrderConfirmDialog(
                             product: widget.product,
                             variant: selectedVariant!,
+                            onOrderSuccess: () {
+                              // Refresh notification count after successful order
+                              widget.onNotificationRefresh?.call();
+                            },
                           ),
                         );
                       },
@@ -1264,7 +1269,8 @@ class OrderConfirmDialog extends StatefulWidget {
   final Map<String, dynamic> product;
   final Map<String, dynamic> variant;
   final int initialQuantity;
-  const OrderConfirmDialog({Key? key, required this.product, required this.variant, this.initialQuantity = 1}) : super(key: key);
+  final VoidCallback? onOrderSuccess;
+  const OrderConfirmDialog({Key? key, required this.product, required this.variant, this.initialQuantity = 1, this.onOrderSuccess}) : super(key: key);
 
   @override
   State<OrderConfirmDialog> createState() => _OrderConfirmDialogState();
@@ -1317,6 +1323,9 @@ class _OrderConfirmDialogState extends State<OrderConfirmDialog> {
       Navigator.of(context).pop();
       
       if (result['success'] == true) {
+        // Refresh notification count after successful order
+        widget.onOrderSuccess?.call();
+        
         // Kiểm tra nếu cần thanh toán VNPAY
         if (result['requires_payment'] == true && result['payment_method'] == 'VNPAY') {
           // Hiển thị dialog thanh toán VNPAY

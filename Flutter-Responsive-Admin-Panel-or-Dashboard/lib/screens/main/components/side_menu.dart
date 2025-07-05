@@ -132,6 +132,26 @@ class SideMenu extends StatelessWidget {
               }
             },
           ),
+          DrawerListTile(
+            title: "Quản lý Gói BACoin",
+            svgSrc:
+                "assets/icons/widgets.svg", // hoặc chọn icon phù hợp hơn nếu có
+            press: () {
+              if (onMenuSelected != null) {
+                onMenuSelected!("Quản lý Gói BACoin");
+              }
+            },
+          ),
+          DrawerListTile(
+            title: "Quản lý Vouchers",
+            svgSrc:
+                "assets/icons/widgets.svg", // hoặc chọn icon phù hợp hơn nếu có
+            press: () {
+              if (onMenuSelected != null) {
+                onMenuSelected!("Quản lý Vouchers");
+              }
+            },
+          ),
           const Divider(color: Colors.white54),
           DrawerListTile(
             title: "Đăng xuất",

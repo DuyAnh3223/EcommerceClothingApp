@@ -13,6 +13,8 @@ import '../user/all_user_addresses_screen.dart';
 import '../product_review/product_review_screen.dart';
 import '../product_combinations/product_combinations_screen.dart';
 import '../withdraw/withdraw_screen.dart';
+import '../bacoin_package/bacoin_package_screen.dart';
+import '../voucher/voucher_screen.dart';
 
 import 'components/side_menu.dart';
 
@@ -59,6 +61,12 @@ class _MainScreenState extends State<MainScreen> {
           break;
         case "Quản lý rút tiền":
           _selectedScreen = const WithdrawScreen();
+          break;
+        case "Quản lý Gói BACoin":
+          _selectedScreen = const BacoinPackageScreen();
+          break;
+        case "Quản lý Vouchers":
+          _selectedScreen = const VoucherScreen();
           break;
         default:
           _selectedScreen = Center(child: Text("Trang '$menu' đang cập nhật"));
