@@ -424,18 +424,45 @@ class AuthService {
     required int addressId,
     required String paymentMethod,
     required List<Map<String, dynamic>> cartItems,
+    Map<String, dynamic>? voucherData,
   }) async {
     try {
+      final Map<String, dynamic> requestBody = {
+        'user_id': userId,
+        'address_id': addressId,
+        'payment_method': paymentMethod,
+        'cart_items': cartItems,
+      };
+      
+      // Add voucher data if provided
+      if (voucherData != null) {
+        requestBody['voucher_id'] = voucherData['voucher_id'];
+        requestBody['voucher_code'] = voucherData['voucher_code'];
+        requestBody['discount_amount'] = voucherData['discount_amount'];
+      }
+      
+      // Debug: Log request
+      print('=== DEBUG AUTH SERVICE ===');
+      print('Request URL: $baseUrl/orders/place_order_with_combinations.php');
+      print('Request Body: ${json.encode(requestBody)}');
+      print('Request Body Length: ${json.encode(requestBody).length}');
+      print('Cart Items Count: ${cartItems.length}');
+      print('User ID: $userId');
+      print('Address ID: $addressId');
+      print('Payment Method: $paymentMethod');
+      
+      final requestBodyJson = json.encode(requestBody);
+      print('Final JSON: $requestBodyJson');
+      
       final response = await http.post(
         Uri.parse('$baseUrl/orders/place_order_with_combinations.php'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'user_id': userId,
-          'address_id': addressId,
-          'payment_method': paymentMethod,
-          'cart_items': cartItems,
-        }),
+        body: requestBodyJson,
       );
+      
+      print('Response Status: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -445,6 +472,7 @@ class AuthService {
         };
       }
     } catch (e) {
+      print('Auth Service Error: $e');
       return {
         'success': false,
         'message': 'Lỗi kết nối: $e',

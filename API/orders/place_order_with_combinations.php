@@ -55,7 +55,13 @@ $address_id = isset($input['address_id']) ? (int)$input['address_id'] : 0;
 $payment_method = isset($input['payment_method']) ? $input['payment_method'] : 'COD';
 $cart_items = isset($input['cart_items']) ? $input['cart_items'] : [];
 
+// Voucher parameters
+$voucher_id = isset($input['voucher_id']) ? (int)$input['voucher_id'] : null;
+$voucher_code = isset($input['voucher_code']) ? $input['voucher_code'] : null;
+$discount_amount = isset($input['discount_amount']) ? (float)$input['discount_amount'] : 0.0;
+
 error_log("DEBUG ORDER: Parsed data - user_id=$user_id, address_id=$address_id, payment_method=$payment_method, cart_items_count=" . count($cart_items));
+error_log("DEBUG ORDER: Voucher info - voucher_id=$voucher_id, voucher_code=$voucher_code, discount_amount=$discount_amount");
 
 // Kiểm tra chi tiết từng field
 $missing_fields = [];
@@ -200,17 +206,65 @@ try {
         }
     }
     
-    // Tạo đơn hàng
+    // Áp dụng voucher discount nếu có
+    $original_total = $total_amount;
+    $final_total = $total_amount;
+    $voucher_applied = false;
+    $voucher_discount = 0;
+    
+    if ($voucher_id && $discount_amount > 0) {
+        // Validate voucher
+        $voucher_sql = "SELECT id, voucher_code, discount_amount, quantity, 
+                               (SELECT COUNT(*) FROM voucher_usage WHERE voucher_id = vouchers.id) as used_count
+                        FROM vouchers WHERE id = ?";
+        $voucher_stmt = $conn->prepare($voucher_sql);
+        $voucher_stmt->bind_param("i", $voucher_id);
+        $voucher_stmt->execute();
+        $voucher_result = $voucher_stmt->get_result();
+        
+        if ($voucher_result->num_rows > 0) {
+            $voucher_data = $voucher_result->fetch_assoc();
+            $remaining_quantity = $voucher_data['quantity'] - $voucher_data['used_count'];
+            
+            if ($remaining_quantity > 0) {
+                // Áp dụng discount
+                $final_total = $total_amount - $discount_amount;
+                if ($final_total < 0) $final_total = 0; // Không âm
+                
+                $voucher_applied = true;
+                $voucher_discount = $discount_amount;
+                
+                error_log("DEBUG ORDER: Voucher applied - voucher_id=$voucher_id, original_total=$original_total, discount_amount=$discount_amount, final_total=$final_total");
+            } else {
+                error_log("DEBUG ORDER: Voucher has no remaining quantity");
+            }
+        } else {
+            error_log("DEBUG ORDER: Voucher not found - voucher_id=$voucher_id");
+        }
+        $voucher_stmt->close();
+    }
+    
+    // Tạo đơn hàng với total_amount đã được áp dụng voucher
     // Nếu thanh toán bằng BACoin, không lưu platform_fee vào database
     // Platform fee sẽ được tính trực tiếp vào total_amount_bacoin
     $platform_fee_to_save = ($payment_method === 'BACoin') ? 0 : $total_platform_fee;
     
     $order_sql = "INSERT INTO orders (user_id, address_id, total_amount, platform_fee, status) VALUES (?, ?, ?, ?, 'pending')";
     $order_stmt = $conn->prepare($order_sql);
-    $order_stmt->bind_param("iidd", $user_id, $address_id, $total_amount, $platform_fee_to_save);
+    $order_stmt->bind_param("iidd", $user_id, $address_id, $final_total, $platform_fee_to_save);
     $order_stmt->execute();
     $order_id = $order_stmt->insert_id;
     $order_stmt->close();
+    
+    // Ghi nhận sử dụng voucher sau khi order được tạo
+    if ($voucher_applied && $voucher_id) {
+        $usage_sql = "INSERT INTO voucher_usage (voucher_id, user_id, order_id, discount_applied) VALUES (?, ?, ?, ?)";
+        $usage_stmt = $conn->prepare($usage_sql);
+        $usage_stmt->bind_param("iiid", $voucher_id, $user_id, $order_id, $voucher_discount);
+        $usage_stmt->execute();
+        $usage_stmt->close();
+        error_log("DEBUG ORDER: Voucher usage recorded - voucher_id=$voucher_id, order_id=$order_id, discount=$voucher_discount");
+    }
     
     // Thêm từng sản phẩm vào order_items và trừ tồn kho
     foreach ($order_items as $item) {
@@ -239,7 +293,7 @@ try {
     // Thêm payment
     $pay_sql = "INSERT INTO payments (order_id, payment_method, amount, status) VALUES (?, ?, ?, 'pending')";
     $pay_stmt = $conn->prepare($pay_sql);
-    $pay_stmt->bind_param("isd", $order_id, $payment_method, $total_amount);
+    $pay_stmt->bind_param("isd", $order_id, $payment_method, $final_total);
     $pay_stmt->execute();
     $pay_stmt->close();
     
@@ -258,7 +312,7 @@ try {
         $user_stmt->close();
         
         // Tạo URL thanh toán VNPAY
-        $vnpay_result = createVNPayPaymentUrlFixed($order_id, $total_amount, $user_data);
+        $vnpay_result = createVNPayPaymentUrlFixed($order_id, $final_total, $user_data);
         
         if ($vnpay_result['success']) {
             http_response_code(200);
@@ -283,7 +337,7 @@ try {
     } 
     // Nếu là thanh toán BACoin, thực hiện trừ coin
     else if ($payment_method === 'BACoin') {
-        error_log("DEBUG ORDER: Processing BACoin payment for order_id=$order_id, total_amount=$total_amount");
+        error_log("DEBUG ORDER: Processing BACoin payment for order_id=$order_id, total_amount=$final_total");
         try {
             // Bắt đầu transaction mới cho việc thanh toán BACoin
             $conn->begin_transaction();
@@ -302,14 +356,14 @@ try {
             }
             
             $current_balance = $user_balance['balance'] ?? 0;
-            error_log("DEBUG ORDER: User balance check - user_id=$user_id, current_balance=$current_balance, required=$total_amount");
+            error_log("DEBUG ORDER: User balance check - user_id=$user_id, current_balance=$current_balance, required=$final_total");
             
-            if ($current_balance < $total_amount) {
-                throw new Exception('Số dư BACoin không đủ. Hiện tại: ' . $current_balance . ', Cần: ' . $total_amount);
+            if ($current_balance < $final_total) {
+                throw new Exception('Số dư BACoin không đủ. Hiện tại: ' . $current_balance . ', Cần: ' . $final_total);
             }
             
             // 1. Trừ BACoin từ user mua hàng
-            $new_balance = $current_balance - $total_amount;
+            $new_balance = $current_balance - $final_total;
             $update_balance_sql = "UPDATE users SET balance = ? WHERE id = ?";
             $update_balance_stmt = $conn->prepare($update_balance_sql);
             $update_balance_stmt->bind_param("di", $new_balance, $user_id);
@@ -320,7 +374,7 @@ try {
             $transaction_sql = "INSERT INTO bacoin_transactions (user_id, amount, type, description) VALUES (?, ?, 'spend', ?)";
             $transaction_stmt = $conn->prepare($transaction_sql);
             $desc = "Thanh toán đơn hàng #$order_id";
-            $transaction_stmt->bind_param("ids", $user_id, $total_amount, $desc);
+            $transaction_stmt->bind_param("ids", $user_id, $final_total, $desc);
             $transaction_stmt->execute();
             $transaction_stmt->close();
             
@@ -467,15 +521,15 @@ try {
             // Cập nhật trạng thái thanh toán và mã giao dịch
             $update_payment_sql = "UPDATE payments SET status = 'paid', paid_at = NOW(), payment_method = 'BACoin', amount_bacoin = ?, transaction_code = ? WHERE order_id = ?";
             $update_payment_stmt = $conn->prepare($update_payment_sql);
-            $update_payment_stmt->bind_param("dsi", $total_amount, $transaction_code, $order_id);
+            $update_payment_stmt->bind_param("dsi", $final_total, $transaction_code, $order_id);
             $update_payment_stmt->execute();
             $update_payment_stmt->close();
             
             // Khi thanh toán bằng BACoin: set total_amount = 0 và cập nhật total_amount_bacoin
-            error_log("DEBUG ORDER: Updating order amounts for BACoin payment - order_id=$order_id, bacoin_amount=$total_amount");
+            error_log("DEBUG ORDER: Updating order amounts for BACoin payment - order_id=$order_id, bacoin_amount=$final_total");
             $update_order_bacoin_sql = "UPDATE orders SET total_amount = 0, total_amount_bacoin = ? WHERE id = ?";
             $update_order_bacoin_stmt = $conn->prepare($update_order_bacoin_sql);
-            $update_order_bacoin_stmt->bind_param("di", $total_amount, $order_id);
+            $update_order_bacoin_stmt->bind_param("di", $final_total, $order_id);
             $update_order_bacoin_stmt->execute();
             $update_order_bacoin_stmt->close();
             
@@ -493,13 +547,13 @@ try {
             http_response_code(200);
             echo json_encode([
                 "success" => true,
-                "message" => "Đặt hàng thành công! Đã trừ " . $total_amount . " BACoin từ tài khoản. Đơn hàng đã được xác nhận.",
+                "message" => "Đặt hàng thành công! Đã trừ " . $final_total . " BACoin từ tài khoản. Đơn hàng đã được xác nhận.",
                 "order_id" => $order_id,
                 "payment_method" => "BACoin",
                 "requires_payment" => false,
                 "order_status" => "confirmed",
                 "new_balance" => $new_balance,
-                "amount_deducted" => $total_amount,
+                "amount_deducted" => $final_total,
                 "transaction_code" => $transaction_code,
                 "bacoin_distribution" => [
                     "admin_received" => $admin_balance,
@@ -527,7 +581,7 @@ try {
         // Thanh toán bằng COD hoặc VNPAY - cập nhật total_amount
         $update_order_amount_sql = "UPDATE orders SET total_amount = ? WHERE id = ?";
         $update_order_amount_stmt = $conn->prepare($update_order_amount_sql);
-        $update_order_amount_stmt->bind_param("di", $total_amount, $order_id);
+        $update_order_amount_stmt->bind_param("di", $final_total, $order_id);
         $update_order_amount_stmt->execute();
         $update_order_amount_stmt->close();
         

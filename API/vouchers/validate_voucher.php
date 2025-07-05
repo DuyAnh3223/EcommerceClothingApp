@@ -15,7 +15,7 @@ require_once '../utils/auth.php';
 require_once '../utils/response.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    sendResponse(405, 'Method not allowed', null);
+    sendResponse(false, 'Method not allowed', null, 405);
     exit;
 }
 
@@ -24,12 +24,12 @@ try {
     
     // Validate input
     if (!isset($input['voucher_code']) || empty($input['voucher_code'])) {
-        sendResponse(400, 'Voucher code is required', null);
+        sendResponse(false, 'Voucher code is required', null, 400);
         exit;
     }
     
     if (!isset($input['product_ids']) || !is_array($input['product_ids'])) {
-        sendResponse(400, 'Product IDs array is required', null);
+        sendResponse(false, 'Product IDs array is required', null, 400);
         exit;
     }
     
@@ -58,7 +58,7 @@ try {
     $voucherResult = mysqli_query($conn, $voucherQuery);
     
     if (!$voucherResult || mysqli_num_rows($voucherResult) === 0) {
-        sendResponse(404, 'Voucher not found', null);
+        sendResponse(false, 'Voucher not found', null, 404);
         exit;
     }
     
@@ -70,14 +70,14 @@ try {
     $endDate = new DateTime($voucher['end_date']);
     
     if ($now < $startDate || $now > $endDate) {
-        sendResponse(400, 'Voucher is not valid at this time', null);
+        sendResponse(false, 'Voucher is not valid at this time', null, 400);
         exit;
     }
     
     // Check if voucher has remaining quantity
     $remainingQuantity = $voucher['quantity'] - $voucher['used_count'];
     if ($remainingQuantity <= 0) {
-        sendResponse(400, 'Voucher has been fully used', null);
+        sendResponse(false, 'Voucher has been fully used', null, 400);
         exit;
     }
     
@@ -132,12 +132,12 @@ try {
             break;
             
         default:
-            sendResponse(400, 'Invalid voucher type', null);
+            sendResponse(false, 'Invalid voucher type', null, 400);
             exit;
     }
     
     if (empty($applicableProducts)) {
-        sendResponse(400, 'Voucher is not applicable to any of the selected products', null);
+        sendResponse(false, 'Voucher is not applicable to any of the selected products', null, 400);
         exit;
     }
     
@@ -153,10 +153,10 @@ try {
         'category_filter' => $voucher['category_filter']
     ];
     
-    sendResponse(200, 'Voucher is valid', $result);
+    sendResponse(true, 'Voucher is valid', $result);
     
 } catch (Exception $e) {
-    sendResponse(500, 'Error: ' . $e->getMessage(), null);
+    sendResponse(false, 'Error: ' . $e->getMessage(), null, 500);
 }
 
 mysqli_close($conn);

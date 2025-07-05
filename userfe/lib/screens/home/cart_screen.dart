@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:userfe/services/auth_service.dart';
 import 'package:userfe/services/notification_service.dart';
+import 'package:userfe/services/voucher_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../services/vnpay_service.dart';
 
@@ -13,13 +14,20 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  List cartItems = [];
+  List<dynamic> cartItems = [];
   bool isLoading = true;
+  double originalTotal = 0.0;
+  double finalTotal = 0.0;
 
   @override
   void initState() {
     super.initState();
     _loadCart();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future<void> _loadCart() async {
@@ -28,12 +36,7 @@ class _CartScreenState extends State<CartScreen> {
     }
     final userData = await AuthService.getUserData();
     final userId = userData?['id'];
-    if (userId == null) {
-      if (mounted) {
-        setState(() { isLoading = false; });
-      }
-      return;
-    }
+    if (userId == null) return;
     final result = await AuthService.getCart(userId: userId);
     if (result['success'] == true && result['data'] is List) {
       if (mounted) {
@@ -41,24 +44,6 @@ class _CartScreenState extends State<CartScreen> {
           cartItems = result['data'];
           isLoading = false;
         });
-        
-        // Debug: In ra thông tin giỏ hàng để kiểm tra
-        print('=== DEBUG CART ===');
-        for (var item in cartItems) {
-          print('Type: ${item['type']}');
-          if (item['type'] == 'combination') {
-            print('Combination: ${item['combination_name']}');
-            print('Combination Image: ${item['combination_image']}');
-            print('Combination Items: ${item['combination_items']}');
-          } else {
-            print('Product: ${item['product_name']}');
-            print('Product Image: ${item['product_image']}');
-            print('Variant Image: ${item['variant_image']}');
-            print('Final Image URL: ${item['image_url']}');
-            print('Attributes: ${item['attributes']}');
-          }
-          print('---');
-        }
       }
     } else {
       if (mounted) {
@@ -669,39 +654,263 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
   int? selectedAddressId;
   String paymentMethod = 'COD';
   bool isLoading = false;
+  
+  // Voucher variables
+  final TextEditingController _voucherController = TextEditingController();
+  Map<String, dynamic>? appliedVoucher;
+  bool isApplyingVoucher = false;
+  double originalTotal = 0.0;
+  double discountAmount = 0.0;
+  double finalTotal = 0.0;
 
   @override
   void initState() {
     super.initState();
+    // Initialize totals from widget cart items
+    originalTotal = widget.totalPrice;
+    finalTotal = originalTotal;
+    // Load user addresses
     _loadAddresses();
+  }
+
+  @override
+  void dispose() {
+    _voucherController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadAddresses() async {
     final userData = await AuthService.getUserData();
     final userId = userData?['id'];
     if (userId == null) return;
-    final result = await AuthService.getUserAddresses(userId: userId);
-    if (result['success'] == true && result['data'] is List && result['data'].isNotEmpty) {
-      setState(() {
-        addresses = result['data'];
-        selectedAddressId = addresses.firstWhere((a) => a['is_default'] == true, orElse: () => addresses[0])['id'];
-      });
+    
+    print('=== DEBUG ADDRESSES ===');
+    print('Loading addresses for user ID: $userId');
+    
+    try {
+      final result = await AuthService.getUserAddresses(userId: userId);
+      print('Address result: $result');
+      
+      if (result['success'] == true && result['data'] is List) {
+        if (mounted) {
+          setState(() {
+            addresses = result['data'];
+            print('Loaded ${addresses.length} addresses');
+            
+            // Auto-select default address if available
+            if (addresses.isNotEmpty) {
+              final defaultAddress = addresses.firstWhere(
+                (addr) => addr['is_default'] == 1,
+                orElse: () => addresses.first,
+              );
+              selectedAddressId = defaultAddress['id'];
+              print('Selected address ID: $selectedAddressId');
+            } else {
+              print('No addresses found');
+            }
+          });
+        }
+      } else {
+        print('Failed to load addresses: ${result['message']}');
+      }
+    } catch (e) {
+      print('Error loading addresses: $e');
     }
+  }
+
+  Future<void> _applyVoucher() async {
+    final voucherCode = _voucherController.text.trim();
+    if (voucherCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng nhập mã voucher'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() { isApplyingVoucher = true; });
+
+    try {
+      // Lấy danh sách product IDs từ cart items
+      final productIds = <int>[];
+      print('=== DEBUG VOUCHER APPLICATION ===');
+      print('Cart Items Count: ${widget.cartItems.length}');
+      
+      for (var item in widget.cartItems) {
+        print('Processing item: ${item['type']}');
+        
+        if (item['type'] == 'combination') {
+          // Nếu là combo, lấy product IDs từ combination_items
+          if (item['combination_items'] != null && item['combination_items'] is List) {
+            print('Combination items: ${item['combination_items']}');
+            for (var comboItem in item['combination_items']) {
+              if (comboItem['product_id'] != null) {
+                productIds.add(comboItem['product_id']);
+                print('Added product ID from combo: ${comboItem['product_id']}');
+              }
+            }
+          }
+        } else {
+          // Nếu là sản phẩm đơn lẻ
+          if (item['product_id'] != null) {
+            productIds.add(item['product_id']);
+            print('Added product ID from single item: ${item['product_id']}');
+          }
+        }
+      }
+
+      print('Final Product IDs: $productIds');
+
+      if (productIds.isEmpty) {
+        throw Exception('Không có sản phẩm hợp lệ để áp dụng voucher');
+      }
+
+      print('Calling VoucherService.validateVoucher...');
+      final result = await VoucherService.validateVoucher(voucherCode, productIds);
+
+      setState(() { isApplyingVoucher = false; });
+
+      // Tạo voucher object từ result
+      final voucher = {
+        'voucher_id': result.voucherId,
+        'voucher_code': result.voucherCode,
+        'discount_amount': result.discountAmount,
+        'voucher_type': result.voucherType,
+        'category_filter': result.categoryFilter,
+      };
+      
+      setState(() {
+        appliedVoucher = voucher;
+        discountAmount = result.totalDiscount;
+        finalTotal = originalTotal - result.totalDiscount;
+      });
+
+      // Debug: In ra thông tin voucher
+      print('=== DEBUG VOUCHER ===');
+      print('Original Total: $originalTotal');
+      print('Discount Amount: $discountAmount');
+      print('Final Total: $finalTotal');
+      print('Applied Voucher: $appliedVoucher');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('✅ Áp dụng voucher thành công! Giảm ${result.formattedTotalDiscount}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      setState(() { isApplyingVoucher = false; });
+      
+      print('Voucher Application Error: $e');
+      
+      // Xử lý các loại lỗi khác nhau
+      String errorMessage = 'Lỗi áp dụng voucher';
+      if (e.toString().contains('Voucher not found')) {
+        errorMessage = '❌ Mã voucher không tồn tại';
+      } else if (e.toString().contains('not valid at this time')) {
+        errorMessage = '❌ Voucher không còn hiệu lực';
+      } else if (e.toString().contains('fully used')) {
+        errorMessage = '❌ Voucher đã hết số lượng';
+      } else if (e.toString().contains('not applicable')) {
+        errorMessage = '❌ Voucher không áp dụng cho sản phẩm này';
+      } else if (e.toString().contains('Network error')) {
+        errorMessage = '❌ Lỗi kết nối mạng';
+      } else if (e.toString().contains('Không có sản phẩm hợp lệ')) {
+        errorMessage = '❌ Không có sản phẩm hợp lệ để áp dụng voucher';
+      } else if (e.toString().contains('Method not allowed')) {
+        errorMessage = '❌ Lỗi server: Method not allowed';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _removeVoucher() {
+    setState(() {
+      appliedVoucher = null;
+      discountAmount = 0.0;
+      finalTotal = originalTotal;
+      _voucherController.clear();
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🗑️ Đã xóa voucher'),
+        backgroundColor: Colors.orange,
+      ),
+    );
   }
 
   Future<void> _placeOrder() async {
     final userData = await AuthService.getUserData();
     final userId = userData?['id'];
-    if (userId == null || selectedAddressId == null) return;
+    
+    print('=== DEBUG ORDER REQUEST ===');
+    print('User Data: $userData');
+    print('User ID: $userId');
+    print('Selected Address ID: $selectedAddressId');
+    print('Cart Items Count: ${widget.cartItems.length}');
+    
+    if (userId == null) {
+      print('ERROR: User ID is null');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Lỗi: Không tìm thấy thông tin người dùng'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
+    if (selectedAddressId == null) {
+      print('ERROR: Address ID is null');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Lỗi: Vui lòng chọn địa chỉ giao hàng'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
+    if (widget.cartItems.isEmpty) {
+      print('ERROR: Cart items is empty');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Lỗi: Giỏ hàng trống'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
     setState(() { isLoading = true; });
     
     try {
+      // Debug: Log order data
+      print('Payment Method: $paymentMethod');
+      print('Applied Voucher: $appliedVoucher');
+      print('Discount Amount: $discountAmount');
+      
+      // Prepare voucher data if applied
+      Map<String, dynamic>? voucherData;
+      if (appliedVoucher != null) {
+        voucherData = {
+          'voucher_id': appliedVoucher!['voucher_id'],
+          'voucher_code': appliedVoucher!['voucher_code'],
+          'discount_amount': discountAmount,
+        };
+        print('Voucher Data: $voucherData');
+      }
+      
+      print('Calling placeOrderWithCombinations...');
       final result = await AuthService.placeOrderWithCombinations(
         userId: userId,
         addressId: selectedAddressId!,
         paymentMethod: paymentMethod,
         cartItems: widget.cartItems.cast<Map<String, dynamic>>(),
+        voucherData: voucherData,
       );
+      
+      print('Order Result: $result');
       
       if (result['success'] == true) {
         // Xóa items khỏi giỏ hàng
@@ -747,6 +956,7 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
       }
     } catch (e) {
       setState(() { isLoading = false; });
+      print('Order Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('❌ Lỗi: $e'),
@@ -1017,6 +1227,87 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
               
               const SizedBox(height: 8),
               
+              // Voucher section
+              const Text('🎫 Mã giảm giá:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              
+              if (appliedVoucher != null) ...[
+                // Applied voucher display
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    border: Border.all(color: Colors.green.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Voucher: ${appliedVoucher!['voucher_code']}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                            Text(
+                              'Giảm ${discountAmount.toStringAsFixed(0)} VNĐ',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.green.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _removeVoucher,
+                        icon: Icon(Icons.close, color: Colors.green.shade700),
+                        iconSize: 20,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ] else ...[
+                // Voucher input
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _voucherController,
+                        decoration: const InputDecoration(
+                          hintText: 'Nhập mã voucher',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: isApplyingVoucher ? null : _applyVoucher,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: isApplyingVoucher
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text('Áp dụng'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              
               // Payment method
               const Text('Phương thức thanh toán:'),
               DropdownButton<String>(
@@ -1032,36 +1323,37 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
               
               const SizedBox(height: 12),
               
-              // Total
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Total with voucher
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Tổng tiền:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('${widget.totalPrice.toStringAsFixed(0)} VNĐ <=> BACoin', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
-                ],
-              ),
-              if (paymentMethod == 'Coin')
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // const Text('Tổng BACoin:', style: TextStyle(fontWeight: FontWeight.bold)),
-                      // Text(
-                      //   '${widget.cartItems.fold<int>(0, (sum, item) {
-                      //     final price = item['price_bacoin'] != null
-                      //         ? (item['price_bacoin'] is num
-                      //             ? (item['price_bacoin'] as num).toInt()
-                      //             : int.tryParse(item['price_bacoin'].toString()) ?? 0)
-                      //         : 0;
-                      //     final qty = (item['quantity'] ?? 1) is num ? (item['quantity'] as num).toInt() : int.tryParse(item['quantity'].toString()) ?? 1;
-                      //     return sum + (price * qty);
-                      //   })} Coin',
-                      //   style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
-                      // ),
+                      const Text('Tổng tiền gốc:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text('${originalTotal.toStringAsFixed(0)} VNĐ', style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
-                ),
+                  if (appliedVoucher != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Giảm giá (${appliedVoucher!['voucher_code']}):', style: TextStyle(color: Colors.green.shade700)),
+                        Text('-${discountAmount.toStringAsFixed(0)} VNĐ', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Tổng tiền thanh toán:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('${finalTotal.toStringAsFixed(0)} VNĐ <=> BACoin', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 16)),
+                    ],
+                  ),
+                ],
+              ),
               
               const SizedBox(height: 16),
               

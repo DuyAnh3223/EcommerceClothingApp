@@ -7,14 +7,32 @@ class VoucherService {
   // Validate voucher for specific products
   static Future<VoucherValidationResult> validateVoucher(String voucherCode, List<int> productIds) async {
     try {
+      final requestBody = {
+        'voucher_code': voucherCode,
+        'product_ids': productIds,
+      };
+      
+      final requestJson = json.encode(requestBody);
+      
+      print('=== DEBUG VOUCHER SERVICE ===');
+      print('Request URL: $baseUrl/vouchers/validate_voucher.php');
+      print('Request Method: POST');
+      print('Request Headers: {"Content-Type": "application/json"}');
+      print('Request Body (JSON): $requestJson');
+      print('Request Body (Raw): ${requestBody.toString()}');
+      print('Voucher Code: $voucherCode');
+      print('Product IDs: $productIds');
+      print('Product IDs Type: ${productIds.runtimeType}');
+      
       final response = await http.post(
         Uri.parse('$baseUrl/vouchers/validate_voucher.php'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'voucher_code': voucherCode,
-          'product_ids': productIds,
-        }),
+        body: requestJson,
       );
+
+      print('Response Status: ${response.statusCode}');
+      print('Response Headers: ${response.headers}');
+      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -27,6 +45,7 @@ class VoucherService {
         throw Exception('HTTP Error: ${response.statusCode}');
       }
     } catch (e) {
+      print('Voucher Service Error: $e');
       throw Exception('Network error: $e');
     }
   }

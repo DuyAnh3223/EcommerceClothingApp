@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Voucher API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Voucher API</h1>
+        
+        <div class="form-group">
+            <label for="voucherCode">Voucher Code:</label>
+            <input type="text" id="voucherCode" value="WELCOME2024" placeholder="Nhập mã voucher">
+        </div>
+        
+        <div class="form-group">
+            <label for="productIds">Product IDs (JSON array):</label>
+            <textarea id="productIds" rows="3" placeholder="[4, 6, 20]">[4, 6, 20]</textarea>
+        </div>
+        
+        <button onclick="testVoucherAPI()">Test Voucher API</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testVoucherAPI() {
+            const voucherCode = document.getElementById('voucherCode').value;
+            const productIdsText = document.getElementById('productIds').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                const productIds = JSON.parse(productIdsText);
+                
+                const response = await fetch('http://localhost/EcommerceClothingApp/API/vouchers/validate_voucher.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        voucher_code: voucherCode,
+                        product_ids: productIds
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Success!</h3>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Error!</h3>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Network Error!</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
