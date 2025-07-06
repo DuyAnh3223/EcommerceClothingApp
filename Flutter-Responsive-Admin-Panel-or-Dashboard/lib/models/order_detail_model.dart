@@ -13,6 +13,7 @@ class OrderDetail {
   final String? postalCode;
   final String orderDate;
   final double totalAmount;
+  final double? totalAmountBACoin;
   final String status;
   final String createdAt;
   final String updatedAt;
@@ -32,6 +33,7 @@ class OrderDetail {
     this.postalCode,
     required this.orderDate,
     required this.totalAmount,
+    this.totalAmountBACoin,
     required this.status,
     required this.createdAt,
     required this.updatedAt,
@@ -53,6 +55,7 @@ class OrderDetail {
       postalCode: json['postal_code'],
       orderDate: json['order_date'] ?? '',
       totalAmount: double.tryParse(json['total_amount']?.toString() ?? '0.0') ?? 0.0,
+      totalAmountBACoin: double.tryParse(json['total_amount_bacoin']?.toString() ?? '0.0'),
       status: json['status'] ?? '',
       createdAt: json['created_at'] ?? '',
       updatedAt: json['updated_at'] ?? '',
@@ -78,6 +81,7 @@ class OrderDetail {
     'postal_code': postalCode,
     'order_date': orderDate,
     'total_amount': totalAmount,
+    'total_amount_bacoin': totalAmountBACoin,
     'status': status,
     'created_at': createdAt,
     'updated_at': updatedAt,

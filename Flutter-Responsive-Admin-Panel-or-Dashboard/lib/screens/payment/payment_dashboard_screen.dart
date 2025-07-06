@@ -248,6 +248,10 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
 
   String _getDisplayAmountForDetail(OrderDetail order) {
     if (order.payments.isEmpty) {
+      // If no payments, check if it's a BACoin order
+      if (order.totalAmountBACoin != null && order.totalAmountBACoin! > 0) {
+        return '${order.totalAmountBACoin!.toStringAsFixed(0)} BACoin';
+      }
       return '${order.totalAmount.toStringAsFixed(0)} VNĐ';
     }
     
@@ -429,6 +433,15 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
   }
 
   Widget _buildOrderItem(OrderItem item) {
+    // Determine currency based on selected order detail
+    String currency = "VNĐ";
+    if (selectedOrderDetail != null && selectedOrderDetail!.payments.isNotEmpty) {
+      final payment = selectedOrderDetail!.payments.first;
+      if (payment.paymentMethod == 'BACoin') {
+        currency = "BACoin";
+      }
+    }
+    
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
@@ -448,7 +461,7 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
           children: [
             if (item.variant != null && item.variant!.isNotEmpty)
               Text(item.variant!),
-            Text('Số lượng: ${item.quantity} | Giá: ${item.price.toStringAsFixed(0)} VNĐ'),
+            Text('Số lượng: ${item.quantity} | Giá: ${item.price.toStringAsFixed(0)} $currency'),
           ],
         ),
       ),

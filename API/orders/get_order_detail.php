@@ -23,7 +23,7 @@ if (!$order_id) {
 
 try {
     // Get order details with user and address information
-    $sql = "SELECT o.id, o.user_id, o.address_id, o.order_date, o.total_amount, o.status, o.created_at, o.updated_at,
+    $sql = "SELECT o.id, o.user_id, o.address_id, o.order_date, o.total_amount, o.total_amount_bacoin, o.status, o.created_at, o.updated_at,
                    u.username, u.email, u.phone,
                    ua.address_line, ua.city, ua.province, ua.postal_code
             FROM orders o
@@ -47,8 +47,21 @@ try {
     $order = $result->fetch_assoc();
     $stmt->close();
     
+    // Get payment method first
+    $payment_method_sql = "SELECT payment_method FROM payments WHERE order_id = ? LIMIT 1";
+    $stmt = $conn->prepare($payment_method_sql);
+    $stmt->bind_param("i", $order_id);
+    $stmt->execute();
+    $payment_result = $stmt->get_result();
+    $payment_method = 'COD'; // default
+    if ($payment_result->num_rows > 0) {
+        $payment_row = $payment_result->fetch_assoc();
+        $payment_method = $payment_row['payment_method'];
+    }
+    $stmt->close();
+    
     // Get order items
-    $items_sql = "SELECT oi.id, oi.product_id, oi.variant_id, oi.quantity, oi.price,
+    $items_sql = "SELECT oi.id, oi.product_id, oi.variant_id, oi.quantity, oi.price, oi.price_bacoin,
                          pv.image_url,
                          p.name as product_name
                   FROM order_items oi
@@ -80,12 +93,16 @@ try {
         $stmt_attr->close();
         $variant_str = implode(', ', $variant_attrs);
 
+        // Determine which price to use based on payment method
+        $display_price = ($payment_method == 'BACoin') ? $item['price_bacoin'] : $item['price'];
+        
         $items[] = [
             'id' => (int)$item['id'],
             'product_id' => (int)$item['product_id'],
             'variant_id' => (int)$item['variant_id'],
             'quantity' => (int)$item['quantity'],
-            'price' => (float)$item['price'],
+            'price' => (float)$display_price,
+            'price_bacoin' => (float)$item['price_bacoin'],
             'image_url' => $item['image_url'],
             'product_name' => $item['product_name'],
             'variant' => $variant_str
@@ -94,7 +111,7 @@ try {
     $stmt->close();
     
     // Get payment information
-    $payment_sql = "SELECT id, payment_method, amount, status, transaction_code, paid_at
+    $payment_sql = "SELECT id, payment_method, amount, amount_bacoin, status, transaction_code, paid_at
                     FROM payments 
                     WHERE order_id = ?";
     $stmt = $conn->prepare($payment_sql);
@@ -108,6 +125,7 @@ try {
             'id' => (int)$payment['id'],
             'payment_method' => $payment['payment_method'],
             'amount' => (float)$payment['amount'],
+            'amount_bacoin' => (float)$payment['amount_bacoin'],
             'status' => $payment['status'],
             'transaction_code' => $payment['transaction_code'],
             'paid_at' => $payment['paid_at']
@@ -121,6 +139,7 @@ try {
         'address_id' => (int)$order['address_id'],
         'order_date' => $order['order_date'],
         'total_amount' => (float)$order['total_amount'],
+        'total_amount_bacoin' => (float)$order['total_amount_bacoin'],
         'status' => $order['status'],
         'created_at' => $order['created_at'],
         'updated_at' => $order['updated_at'],
