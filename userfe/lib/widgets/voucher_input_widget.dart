@@ -53,20 +53,42 @@ class _VoucherInputWidgetState extends State<VoucherInputWidget> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Áp dụng voucher thành công! Giảm ${result.formattedTotalDiscount}'),
+          content: Text('✅ Áp dụng voucher thành công! Giảm ${result.formattedTotalDiscount}'),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = e.toString();
+        // Xử lý thông báo lỗi chi tiết
+        if (e is VoucherException) {
+          _errorMessage = e.message;
+        } else {
+          _errorMessage = e.toString();
+        }
       });
+      
+      // Hiển thị thông báo lỗi với icon và màu sắc phù hợp
+      String errorIcon = '❌';
+      Color errorColor = Colors.red;
+      
+      if (e is VoucherException) {
+        if (e.message.contains('không tồn tại')) {
+          errorIcon = '🔍';
+        } else if (e.message.contains('hết hiệu lực') || e.message.contains('chưa có hiệu lực')) {
+          errorIcon = '⏰';
+        } else if (e.message.contains('hết số lượng')) {
+          errorIcon = '📦';
+        } else if (e.message.contains('không áp dụng')) {
+          errorIcon = '🚫';
+        }
+      }
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Lỗi: $e'),
-          backgroundColor: Colors.red,
+          content: Text('$errorIcon ${e.toString()}'),
+          backgroundColor: errorColor,
+          duration: const Duration(seconds: 4),
         ),
       );
     }
@@ -82,7 +104,7 @@ class _VoucherInputWidgetState extends State<VoucherInputWidget> {
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Đã xóa voucher'),
+        content: Text('🗑️ Đã xóa voucher'),
         backgroundColor: Colors.orange,
       ),
     );

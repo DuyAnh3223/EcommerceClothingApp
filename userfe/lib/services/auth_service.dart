@@ -439,6 +439,16 @@ class AuthService {
         requestBody['voucher_id'] = voucherData['voucher_id'];
         requestBody['voucher_code'] = voucherData['voucher_code'];
         requestBody['discount_amount'] = voucherData['discount_amount'];
+        
+        // Debug voucher data
+        print('=== DEBUG VOUCHER DATA ===');
+        print('Voucher Data: $voucherData');
+        print('Voucher ID: ${voucherData['voucher_id']}');
+        print('Voucher Code: ${voucherData['voucher_code']}');
+        print('Discount Amount: ${voucherData['discount_amount']}');
+      } else {
+        print('=== DEBUG VOUCHER DATA ===');
+        print('No voucher data provided');
       }
       
       // Debug: Log request

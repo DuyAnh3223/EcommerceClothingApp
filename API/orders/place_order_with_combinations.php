@@ -60,6 +60,14 @@ $voucher_id = isset($input['voucher_id']) ? (int)$input['voucher_id'] : null;
 $voucher_code = isset($input['voucher_code']) ? $input['voucher_code'] : null;
 $discount_amount = isset($input['discount_amount']) ? (float)$input['discount_amount'] : 0.0;
 
+// Debug voucher data
+error_log("DEBUG ORDER: Received voucher data - voucher_id=$voucher_id, voucher_code=$voucher_code, discount_amount=$discount_amount");
+error_log("DEBUG ORDER: Raw input voucher data: " . json_encode([
+    'voucher_id' => $input['voucher_id'] ?? 'null',
+    'voucher_code' => $input['voucher_code'] ?? 'null', 
+    'discount_amount' => $input['discount_amount'] ?? 'null'
+]));
+
 error_log("DEBUG ORDER: Parsed data - user_id=$user_id, address_id=$address_id, payment_method=$payment_method, cart_items_count=" . count($cart_items));
 error_log("DEBUG ORDER: Voucher info - voucher_id=$voucher_id, voucher_code=$voucher_code, discount_amount=$discount_amount");
 
@@ -213,20 +221,54 @@ try {
     $voucher_discount = 0;
     
     if ($voucher_id && $discount_amount > 0) {
-        // Validate voucher
-        $voucher_sql = "SELECT id, voucher_code, discount_amount, quantity, 
-                               (SELECT COUNT(*) FROM voucher_usage WHERE voucher_id = vouchers.id) as used_count
+        // Validate voucher with status check
+        $voucher_sql = "SELECT id, voucher_code, discount_amount, quantity, status, start_date, end_date
                         FROM vouchers WHERE id = ?";
         $voucher_stmt = $conn->prepare($voucher_sql);
         $voucher_stmt->bind_param("i", $voucher_id);
         $voucher_stmt->execute();
         $voucher_result = $voucher_stmt->get_result();
         
+        error_log("DEBUG ORDER: Validating voucher - voucher_id=$voucher_id");
+        
         if ($voucher_result->num_rows > 0) {
             $voucher_data = $voucher_result->fetch_assoc();
-            $remaining_quantity = $voucher_data['quantity'] - $voucher_data['used_count'];
+            $current_time = new DateTime('now', new DateTimeZone('Asia/Ho_Chi_Minh'));
+            $start_date = new DateTime($voucher_data['start_date'], new DateTimeZone('Asia/Ho_Chi_Minh'));
+            $end_date = new DateTime($voucher_data['end_date'], new DateTimeZone('Asia/Ho_Chi_Minh'));
             
-            if ($remaining_quantity > 0) {
+            error_log("DEBUG ORDER: Voucher found - code={$voucher_data['voucher_code']}, quantity={$voucher_data['quantity']}, status={$voucher_data['status']}");
+            error_log("DEBUG ORDER: Time check - current={$current_time->format('Y-m-d H:i:s')}, start={$start_date->format('Y-m-d H:i:s')}, end={$end_date->format('Y-m-d H:i:s')}");
+            
+            // Kiểm tra các điều kiện để áp dụng voucher
+            $voucher_valid = true;
+            $error_message = "";
+            
+            // 1. Kiểm tra trạng thái voucher
+            if ($voucher_data['status'] !== 'active') {
+                $voucher_valid = false;
+                if ($voucher_data['status'] === 'inactive') {
+                    $error_message = "Voucher đã hết số lượng sử dụng";
+                } elseif ($voucher_data['status'] === 'expired') {
+                    $error_message = "Voucher đã hết hiệu lực";
+                } else {
+                    $error_message = "Voucher không hợp lệ";
+                }
+            }
+            
+            // 2. Kiểm tra thời gian hiệu lực
+            if ($current_time < $start_date || $current_time > $end_date) {
+                $voucher_valid = false;
+                $error_message = "Voucher chưa có hiệu lực hoặc đã hết hạn";
+            }
+            
+            // 3. Kiểm tra số lượng còn lại
+            if ($voucher_data['quantity'] <= 0) {
+                $voucher_valid = false;
+                $error_message = "Voucher đã hết số lượng sử dụng";
+            }
+            
+            if ($voucher_valid) {
                 // Áp dụng discount
                 $final_total = $total_amount - $discount_amount;
                 if ($final_total < 0) $final_total = 0; // Không âm
@@ -236,12 +278,16 @@ try {
                 
                 error_log("DEBUG ORDER: Voucher applied - voucher_id=$voucher_id, original_total=$original_total, discount_amount=$discount_amount, final_total=$final_total");
             } else {
-                error_log("DEBUG ORDER: Voucher has no remaining quantity");
+                error_log("DEBUG ORDER: Voucher validation failed - $error_message");
+                throw new Exception("Voucher không hợp lệ: $error_message");
             }
         } else {
             error_log("DEBUG ORDER: Voucher not found - voucher_id=$voucher_id");
+            throw new Exception("Không tìm thấy voucher");
         }
         $voucher_stmt->close();
+    } else {
+        error_log("DEBUG ORDER: No voucher data or invalid - voucher_id=$voucher_id, discount_amount=$discount_amount");
     }
     
     // Tạo đơn hàng với total_amount đã được áp dụng voucher
@@ -249,21 +295,52 @@ try {
     // Platform fee sẽ được tính trực tiếp vào total_amount_bacoin
     $platform_fee_to_save = ($payment_method === 'BACoin') ? 0 : $total_platform_fee;
     
-    $order_sql = "INSERT INTO orders (user_id, address_id, total_amount, platform_fee, status) VALUES (?, ?, ?, ?, 'pending')";
+    $order_sql = "INSERT INTO orders (user_id, address_id, total_amount, platform_fee, status, voucher_id) VALUES (?, ?, ?, ?, 'pending', ?)";
     $order_stmt = $conn->prepare($order_sql);
-    $order_stmt->bind_param("iidd", $user_id, $address_id, $final_total, $platform_fee_to_save);
+    $order_stmt->bind_param("iiddi", $user_id, $address_id, $final_total, $platform_fee_to_save, $voucher_id);
     $order_stmt->execute();
     $order_id = $order_stmt->insert_id;
     $order_stmt->close();
     
     // Ghi nhận sử dụng voucher sau khi order được tạo
     if ($voucher_applied && $voucher_id) {
+        error_log("DEBUG ORDER: Recording voucher usage - voucher_id=$voucher_id, user_id=$user_id, order_id=$order_id, discount=$voucher_discount");
+        
+        // 1. Trừ trực tiếp quantity trong bảng vouchers và tự động cập nhật trạng thái
+        $update_quantity_sql = "UPDATE vouchers SET 
+            quantity = quantity - 1,
+            status = CASE 
+                WHEN quantity - 1 = 0 THEN 'inactive'
+                WHEN end_date < NOW() THEN 'expired'
+                ELSE status
+            END
+            WHERE id = ? AND quantity > 0";
+        $update_quantity_stmt = $conn->prepare($update_quantity_sql);
+        $update_quantity_stmt->bind_param("i", $voucher_id);
+        $update_quantity_result = $update_quantity_stmt->execute();
+        
+        if ($update_quantity_result) {
+            error_log("DEBUG ORDER: Voucher quantity and status updated successfully - voucher_id=$voucher_id");
+        } else {
+            error_log("DEBUG ORDER: Failed to update voucher quantity/status - " . $update_quantity_stmt->error);
+        }
+        $update_quantity_stmt->close();
+        
+        // 2. Ghi nhận sử dụng voucher
         $usage_sql = "INSERT INTO voucher_usage (voucher_id, user_id, order_id, discount_applied) VALUES (?, ?, ?, ?)";
         $usage_stmt = $conn->prepare($usage_sql);
         $usage_stmt->bind_param("iiid", $voucher_id, $user_id, $order_id, $voucher_discount);
-        $usage_stmt->execute();
+        $usage_result = $usage_stmt->execute();
+        
+        if ($usage_result) {
+            error_log("DEBUG ORDER: Voucher usage recorded successfully - voucher_id=$voucher_id, order_id=$order_id, discount=$voucher_discount");
+        } else {
+            error_log("DEBUG ORDER: Failed to record voucher usage - " . $usage_stmt->error);
+        }
+        
         $usage_stmt->close();
-        error_log("DEBUG ORDER: Voucher usage recorded - voucher_id=$voucher_id, order_id=$order_id, discount=$voucher_discount");
+    } else {
+        error_log("DEBUG ORDER: Skipping voucher usage recording - voucher_applied=$voucher_applied, voucher_id=$voucher_id");
     }
     
     // Thêm từng sản phẩm vào order_items và trừ tồn kho

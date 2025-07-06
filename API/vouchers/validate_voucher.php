@@ -10,6 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Set timezone to Vietnam
+date_default_timezone_set('Asia/Ho_Chi_Minh');
+
 require_once '../config/db_connect.php';
 require_once '../utils/auth.php';
 require_once '../utils/response.php';
@@ -24,12 +27,12 @@ try {
     
     // Validate input
     if (!isset($input['voucher_code']) || empty($input['voucher_code'])) {
-        sendResponse(false, 'Voucher code is required', null, 400);
+        sendResponse(false, 'Mã voucher không được để trống', null, 400);
         exit;
     }
     
     if (!isset($input['product_ids']) || !is_array($input['product_ids'])) {
-        sendResponse(false, 'Product IDs array is required', null, 400);
+        sendResponse(false, 'Danh sách sản phẩm không hợp lệ', null, 400);
         exit;
     }
     
@@ -48,36 +51,62 @@ try {
             v.end_date,
             v.voucher_type,
             v.category_filter,
-            COUNT(vu.id) as used_count
+            v.status
         FROM vouchers v
-        LEFT JOIN voucher_usage vu ON v.id = vu.voucher_id
         WHERE v.voucher_code = '$voucherCode'
-        GROUP BY v.id
     ";
     
     $voucherResult = mysqli_query($conn, $voucherQuery);
     
     if (!$voucherResult || mysqli_num_rows($voucherResult) === 0) {
-        sendResponse(false, 'Voucher not found', null, 404);
+        sendResponse(false, 'Mã voucher không tồn tại', null, 404);
         exit;
     }
     
     $voucher = mysqli_fetch_assoc($voucherResult);
     
     // Check if voucher is valid
-    $now = new DateTime();
-    $startDate = new DateTime($voucher['start_date']);
-    $endDate = new DateTime($voucher['end_date']);
+    $now = new DateTime('now', new DateTimeZone('Asia/Ho_Chi_Minh'));
+    $startDate = new DateTime($voucher['start_date'], new DateTimeZone('Asia/Ho_Chi_Minh'));
+    $endDate = new DateTime($voucher['end_date'], new DateTimeZone('Asia/Ho_Chi_Minh'));
     
-    if ($now < $startDate || $now > $endDate) {
-        sendResponse(false, 'Voucher is not valid at this time', null, 400);
+    // Debug logging
+    error_log("Voucher validation debug:");
+    error_log("Current time: " . $now->format('Y-m-d H:i:s'));
+    error_log("Start date: " . $startDate->format('Y-m-d H:i:s'));
+    error_log("End date: " . $endDate->format('Y-m-d H:i:s'));
+    error_log("Is current time before start date: " . ($now < $startDate ? 'YES' : 'NO'));
+    error_log("Is current time after end date: " . ($now > $endDate ? 'YES' : 'NO'));
+    error_log("Voucher status: " . $voucher['status']);
+    error_log("Voucher quantity: " . $voucher['quantity']);
+    
+    // Check voucher validity period
+    if ($now < $startDate) {
+        $startDateFormatted = $startDate->format('d/m/Y H:i');
+        sendResponse(false, "Voucher chưa có hiệu lực. Thời gian bắt đầu: $startDateFormatted", null, 400);
         exit;
     }
     
-    // Check if voucher has remaining quantity
-    $remainingQuantity = $voucher['quantity'] - $voucher['used_count'];
-    if ($remainingQuantity <= 0) {
-        sendResponse(false, 'Voucher has been fully used', null, 400);
+    if ($now > $endDate) {
+        $endDateFormatted = $endDate->format('d/m/Y H:i');
+        sendResponse(false, "Voucher đã hết hiệu lực. Thời gian kết thúc: $endDateFormatted", null, 400);
+        exit;
+    }
+    
+    // Check voucher status and quantity using new logic
+    if ($voucher['status'] !== 'active') {
+        if ($voucher['status'] === 'inactive') {
+            sendResponse(false, 'Voucher đã hết số lượng sử dụng', null, 400);
+        } elseif ($voucher['status'] === 'expired') {
+            sendResponse(false, 'Voucher đã hết hiệu lực', null, 400);
+        } else {
+            sendResponse(false, 'Voucher không hợp lệ', null, 400);
+        }
+        exit;
+    }
+    
+    if ($voucher['quantity'] <= 0) {
+        sendResponse(false, 'Voucher đã hết số lượng sử dụng', null, 400);
         exit;
     }
     
@@ -132,12 +161,12 @@ try {
             break;
             
         default:
-            sendResponse(false, 'Invalid voucher type', null, 400);
+            sendResponse(false, 'Loại voucher không hợp lệ', null, 400);
             exit;
     }
     
     if (empty($applicableProducts)) {
-        sendResponse(false, 'Voucher is not applicable to any of the selected products', null, 400);
+        sendResponse(false, 'Voucher không áp dụng được cho sản phẩm đã chọn', null, 400);
         exit;
     }
     
@@ -148,15 +177,15 @@ try {
         'discount_amount' => (float)$voucher['discount_amount'],
         'total_discount' => $totalDiscount,
         'applicable_products' => $applicableProducts,
-        'remaining_quantity' => $remainingQuantity,
+        'remaining_quantity' => (int)$voucher['quantity'],
         'voucher_type' => $voucher['voucher_type'],
         'category_filter' => $voucher['category_filter']
     ];
     
-    sendResponse(true, 'Voucher is valid', $result);
+    sendResponse(true, 'Voucher hợp lệ', $result);
     
 } catch (Exception $e) {
-    sendResponse(false, 'Error: ' . $e->getMessage(), null, 500);
+    sendResponse(false, 'Lỗi hệ thống: ' . $e->getMessage(), null, 500);
 }
 
 mysqli_close($conn);

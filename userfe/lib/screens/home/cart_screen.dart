@@ -781,11 +781,21 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
         'category_filter': result.categoryFilter,
       };
       
+      print('=== DEBUG APPLY VOUCHER ===');
+      print('Voucher Result: $result');
+      print('Voucher ID from result: ${result.voucherId}');
+      print('Created voucher object: $voucher');
+      
       setState(() {
         appliedVoucher = voucher;
         discountAmount = result.totalDiscount;
         finalTotal = originalTotal - result.totalDiscount;
       });
+      
+      print('=== DEBUG AFTER SET STATE ===');
+      print('Applied Voucher: $appliedVoucher');
+      print('Discount Amount: $discountAmount');
+      print('Final Total: $finalTotal');
 
       // Debug: In ra thông tin voucher
       print('=== DEBUG VOUCHER ===');
@@ -898,7 +908,15 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
           'voucher_code': appliedVoucher!['voucher_code'],
           'discount_amount': discountAmount,
         };
+        print('=== DEBUG CART SCREEN VOUCHER ===');
+        print('Applied Voucher: $appliedVoucher');
         print('Voucher Data: $voucherData');
+        print('Voucher ID: ${appliedVoucher!['voucher_id']}');
+        print('Voucher Code: ${appliedVoucher!['voucher_code']}');
+        print('Discount Amount: $discountAmount');
+      } else {
+        print('=== DEBUG CART SCREEN VOUCHER ===');
+        print('No applied voucher');
       }
       
       print('Calling placeOrderWithCombinations...');

@@ -31,14 +31,28 @@ function authenticate() {
     if (isset($headers['Authorization'])) {
         $token = str_replace('Bearer ', '', $headers['Authorization']);
         
-        // For development/testing, accept any token and return agency user
+        // For development/testing, accept any token and return appropriate user
         // In production, you would validate the token against database
         global $conn;
         if (!$conn) {
             include_once __DIR__ . '/../config/db_connect.php';
         }
         
-        // Find first admin user
+        // Check if this is an agency API call
+        $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($request_uri, '/agency/') !== false) {
+            // For agency APIs, try to find agency user first
+            $result = $conn->query("SELECT id, role FROM users WHERE role = 'agency' LIMIT 1");
+            if ($result && $result->num_rows > 0) {
+                $user = $result->fetch_assoc();
+                return [
+                    'id' => $user['id'],
+                    'role' => $user['role']
+                ];
+            }
+        }
+        
+        // For other APIs, try admin first, then agency
         $result = $conn->query("SELECT id, role FROM users WHERE role = 'admin' LIMIT 1");
         if ($result && $result->num_rows > 0) {
             $user = $result->fetch_assoc();
@@ -48,8 +62,8 @@ function authenticate() {
             ];
         }
         
-        // Fallback: find any user with role 'admin'
-        $result = $conn->query("SELECT id, role FROM users WHERE role = 'admin' LIMIT 1");
+        // Fallback to agency user
+        $result = $conn->query("SELECT id, role FROM users WHERE role = 'agency' LIMIT 1");
         if ($result && $result->num_rows > 0) {
             $user = $result->fetch_assoc();
             return [
@@ -59,14 +73,37 @@ function authenticate() {
         }
     }
     
-    // For development, if no Authorization header, still return admin user
-    // This allows testing without proper authentication
+    // For development, if no Authorization header, check request URI
     global $conn;
     if (!$conn) {
         include_once __DIR__ . '/../config/db_connect.php';
     }
     
+    $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+    if (strpos($request_uri, '/agency/') !== false) {
+        // For agency APIs, try to find agency user first
+        $result = $conn->query("SELECT id, role FROM users WHERE role = 'agency' LIMIT 1");
+        if ($result && $result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            return [
+                'id' => $user['id'],
+                'role' => $user['role']
+            ];
+        }
+    }
+    
+    // For other APIs, try admin first, then agency
     $result = $conn->query("SELECT id, role FROM users WHERE role = 'admin' LIMIT 1");
+    if ($result && $result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        return [
+            'id' => $user['id'],
+            'role' => $user['role']
+        ];
+    }
+    
+    // Fallback to agency user
+    $result = $conn->query("SELECT id, role FROM users WHERE role = 'agency' LIMIT 1");
     if ($result && $result->num_rows > 0) {
         $user = $result->fetch_assoc();
         return [

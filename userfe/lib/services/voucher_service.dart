@@ -36,17 +36,43 @@ class VoucherService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        print('=== DEBUG VOUCHER SERVICE RESPONSE ===');
+        print('Response data: $data');
+        print('Success: ${data['success']}');
+        print('Data: ${data['data']}');
+        
         if (data['success'] == true) {
-          return VoucherValidationResult.fromJson(data['data']);
+          final result = VoucherValidationResult.fromJson(data['data']);
+          print('=== DEBUG VOUCHER VALIDATION RESULT ===');
+          print('Voucher ID: ${result.voucherId}');
+          print('Voucher Code: ${result.voucherCode}');
+          print('Discount Amount: ${result.discountAmount}');
+          print('Total Discount: ${result.totalDiscount}');
+          return result;
         } else {
-          throw Exception(data['message'] ?? 'Voucher validation failed');
+          // Trả về thông báo lỗi chi tiết từ API
+          final errorMessage = data['message'] ?? 'Voucher validation failed';
+          throw VoucherException(errorMessage);
         }
+      } else if (response.statusCode == 400) {
+        // Xử lý lỗi 400 Bad Request
+        final data = json.decode(response.body);
+        final errorMessage = data['message'] ?? 'Voucher không hợp lệ';
+        throw VoucherException(errorMessage);
+      } else if (response.statusCode == 404) {
+        // Xử lý lỗi 404 Not Found
+        final data = json.decode(response.body);
+        final errorMessage = data['message'] ?? 'Mã voucher không tồn tại';
+        throw VoucherException(errorMessage);
       } else {
-        throw Exception('HTTP Error: ${response.statusCode}');
+        throw VoucherException('Lỗi kết nối: HTTP ${response.statusCode}');
       }
     } catch (e) {
       print('Voucher Service Error: $e');
-      throw Exception('Network error: $e');
+      if (e is VoucherException) {
+        rethrow;
+      }
+      throw VoucherException('Lỗi mạng: $e');
     }
   }
 
@@ -72,6 +98,16 @@ class VoucherService {
       throw Exception('Network error: $e');
     }
   }
+}
+
+// Custom exception class for voucher errors
+class VoucherException implements Exception {
+  final String message;
+  
+  VoucherException(this.message);
+  
+  @override
+  String toString() => message;
 }
 
 class VoucherValidationResult {

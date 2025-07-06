@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th7 05, 2025 lúc 07:53 PM
+-- Thời gian đã tạo: Th7 06, 2025 lúc 04:39 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -267,7 +267,9 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `type`, `is_re
 (130, 9, 'Sản phẩm của bạn đã được bán', 'Sản phẩm: Quần lửng | Số lượng: 1', 'order_status', 0, '2025-07-05 12:49:30'),
 (131, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #162 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 60,000 VNĐ <=> BACoin', 'order_status', 1, '2025-07-05 12:49:30'),
 (132, 6, 'Sản phẩm của bạn đã được bán', 'Sản phẩm: Áo sơ mi tay dài | Số lượng: 1', 'order_status', 0, '2025-07-05 18:33:12'),
-(133, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #169 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 70,000 VNĐ <=> BACoin', 'order_status', 1, '2025-07-05 18:33:12');
+(133, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #169 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 70,000 VNĐ <=> BACoin', 'order_status', 1, '2025-07-05 18:33:12'),
+(134, 6, 'Sản phẩm của bạn đã được bán', 'Sản phẩm: Áo đi biển | Số lượng: 1', 'order_status', 0, '2025-07-06 09:38:25'),
+(135, 4, 'Đơn hàng đã được xác nhận', 'Đơn hàng #176 của bạn đã được xác nhận và đang được xử lý. Tổng tiền: 180,000 VNĐ <=> BACoin', 'order_status', 1, '2025-07-06 09:38:25');
 
 -- --------------------------------------------------------
 
@@ -310,7 +312,8 @@ INSERT INTO `orders` (`id`, `user_id`, `address_id`, `order_date`, `total_amount
 (172, 4, 3, '2025-07-05 23:58:01', 200000.00, 0.00, 'pending', '2025-07-05 23:58:01', '2025-07-05 23:58:01', NULL, 0, NULL),
 (173, 4, 3, '2025-07-06 00:06:27', 270000.00, 0.00, 'pending', '2025-07-06 00:06:27', '2025-07-06 00:06:27', NULL, 0, NULL),
 (174, 4, 3, '2025-07-06 00:19:33', 60000.00, 10000.00, 'pending', '2025-07-06 00:19:33', '2025-07-06 00:19:33', NULL, 0, NULL),
-(175, 4, 3, '2025-07-06 00:52:22', 49812.40, 9135.40, 'pending', '2025-07-06 00:52:22', '2025-07-06 00:52:22', NULL, 0, NULL);
+(175, 4, 3, '2025-07-06 00:52:22', 49812.40, 9135.40, 'pending', '2025-07-06 00:52:22', '2025-07-06 00:52:22', NULL, 0, NULL),
+(176, 4, 3, '2025-07-06 09:37:46', 180000.00, 0.00, 'confirmed', '2025-07-06 09:37:46', '2025-07-06 09:38:25', NULL, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -350,7 +353,8 @@ INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `variant_id`, `quanti
 (205, 172, 4, 6, 1, 200000.00, 0.00, NULL),
 (206, 173, 6, 7, 1, 320000.00, 0.00, NULL),
 (207, 174, 31, 27, 1, 60000.00, 10000.00, NULL),
-(208, 175, 30, 29, 1, 54812.40, 9135.40, NULL);
+(208, 175, 30, 29, 1, 54812.40, 9135.40, NULL),
+(209, 176, 4, 6, 1, 200000.00, 0.00, NULL);
 
 -- --------------------------------------------------------
 
@@ -389,7 +393,8 @@ INSERT INTO `payments` (`id`, `order_id`, `payment_method`, `amount`, `status`, 
 (172, 172, 'COD', 200000.00, 'pending', NULL, NULL, NULL),
 (173, 173, 'COD', 270000.00, 'pending', NULL, NULL, NULL),
 (174, 174, 'COD', 60000.00, 'pending', NULL, NULL, NULL),
-(175, 175, 'COD', 49812.40, 'pending', NULL, NULL, NULL);
+(175, 175, 'COD', 49812.40, 'pending', NULL, NULL, NULL),
+(176, 176, 'COD', 180000.00, 'paid', 'COD2025070604382581379497', '2025-07-06 04:38:25', NULL);
 
 -- --------------------------------------------------------
 
@@ -657,7 +662,7 @@ CREATE TABLE `product_variant` (
 --
 
 INSERT INTO `product_variant` (`product_id`, `variant_id`, `price`, `stock`, `image_url`, `status`, `price_bacoin`) VALUES
-(4, 6, 200000.00, 858, '685fc4426c6ca_1751106626.jpg', 'active', 0.00),
+(4, 6, 200000.00, 857, '685fc4426c6ca_1751106626.jpg', 'active', 0.00),
 (4, 7, 190000.00, 95, '685fc44a1726b_1751106634.jpg', 'active', 0.00),
 (4, 9, 210000.00, 95, '685fc4571983c_1751106647.jpg', 'active', 0.00),
 (6, 7, 320000.00, 79, '685fc63e59b33_1751107134.jpg', 'active', 0.00),
@@ -957,7 +962,9 @@ INSERT INTO `vouchers` (`id`, `voucher_code`, `discount_amount`, `quantity`, `st
 (5, 'VIP200K', 200000.00, 10, '2024-01-01 00:00:00', '2024-12-31 23:59:59', 'all_products', NULL, '2025-07-05 14:30:46', '2025-07-05 14:30:46'),
 (7, 'EMMUONQUAMON', 100000.00, 1000, '2025-07-05 14:54:36', '2025-08-04 14:54:36', 'all_products', NULL, '2025-07-05 14:55:04', '2025-07-05 18:34:56'),
 (8, 'TEST2025', 50000.00, 100, '2025-01-01 00:00:00', '2025-12-31 23:59:59', 'all_products', NULL, '2025-07-05 23:09:58', '2025-07-05 23:09:58'),
-(10, 'TEST2', 5000.00, 100, '2025-06-06 00:31:01', '2025-08-05 00:31:01', 'all_products', NULL, '2025-07-06 00:31:21', '2025-07-06 00:51:46');
+(10, 'TEST2', 5000.00, 100, '2025-06-06 00:31:01', '2025-08-05 00:31:01', 'all_products', NULL, '2025-07-06 00:31:21', '2025-07-06 00:51:46'),
+(11, 'GIAM20K', 20000.00, 100, '2025-07-06 09:19:27', '2025-08-06 09:19:27', 'all_products', NULL, '2025-07-06 09:00:58', '2025-07-06 09:19:27'),
+(12, 'GIAM30K', 30000.00, 100, '2025-07-06 09:23:02', '2025-08-05 09:23:02', 'all_products', NULL, '2025-07-06 09:23:16', '2025-07-06 09:23:16');
 
 -- --------------------------------------------------------
 
@@ -993,7 +1000,8 @@ CREATE TABLE `voucher_usage` (
 
 INSERT INTO `voucher_usage` (`id`, `voucher_id`, `user_id`, `order_id`, `discount_applied`, `used_at`) VALUES
 (1, 8, 4, 173, 50000.00, '2025-07-06 00:06:27'),
-(2, 10, 4, 175, 5000.00, '2025-07-06 00:52:22');
+(2, 10, 4, 175, 5000.00, '2025-07-06 00:52:22'),
+(3, 11, 4, 176, 20000.00, '2025-07-06 09:37:46');
 
 -- --------------------------------------------------------
 
@@ -1270,31 +1278,31 @@ ALTER TABLE `bacoin_transactions`
 -- AUTO_INCREMENT cho bảng `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=160;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=162;
 
 --
 -- AUTO_INCREMENT cho bảng `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
 
 --
 -- AUTO_INCREMENT cho bảng `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=176;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=177;
 
 --
 -- AUTO_INCREMENT cho bảng `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=209;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=210;
 
 --
 -- AUTO_INCREMENT cho bảng `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=176;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=177;
 
 --
 -- AUTO_INCREMENT cho bảng `products`
@@ -1354,7 +1362,7 @@ ALTER TABLE `variants`
 -- AUTO_INCREMENT cho bảng `vouchers`
 --
 ALTER TABLE `vouchers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT cho bảng `voucher_product_associations`
@@ -1366,7 +1374,7 @@ ALTER TABLE `voucher_product_associations`
 -- AUTO_INCREMENT cho bảng `voucher_usage`
 --
 ALTER TABLE `voucher_usage`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT cho bảng `withdraw_agency`
