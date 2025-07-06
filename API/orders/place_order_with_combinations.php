@@ -291,9 +291,8 @@ try {
     }
     
     // Tạo đơn hàng với total_amount đã được áp dụng voucher
-    // Nếu thanh toán bằng BACoin, không lưu platform_fee vào database
-    // Platform fee sẽ được tính trực tiếp vào total_amount_bacoin
-    $platform_fee_to_save = ($payment_method === 'BACoin') ? 0 : $total_platform_fee;
+    // Lưu platform_fee cho cả BACoin và VNĐ
+    $platform_fee_to_save = $total_platform_fee;
     
     $order_sql = "INSERT INTO orders (user_id, address_id, total_amount, platform_fee, status, voucher_id) VALUES (?, ?, ?, ?, 'pending', ?)";
     $order_stmt = $conn->prepare($order_sql);
@@ -603,10 +602,15 @@ try {
             $update_payment_stmt->close();
             
             // Khi thanh toán bằng BACoin: set total_amount = 0 và cập nhật total_amount_bacoin
-            error_log("DEBUG ORDER: Updating order amounts for BACoin payment - order_id=$order_id, bacoin_amount=$final_total");
+            // Giữ nguyên platform_fee đã được tính
+            error_log("DEBUG ORDER: Updating order amounts for BACoin payment - order_id=$order_id, bacoin_amount=$final_total, platform_fee=$total_platform_fee");
+            
+            // total_amount_bacoin = final_total (bao gồm cả platform_fee)
+            $total_amount_bacoin = $final_total;
+            
             $update_order_bacoin_sql = "UPDATE orders SET total_amount = 0, total_amount_bacoin = ? WHERE id = ?";
             $update_order_bacoin_stmt = $conn->prepare($update_order_bacoin_sql);
-            $update_order_bacoin_stmt->bind_param("di", $final_total, $order_id);
+            $update_order_bacoin_stmt->bind_param("di", $total_amount_bacoin, $order_id);
             $update_order_bacoin_stmt->execute();
             $update_order_bacoin_stmt->close();
             

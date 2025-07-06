@@ -327,9 +327,14 @@ else if ($payment_method === 'BACoin') {
         $update_payment_stmt->close();
         
         // Chỉ cập nhật total_amount_bacoin khi thanh toán bằng BACoin
-        $update_order_bacoin_sql = "UPDATE orders SET total_amount_bacoin = ? WHERE id = ?";
+        // Khi thanh toán bằng BACoin: set total_amount = 0 và cập nhật total_amount_bacoin
+        // Giữ nguyên platform_fee đã được tính
+        // total_amount_bacoin = total_amount (bao gồm cả platform_fee)
+        $total_amount_bacoin = $total_amount;
+        
+        $update_order_bacoin_sql = "UPDATE orders SET total_amount = 0, total_amount_bacoin = ? WHERE id = ?";
         $update_order_bacoin_stmt = $conn->prepare($update_order_bacoin_sql);
-        $update_order_bacoin_stmt->bind_param("di", $total_amount, $order_id);
+        $update_order_bacoin_stmt->bind_param("di", $total_amount_bacoin, $order_id);
         $update_order_bacoin_stmt->execute();
         $update_order_bacoin_stmt->close();
         
