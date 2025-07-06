@@ -291,8 +291,8 @@ try {
     }
     
     // Tạo đơn hàng với total_amount đã được áp dụng voucher
-    // Lưu platform_fee cho cả BACoin và VNĐ
-    $platform_fee_to_save = $total_platform_fee;
+    // Lưu platform_fee chỉ cho COD/VNPAY, không lưu cho BACoin
+    $platform_fee_to_save = ($payment_method === 'BACoin') ? 0 : $total_platform_fee;
     
     $order_sql = "INSERT INTO orders (user_id, address_id, total_amount, platform_fee, status, voucher_id) VALUES (?, ?, ?, ?, 'pending', ?)";
     $order_stmt = $conn->prepare($order_sql);
@@ -352,9 +352,19 @@ try {
         
         $final_price = $base_price + ($platform_fee / $quantity); // Giá cuối cho 1 sản phẩm
         
-        $item_sql = "INSERT INTO order_items (order_id, product_id, variant_id, quantity, price, platform_fee) VALUES (?, ?, ?, ?, ?, ?)";
-        $item_stmt = $conn->prepare($item_sql);
-        $item_stmt->bind_param("iiiddd", $order_id, $product_id, $variant_id, $quantity, $final_price, $platform_fee);
+        // Phân biệt lưu giá theo phương thức thanh toán
+        if ($payment_method === 'BACoin') {
+            // Lưu giá BACoin vào cột price_bacoin, price = 0
+            $item_sql = "INSERT INTO order_items (order_id, product_id, variant_id, quantity, price, platform_fee, price_bacoin) VALUES (?, ?, ?, ?, 0, ?, ?)";
+            $item_stmt = $conn->prepare($item_sql);
+            $item_stmt->bind_param("iiiddd", $order_id, $product_id, $variant_id, $quantity, $platform_fee, $final_price);
+        } else {
+            // Lưu giá VNĐ vào cột price cho COD/VNPAY
+            $item_sql = "INSERT INTO order_items (order_id, product_id, variant_id, quantity, price, platform_fee, price_bacoin) VALUES (?, ?, ?, ?, ?, ?, NULL)";
+            $item_stmt = $conn->prepare($item_sql);
+            $item_stmt->bind_param("iiiddd", $order_id, $product_id, $variant_id, $quantity, $final_price, $platform_fee);
+        }
+        
         $item_stmt->execute();
         $item_stmt->close();
         
@@ -461,7 +471,7 @@ try {
             error_log("DEBUG ORDER: Starting BACoin distribution for order_id=$order_id");
             
             // Lấy thông tin chi tiết các sản phẩm trong đơn hàng để phân bổ
-            $order_items_sql = "SELECT oi.product_id, oi.quantity, oi.price, p.is_agency_product, p.created_by as agency_id, p.platform_fee_rate
+            $order_items_sql = "SELECT oi.product_id, oi.quantity, oi.price, oi.price_bacoin, p.is_agency_product, p.created_by as agency_id, p.platform_fee_rate
                                FROM order_items oi 
                                JOIN products p ON oi.product_id = p.id 
                                WHERE oi.order_id = ?";
@@ -471,9 +481,11 @@ try {
             $order_items_result = $order_items_stmt->get_result();
             
             while ($item = $order_items_result->fetch_assoc()) {
-                $item_total = $item['price'] * $item['quantity'];
+                // Sử dụng price_bacoin cho tính toán BACoin
+                $item_price = $item['price_bacoin'] ?? $item['price'];
+                $item_total = $item_price * $item['quantity'];
                 
-                error_log("DEBUG ORDER: Processing item - product_id={$item['product_id']}, quantity={$item['quantity']}, price={$item['price']}, total=$item_total, is_agency={$item['is_agency_product']}");
+                error_log("DEBUG ORDER: Processing item - product_id={$item['product_id']}, quantity={$item['quantity']}, price={$item['price']}, price_bacoin={$item['price_bacoin']}, total=$item_total, is_agency={$item['is_agency_product']}");
                 
                 if ($item['is_agency_product']) {
                     // Sản phẩm của agency: Agency nhận giá gốc, Admin nhận phí sàn
@@ -484,6 +496,7 @@ try {
                     error_log("DEBUG ORDER: Agency product - platform_fee_rate=$platform_fee_rate, agency_amount=$agency_amount, admin_amount=$admin_amount");
                     
                     $agency_balance += $agency_amount;
+                    // Admin nhận phí sàn bằng BACoin (không phải platform fee)
                     $admin_balance += $admin_amount;
                     
                     // Cộng BACoin cho agency

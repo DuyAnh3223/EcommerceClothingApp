@@ -6,6 +6,7 @@ class Payment {
   final String status;
   final String? transactionCode;
   final String? paidAt;
+  final double? amountBACoin;
 
   Payment({
     required this.id,
@@ -15,6 +16,7 @@ class Payment {
     required this.status,
     this.transactionCode,
     this.paidAt,
+    this.amountBACoin,
   });
 
   factory Payment.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,9 @@ class Payment {
       status: json['status'] ?? '',
       transactionCode: json['transaction_code'],
       paidAt: json['paid_at'],
+      amountBACoin: json['amount_bacoin'] != null 
+          ? double.tryParse(json['amount_bacoin'].toString()) 
+          : null,
     );
   }
 
@@ -37,5 +42,6 @@ class Payment {
     'status': status,
     'transaction_code': transactionCode,
     'paid_at': paidAt,
+    'amount_bacoin': amountBACoin,
   };
 } 

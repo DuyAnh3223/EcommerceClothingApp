@@ -74,7 +74,7 @@ foreach ($items as $item) {
     $price = (float)$pv_row['price'];
     $pv_stmt->close();
 
-    $item_sql = "INSERT INTO order_items (order_id, product_id, variant_id, quantity, price) VALUES (?, ?, ?, ?, ?)";
+    $item_sql = "INSERT INTO order_items (order_id, product_id, variant_id, quantity, price, price_bacoin) VALUES (?, ?, ?, ?, ?, NULL)";
     $item_stmt = $conn->prepare($item_sql);
     $item_stmt->bind_param("iiiid", $order_id, $product_id, $variant_id, $quantity, $price);
     $item_stmt->execute();

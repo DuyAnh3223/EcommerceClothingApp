@@ -1,3 +1,5 @@
+import 'payment_model.dart';
+
 class Order {
   final int id;
   final int userId;
@@ -6,6 +8,7 @@ class Order {
   final String orderDate;
   final double totalAmount;
   final String status;
+  final List<Payment> payments;
 
   Order({
     required this.id,
@@ -15,6 +18,7 @@ class Order {
     required this.orderDate,
     required this.totalAmount,
     required this.status,
+    this.payments = const [],
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -26,6 +30,9 @@ class Order {
       orderDate: json['order_date'] ?? '',
       totalAmount: double.tryParse(json['total_amount']?.toString() ?? '0.0') ?? 0.0,
       status: json['status'] ?? '',
+      payments: json['payments'] != null 
+          ? (json['payments'] as List).map((p) => Payment.fromJson(p)).toList()
+          : [],
     );
   }
 
@@ -37,5 +44,6 @@ class Order {
     'order_date': orderDate,
     'total_amount': totalAmount,
     'status': status,
+    'payments': payments.map((p) => p.toJson()).toList(),
   };
 }

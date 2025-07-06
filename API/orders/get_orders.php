@@ -12,13 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 require_once '../config/db_connect.php';
 
 try {
-    $sql = "SELECT o.id, o.user_id, o.address_id, o.order_date, o.total_amount, o.status, o.created_at, o.updated_at,
+    $sql = "SELECT o.id, o.user_id, o.address_id, o.order_date, o.total_amount, o.status,
                    u.username, u.email, u.phone,
                    ua.address_line, ua.city, ua.province
             FROM orders o
             JOIN users u ON o.user_id = u.id
             JOIN user_addresses ua ON o.address_id = ua.id
-            ORDER BY o.created_at DESC";
+            ORDER BY o.order_date DESC";
     
     $result = $conn->query($sql);
 
@@ -70,6 +70,31 @@ try {
             ];
         }
         $stmt->close();
+
+        // Get payments for each order
+        $payments_sql = "SELECT id, order_id, payment_method, amount, amount_bacoin, status, transaction_code, paid_at
+                        FROM payments 
+                        WHERE order_id = ?";
+        
+        $stmt_payments = $conn->prepare($payments_sql);
+        $stmt_payments->bind_param("i", $order_id);
+        $stmt_payments->execute();
+        $payments_result = $stmt_payments->get_result();
+        
+        $payments = [];
+        while ($payment = $payments_result->fetch_assoc()) {
+            $payments[] = [
+                'id' => (int)$payment['id'],
+                'order_id' => (int)$payment['order_id'],
+                'payment_method' => $payment['payment_method'],
+                'amount' => (float)$payment['amount'],
+                'amount_bacoin' => $payment['amount_bacoin'] !== null ? (float)$payment['amount_bacoin'] : null,
+                'status' => $payment['status'],
+                'transaction_code' => $payment['transaction_code'],
+                'paid_at' => $payment['paid_at']
+            ];
+        }
+        $stmt_payments->close();
         
         $orders[] = [
             'id' => (int)$row['id'],
@@ -78,15 +103,14 @@ try {
             'order_date' => $row['order_date'],
             'total_amount' => (float)$row['total_amount'],
             'status' => $row['status'],
-            'created_at' => $row['created_at'],
-            'updated_at' => $row['updated_at'],
             'username' => $row['username'],
             'email' => $row['email'],
             'phone' => $row['phone'],
             'address_line' => $row['address_line'],
             'city' => $row['city'],
             'province' => $row['province'],
-            'items' => $items
+            'items' => $items,
+            'payments' => $payments
         ];
     }
 

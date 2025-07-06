@@ -33,7 +33,7 @@ if ($conn->connect_error) {
     exit();
 }
 
-$sql = "SELECT p.id, p.order_id, p.payment_method, p.amount, p.status, p.transaction_code, p.paid_at, o.order_date, o.total_amount
+$sql = "SELECT p.id, p.order_id, p.payment_method, p.amount, p.amount_bacoin, p.status, p.transaction_code, p.paid_at, o.order_date, o.total_amount, o.total_amount_bacoin
         FROM payments p
         JOIN orders o ON p.order_id = o.id
         WHERE o.user_id = ?
@@ -95,7 +95,11 @@ while ($row = $result->fetch_assoc()) {
             'variant' => $variant_str,
             'image' => $image_url,
             'quantity' => (int)$item['quantity'],
-            'price' => (float)$item['price']
+            'price' => (float)$item['price'],
+            'price_bacoin' => (float)$item['price_bacoin'],
+            // Hiển thị đúng giá theo phương thức thanh toán
+            'display_price' => $row['payment_method'] === 'BACoin' ? (float)$item['price_bacoin'] : (float)$item['price'],
+            'display_currency' => $row['payment_method'] === 'BACoin' ? 'BACoin' : 'VNĐ'
         ];
     }
     $stmt_items->close();
@@ -105,11 +109,15 @@ while ($row = $result->fetch_assoc()) {
         'order_id' => (int)$row['order_id'],
         'payment_method' => $row['payment_method'],
         'amount' => (float)$row['amount'],
+        'amount_bacoin' => (float)$row['amount_bacoin'],
         'status' => $row['status'],
         'transaction_code' => $row['transaction_code'],
         'paid_at' => $row['paid_at'],
         'order_date' => $row['order_date'],
         'order_total' => (float)$row['total_amount'],
+        'order_total_bacoin' => (float)$row['total_amount_bacoin'],
+        'display_amount' => $row['payment_method'] === 'BACoin' ? (float)$row['amount_bacoin'] : (float)$row['amount'],
+        'display_currency' => $row['payment_method'] === 'BACoin' ? 'BACoin' : 'VNĐ',
         'products' => $products
     ];
 }

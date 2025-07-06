@@ -18,6 +18,11 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
   bool isLoading = true;
   bool isLoadingDetail = false;
   String? errorMessage;
+  
+  // Payment totals
+  double totalVND = 0.0;
+  double totalBACoin = 0.0;
+  Map<String, double> paymentMethodTotals = {};
 
   @override
   void initState() {
@@ -41,6 +46,10 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
           final List<Order> loadedOrders = (data['data'] as List)
               .map((item) => Order.fromJson(item))
               .toList();
+          
+          // Calculate payment totals
+          _calculatePaymentTotals(loadedOrders);
+          
           setState(() {
             orders = loadedOrders;
             isLoading = false;
@@ -62,6 +71,36 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
         errorMessage = 'Lỗi khi load đơn hàng: $e';
         isLoading = false;
       });
+    }
+  }
+
+  void _calculatePaymentTotals(List<Order> orders) {
+    totalVND = 0.0;
+    totalBACoin = 0.0;
+    paymentMethodTotals.clear();
+
+    for (Order order in orders) {
+      if (order.payments.isNotEmpty) {
+        for (Payment payment in order.payments) {
+          if (payment.status == 'paid') {
+            // Add to method totals
+            String method = payment.paymentMethod ?? 'Unknown';
+            
+            // For BACoin payments, use amount_bacoin for BACoin total and amount for method total
+            if (method == 'BACoin') {
+              // Add to BACoin total
+              totalBACoin += payment.amountBACoin ?? 0.0;
+              // Add to method total using amount (VNĐ equivalent)
+              paymentMethodTotals[method] = (paymentMethodTotals[method] ?? 0.0) + (payment.amount ?? 0.0);
+            } else {
+              // For other payment methods, use amount for both totals
+              double amount = payment.amount ?? 0.0;
+              paymentMethodTotals[method] = (paymentMethodTotals[method] ?? 0.0) + amount;
+              totalVND += amount;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -408,7 +447,14 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              _buildInfoRow('Số tiền', '${payment.amount.toStringAsFixed(0)} VNĐ'),
+              // Display amount based on payment method
+              if (payment.paymentMethod == 'BACoin') ...[
+                _buildInfoRow('Số tiền (VNĐ)', '${payment.amount?.toStringAsFixed(0) ?? '0'} VNĐ'),
+                if (payment.amountBACoin != null)
+                  _buildInfoRow('Số tiền (BACoin)', '${payment.amountBACoin!.toStringAsFixed(0)} BACoin'),
+              ] else ...[
+                _buildInfoRow('Số tiền', '${payment.amount?.toStringAsFixed(0) ?? '0'} VNĐ'),
+              ],
               if (payment.transactionCode != null)
                 _buildInfoRow('Mã giao dịch', payment.transactionCode!),
               if (payment.paidAt != null)
@@ -456,6 +502,12 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 20),
+            
+            // Payment Summary Section
+            if (!isLoading && errorMessage == null)
+              _buildPaymentSummary(),
+            
             const SizedBox(height: 20),
             
             if (isLoading)
@@ -506,5 +558,138 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildPaymentSummary() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Tổng quan thanh toán',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                // Total VND
+                Expanded(
+                  child: _buildSummaryCard(
+                    'Tổng VNĐ',
+                    '${totalVND.toStringAsFixed(0)} VNĐ',
+                    Colors.blue,
+                    Icons.attach_money,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Total BACoin
+                Expanded(
+                  child: _buildSummaryCard(
+                    'Tổng BACoin',
+                    '${totalBACoin.toStringAsFixed(0)} BACoin',
+                    Colors.orange,
+                    Icons.monetization_on,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Total Orders
+                Expanded(
+                  child: _buildSummaryCard(
+                    'Tổng đơn hàng',
+                    '${orders.length} đơn',
+                    Colors.green,
+                    Icons.shopping_cart,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Payment Method Breakdown
+            if (paymentMethodTotals.isNotEmpty) ...[
+              const Text(
+                'Chi tiết theo phương thức thanh toán',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                children: paymentMethodTotals.entries.map((entry) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _getPaymentMethodColor(entry.key),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      '${entry.key}: ${entry.value.toStringAsFixed(0)}',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(String title, String value, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getPaymentMethodColor(String method) {
+    switch (method) {
+      case 'COD':
+        return Colors.blue;
+      case 'VNPAY':
+        return Colors.green;
+      case 'BACoin':
+        return Colors.orange;
+      case 'Bank':
+        return Colors.purple;
+      case 'Momo':
+        return Colors.pink;
+      default:
+        return Colors.grey;
+    }
   }
 } 

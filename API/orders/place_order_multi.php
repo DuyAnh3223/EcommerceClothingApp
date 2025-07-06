@@ -78,9 +78,12 @@ foreach ($items as $item) {
 }
 
 // Tạo đơn hàng
+// Lưu platform_fee chỉ cho COD/VNPAY, không lưu cho BACoin
+$platform_fee_to_save = ($payment_method === 'BACoin') ? 0 : $total_platform_fee;
+
 $order_sql = "INSERT INTO orders (user_id, address_id, total_amount, platform_fee, status) VALUES (?, ?, ?, ?, 'pending')";
 $order_stmt = $conn->prepare($order_sql);
-$order_stmt->bind_param("iidd", $user_id, $address_id, $total_amount, $total_platform_fee);
+$order_stmt->bind_param("iidd", $user_id, $address_id, $total_amount, $platform_fee_to_save);
 $order_stmt->execute();
 $order_id = $order_stmt->insert_id;
 $order_stmt->close();
@@ -118,9 +121,19 @@ foreach ($items as $item) {
     // Tính platform fee cho toàn bộ quantity
     $total_item_platform_fee = $item_platform_fee * $quantity;
     
-    $item_sql = "INSERT INTO order_items (order_id, product_id, variant_id, quantity, price, platform_fee) VALUES (?, ?, ?, ?, ?, ?)";
-    $item_stmt = $conn->prepare($item_sql);
-    $item_stmt->bind_param("iiiddd", $order_id, $product_id, $variant_id, $quantity, $final_price, $total_item_platform_fee);
+    // Phân biệt lưu giá theo phương thức thanh toán
+    if ($payment_method === 'BACoin') {
+        // Lưu giá BACoin vào cột price_bacoin, price = 0
+        $item_sql = "INSERT INTO order_items (order_id, product_id, variant_id, quantity, price, platform_fee, price_bacoin) VALUES (?, ?, ?, ?, 0, ?, ?)";
+        $item_stmt = $conn->prepare($item_sql);
+        $item_stmt->bind_param("iiiddd", $order_id, $product_id, $variant_id, $quantity, $total_item_platform_fee, $final_price);
+    } else {
+        // Lưu giá VNĐ vào cột price cho COD/VNPAY
+        $item_sql = "INSERT INTO order_items (order_id, product_id, variant_id, quantity, price, platform_fee, price_bacoin) VALUES (?, ?, ?, ?, ?, ?, NULL)";
+        $item_stmt = $conn->prepare($item_sql);
+        $item_stmt->bind_param("iiiddd", $order_id, $product_id, $variant_id, $quantity, $final_price, $total_item_platform_fee);
+    }
+    
     $item_stmt->execute();
     $item_stmt->close();
 
@@ -221,7 +234,7 @@ else if ($payment_method === 'BACoin') {
         $agency_balance = 0;
         
         // Lấy thông tin chi tiết các sản phẩm trong đơn hàng để phân bổ
-        $order_items_sql = "SELECT oi.product_id, oi.quantity, oi.price, p.is_agency_product, p.agency_id, p.platform_fee_rate
+        $order_items_sql = "SELECT oi.product_id, oi.quantity, oi.price, oi.price_bacoin, p.is_agency_product, p.created_by as agency_id, p.platform_fee_rate
                            FROM order_items oi 
                            JOIN products p ON oi.product_id = p.id 
                            WHERE oi.order_id = ?";
@@ -231,7 +244,9 @@ else if ($payment_method === 'BACoin') {
         $order_items_result = $order_items_stmt->get_result();
         
         while ($item = $order_items_result->fetch_assoc()) {
-            $item_total = $item['price'] * $item['quantity'];
+            // Sử dụng price_bacoin cho tính toán BACoin
+            $item_price = $item['price_bacoin'] ?? $item['price'];
+            $item_total = $item_price * $item['quantity'];
             
             if ($item['is_agency_product']) {
                 // Sản phẩm của agency: Agency nhận giá gốc, Admin nhận phí sàn
