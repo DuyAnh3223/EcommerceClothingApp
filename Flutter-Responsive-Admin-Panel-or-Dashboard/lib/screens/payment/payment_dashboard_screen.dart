@@ -202,7 +202,7 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Khách: ${order.userName ?? ''}'),
-                      Text('Tổng: ${order.totalAmount.toStringAsFixed(0)} VNĐ'),
+                      Text('Tổng: ${_getDisplayAmount(order)}'),
                       Text('Trạng thái: ${order.status}'),
                     ],
                   ),
@@ -225,6 +225,44 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
         ],
       ),
     );
+  }
+
+  String _getDisplayAmount(Order order) {
+    if (order.payments.isEmpty) {
+      return '${order.totalAmount.toStringAsFixed(0)} VNĐ';
+    }
+    
+    // Lấy payment đầu tiên (thường chỉ có 1 payment per order)
+    final payment = order.payments.first;
+    
+    if (payment.paymentMethod == 'BACoin') {
+      // Nếu thanh toán bằng BACoin, hiển thị amount_bacoin
+      final amount = payment.amountBACoin ?? 0.0;
+      return '${amount.toStringAsFixed(0)} BACoin';
+    } else {
+      // Nếu thanh toán bằng COD/VNPAY, hiển thị amount
+      final amount = payment.amount ?? 0.0;
+      return '${amount.toStringAsFixed(0)} VNĐ';
+    }
+  }
+
+  String _getDisplayAmountForDetail(OrderDetail order) {
+    if (order.payments.isEmpty) {
+      return '${order.totalAmount.toStringAsFixed(0)} VNĐ';
+    }
+    
+    // Lấy payment đầu tiên (thường chỉ có 1 payment per order)
+    final payment = order.payments.first;
+    
+    if (payment.paymentMethod == 'BACoin') {
+      // Nếu thanh toán bằng BACoin, hiển thị amount_bacoin
+      final amount = payment.amountBACoin ?? 0.0;
+      return '${amount.toStringAsFixed(0)} BACoin';
+    } else {
+      // Nếu thanh toán bằng COD/VNPAY, hiển thị amount
+      final amount = payment.amount ?? 0.0;
+      return '${amount.toStringAsFixed(0)} VNĐ';
+    }
   }
 
   Color _getStatusColor(String status) {
@@ -309,7 +347,7 @@ class _PaymentDashboardScreenState extends State<PaymentDashboardScreen> {
             // Order Information
             _buildSection('Thông tin đơn hàng', [
               _buildInfoRow('Ngày đặt hàng', order.orderDate),
-              _buildInfoRow('Tổng tiền', '${order.totalAmount.toStringAsFixed(0)} VNĐ'),
+              _buildInfoRow('Tổng tiền', _getDisplayAmountForDetail(order)),
             ]),
 
             const SizedBox(height: 16),
