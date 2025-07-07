@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Voucher Conditions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .voucher-card {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .eligible {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .ineligible {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+            opacity: 0.7;
+        }
+        .voucher-code {
+            font-weight: bold;
+            font-size: 18px;
+            color: #007bff;
+        }
+        .discount-amount {
+            font-size: 16px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        .condition-text {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .status-message {
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .cart-info {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .debug {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Voucher Conditions</h1>
+    
+    <div class="test-section">
+        <h2>📊 Thông tin giỏ hàng</h2>
+        <div class="cart-info">
+            <label>Số lượng sản phẩm: <input type="number" id="cartQuantity" value="1" min="1"></label><br>
+            <label>Tổng tiền: <input type="number" id="cartTotal" value="65000" min="0"> VNĐ</label><br>
+            <label>User ID: <input type="number" id="userId" value="4"></label><br>
+            <button onclick="testVouchers()">🔍 Kiểm tra voucher</button>
+            <button onclick="testDebug()">🐛 Debug API</button>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>✅ Voucher có thể sử dụng</h2>
+        <div id="eligibleVouchers"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>❌ Voucher không đủ điều kiện</h2>
+        <div id="ineligibleVouchers"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>📋 Ví dụ test cases</h2>
+        <button onclick="setTestCase(1, 65000, 4)">Test Case 1: 1 sản phẩm, 65.000đ</button>
+        <button onclick="setTestCase(3, 210000, 4)">Test Case 2: 3 sản phẩm, 210.000đ</button>
+        <button onclick="setTestCase(2, 150000, 4)">Test Case 3: 2 sản phẩm, 150.000đ</button>
+        <button onclick="setTestCase(1, 30000, 4)">Test Case 4: 1 sản phẩm, 30.000đ</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>🐛 Debug Info</h2>
+        <div id="debugInfo"></div>
+    </div>
+
+    <script>
+        function setTestCase(quantity, total, userId) {
+            document.getElementById('cartQuantity').value = quantity;
+            document.getElementById('cartTotal').value = total;
+            document.getElementById('userId').value = userId;
+            testVouchers();
+        }
+        
+        function testDebug() {
+            fetch('debug_voucher.php')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('debugInfo').innerHTML = '<div class="debug">' + data + '</div>';
+                })
+                .catch(error => {
+                    document.getElementById('debugInfo').innerHTML = '<div class="error">Debug Error: ' + error + '</div>';
+                });
+        }
+        
+        function testVouchers() {
+            const cartQuantity = parseInt(document.getElementById('cartQuantity').value);
+            const cartTotal = parseInt(document.getElementById('cartTotal').value);
+            const userId = parseInt(document.getElementById('userId').value);
+            
+            // Clear previous results
+            document.getElementById('eligibleVouchers').innerHTML = '';
+            document.getElementById('ineligibleVouchers').innerHTML = '';
+            document.getElementById('debugInfo').innerHTML = '';
+            
+            console.log('Sending request:', {
+                user_id: userId,
+                cart_total: cartTotal,
+                cart_quantity: cartQuantity
+            });
+            
+            fetch('vouchers/get_available_vouchers.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    cart_total: cartTotal,
+                    cart_quantity: cartQuantity
+                })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                return response.text();
+            })
+            .then(data => {
+                console.log('Raw response:', data);
+                
+                try {
+                    const jsonData = JSON.parse(data);
+                    if (jsonData.success) {
+                        displayVouchers(jsonData.data.eligible_vouchers, 'eligibleVouchers', true);
+                        displayVouchers(jsonData.data.ineligible_vouchers, 'ineligibleVouchers', false);
+                        
+                        // Hiển thị thông tin giỏ hàng
+                        console.log('Cart Info:', jsonData.data.cart_info);
+                    } else {
+                        document.getElementById('debugInfo').innerHTML = '<div class="error">API Error: ' + jsonData.message + '</div>';
+                    }
+                } catch (e) {
+                    document.getElementById('debugInfo').innerHTML = '<div class="error">JSON Parse Error: ' + e.message + '</div><div class="debug">Raw Response: ' + data + '</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                document.getElementById('debugInfo').innerHTML = '<div class="error">Fetch Error: ' + error.message + '</div>';
+            });
+        }
+        
+        function displayVouchers(vouchers, containerId, isEligible) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if (vouchers.length === 0) {
+                container.innerHTML = '<p>Không có voucher nào.</p>';
+                return;
+            }
+            
+            vouchers.forEach(voucher => {
+                const voucherDiv = document.createElement('div');
+                voucherDiv.className = `voucher-card ${isEligible ? 'eligible' : 'ineligible'}`;
+                
+                const statusClass = voucher.is_available ? 'status-success' : 
+                                  voucher.already_used ? 'status-danger' : 'status-warning';
+                
+                voucherDiv.innerHTML = `
+                    <div class="voucher-code">${voucher.voucher_code}</div>
+                    <div class="discount-amount">Giảm ${voucher.discount_formatted}</div>
+                    <div class="condition-text">Điều kiện: ${voucher.condition_text || 'Không có điều kiện'}</div>
+                    <div class="status-message ${statusClass}">
+                        ${voucher.status_message}
+                    </div>
+                    <div style="font-size: 12px; margin-top: 5px;">
+                        <strong>Chi tiết:</strong><br>
+                        - Số lượng tối thiểu: ${voucher.min_quantity}<br>
+                        - Tổng tiền tối thiểu: ${voucher.min_total_amount.toLocaleString()}đ<br>
+                        - Đã sử dụng: ${voucher.already_used ? 'Có' : 'Chưa'}
+                    </div>
+                `;
+                
+                container.appendChild(voucherDiv);
+            });
+        }
+        
+        // Test ngay khi load trang
+        window.onload = function() {
+            testVouchers();
+        };
+    </script>
+</body>
+</html> 

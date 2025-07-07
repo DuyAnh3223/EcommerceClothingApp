@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý Voucher (Admin) - Đầy đủ thông tin</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 1100px; margin: 0 auto; padding: 20px; }
+    h1 { color: #007bff; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f8f9fa; }
+    tr:nth-child(even) { background: #f2f2f2; }
+    .actions button { margin-right: 5px; }
+    .form-section { background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+    .form-section input, .form-section select { margin: 4px 0 12px 0; padding: 6px; width: 100%; }
+    .form-section label { font-weight: bold; }
+    .error { color: #c00; margin-bottom: 10px; }
+    .success { color: #090; margin-bottom: 10px; }
+    .status-active { color: #090; font-weight: bold; }
+    .status-inactive { color: #c00; font-weight: bold; }
+    .status-expired { color: #888; font-weight: bold; }
+    .category { font-size: 12px; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>🛠️ Quản lý Voucher (Admin) - Đầy đủ thông tin</h1>
+
+  <div class="form-section">
+    <h2 id="form-title">Thêm voucher mới</h2>
+    <div id="form-message"></div>
+    <form id="voucherForm">
+      <input type="hidden" id="voucher_id">
+      <label>Mã voucher:</label>
+      <input type="text" id="voucher_code" required><br>
+      <label>Số tiền giảm:</label>
+      <input type="number" id="discount_amount" required><br>
+      <label>Số lượng:</label>
+      <input type="number" id="quantity" required><br>
+      <label>Số lượng tối thiểu:</label>
+      <input type="number" id="min_quantity" value="1" required><br>
+      <label>Tổng tiền tối thiểu:</label>
+      <input type="number" id="min_total_amount" value="0" required><br>
+      <label>Ngày bắt đầu (YYYY-MM-DD HH:mm:ss):</label>
+      <input type="text" id="start_date" required><br>
+      <label>Ngày kết thúc (YYYY-MM-DD HH:mm:ss):</label>
+      <input type="text" id="end_date" required><br>
+      <label>Trạng thái:</label>
+      <select id="status">
+        <option value="active">active</option>
+        <option value="inactive">inactive</option>
+        <option value="expired">expired</option>
+      </select><br>
+      <label>Loại voucher:</label>
+      <select id="voucher_type">
+        <option value="all_products">Tất cả sản phẩm</option>
+        <option value="specific_products">Sản phẩm cụ thể</option>
+        <option value="category_based">Theo danh mục</option>
+      </select><br>
+      <label>Danh mục áp dụng (nếu có):</label>
+      <input type="text" id="category_filter" placeholder="Ví dụ: T-Shirts"><br>
+      <button type="submit" id="submitBtn">Thêm voucher</button>
+      <button type="button" onclick="resetForm()">Hủy</button>
+    </form>
+  </div>
+
+  <h2>Danh sách voucher</h2>
+  <div id="message"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Mã</th>
+        <th>Giảm</th>
+        <th>Số lượng</th>
+        <th>Còn lại</th>
+        <th>Đã dùng</th>
+        <th>SL tối thiểu</th>
+        <th>Tiền tối thiểu</th>
+        <th>Bắt đầu</th>
+        <th>Kết thúc</th>
+        <th>Trạng thái</th>
+        <th>Loại</th>
+        <th>Danh mục</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody id="voucherTable"></tbody>
+  </table>
+
+  <script>
+    const apiBase = './';
+    let editing = false;
+
+    function fetchVouchers() {
+      fetch(apiBase + 'get_vouchers.php', {headers: {Authorization: 'Bearer admin_token'}})
+        .then(r => r.json())
+        .then(data => {
+          if (data.success || data.status === 200) {
+            renderTable(data.data);
+          } else {
+            document.getElementById('message').innerHTML = '<span class="error">' + (data.message || 'Lỗi tải voucher') + '</span>';
+          }
+        });
+    }
+
+    function renderTable(vouchers) {
+      const tbody = document.getElementById('voucherTable');
+      tbody.innerHTML = '';
+      vouchers.forEach(v => {
+        // Tính số lượng đã dùng và còn lại
+        const used = v.used !== undefined ? v.used : (v.quantity && v.status !== 'active' ? v.quantity : (v.quantity - (v.remaining ?? 0)));
+        const remaining = v.remaining !== undefined ? v.remaining : v.quantity;
+        let statusClass = 'status-active';
+        if (v.status === 'inactive') statusClass = 'status-inactive';
+        if (v.status === 'expired') statusClass = 'status-expired';
+        const typeText = v.voucher_type === 'all_products' ? 'Tất cả' : (v.voucher_type === 'specific_products' ? 'Cụ thể' : 'Danh mục');
+        const category = v.category_filter ? `<span class="category">${v.category_filter}</span>` : '';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${v.id}</td>
+          <td>${v.voucher_code}</td>
+          <td>${v.discount_amount}</td>
+          <td>${v.quantity}</td>
+          <td>${remaining}</td>
+          <td>${used}</td>
+          <td>${v.min_quantity}</td>
+          <td>${v.min_total_amount}</td>
+          <td>${v.start_date}</td>
+          <td>${v.end_date}</td>
+          <td class="${statusClass}">${v.status}</td>
+          <td>${typeText}</td>
+          <td>${category}</td>
+          <td class="actions">
+            <button onclick='editVoucher(${JSON.stringify(v)})'>Sửa</button>
+            <button onclick='deleteVoucher(${v.id})'>Xóa</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('voucherForm').onsubmit = function(e) {
+      e.preventDefault();
+      const id = document.getElementById('voucher_id').value;
+      const data = {
+        voucher_code: document.getElementById('voucher_code').value,
+        discount_amount: parseFloat(document.getElementById('discount_amount').value),
+        quantity: parseInt(document.getElementById('quantity').value),
+        min_quantity: parseInt(document.getElementById('min_quantity').value),
+        min_total_amount: parseFloat(document.getElementById('min_total_amount').value),
+        start_date: document.getElementById('start_date').value,
+        end_date: document.getElementById('end_date').value,
+        status: document.getElementById('status').value,
+        voucher_type: document.getElementById('voucher_type').value,
+        category_filter: document.getElementById('category_filter').value
+      };
+      if (editing) data.id = parseInt(id);
+      const url = apiBase + (editing ? 'update_voucher.php' : 'add_voucher.php');
+      fetch(url, {
+        method: editing ? 'PUT' : 'POST',
+        headers: {'Content-Type': 'application/json', Authorization: 'Bearer admin_token'},
+        body: JSON.stringify(data)
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success || res.status === 200 || res.status === 201) {
+          document.getElementById('form-message').innerHTML = '<span class="success">' + (res.message || 'Thành công!') + '</span>';
+          fetchVouchers();
+          resetForm();
+        } else {
+          document.getElementById('form-message').innerHTML = '<span class="error">' + (res.message || 'Lỗi!') + '</span>';
+        }
+      });
+    };
+
+    function editVoucher(v) {
+      editing = true;
+      document.getElementById('form-title').innerText = 'Sửa voucher';
+      document.getElementById('submitBtn').innerText = 'Cập nhật';
+      document.getElementById('voucher_id').value = v.id;
+      document.getElementById('voucher_code').value = v.voucher_code;
+      document.getElementById('discount_amount').value = v.discount_amount;
+      document.getElementById('quantity').value = v.quantity;
+      document.getElementById('min_quantity').value = v.min_quantity;
+      document.getElementById('min_total_amount').value = v.min_total_amount;
+      document.getElementById('start_date').value = v.start_date;
+      document.getElementById('end_date').value = v.end_date;
+      document.getElementById('status').value = v.status || 'active';
+      document.getElementById('voucher_type').value = v.voucher_type || 'all_products';
+      document.getElementById('category_filter').value = v.category_filter || '';
+    }
+
+    function resetForm() {
+      editing = false;
+      document.getElementById('form-title').innerText = 'Thêm voucher mới';
+      document.getElementById('submitBtn').innerText = 'Thêm voucher';
+      document.getElementById('voucherForm').reset();
+      document.getElementById('voucher_id').value = '';
+      document.getElementById('form-message').innerHTML = '';
+      document.getElementById('status').value = 'active';
+      document.getElementById('voucher_type').value = 'all_products';
+      document.getElementById('category_filter').value = '';
+    }
+
+    function deleteVoucher(id) {
+      if (!confirm('Bạn chắc chắn muốn xóa voucher này?')) return;
+      fetch(apiBase + 'delete_voucher.php', {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json', Authorization: 'Bearer admin_token'},
+        body: JSON.stringify({id})
+      })
+      .then(r => r.json())
+      .then(res => {
+        if (res.success || res.status === 200) {
+          document.getElementById('message').innerHTML = '<span class="success">' + (res.message || 'Đã xóa!') + '</span>';
+          fetchVouchers();
+        } else {
+          document.getElementById('message').innerHTML = '<span class="error">' + (res.message || 'Lỗi!') + '</span>';
+        }
+      });
+    }
+
+    fetchVouchers();
+  </script>
+</body>
+</html> 

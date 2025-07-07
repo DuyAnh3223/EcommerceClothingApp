@@ -10,6 +10,8 @@ class Voucher {
   final List<int>? associatedProductIds;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final int minQuantity;
+  final double minTotalAmount;
 
   Voucher({
     required this.id,
@@ -23,6 +25,8 @@ class Voucher {
     this.associatedProductIds,
     this.createdAt,
     this.updatedAt,
+    this.minQuantity = 1,
+    this.minTotalAmount = 0.0,
   });
 
   factory Voucher.fromJson(Map<String, dynamic> json) {
@@ -40,6 +44,8 @@ class Voucher {
           : null,
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : null,
       updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
+      minQuantity: json['min_quantity'] ?? 1,
+      minTotalAmount: json['min_total_amount'] != null ? double.parse(json['min_total_amount'].toString()) : 0.0,
     );
   }
 
@@ -56,6 +62,8 @@ class Voucher {
       'associated_product_ids': associatedProductIds,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'min_quantity': minQuantity,
+      'min_total_amount': minTotalAmount,
     };
   }
 
@@ -71,6 +79,8 @@ class Voucher {
     List<int>? associatedProductIds,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? minQuantity,
+    double? minTotalAmount,
   }) {
     return Voucher(
       id: id ?? this.id,
@@ -84,6 +94,8 @@ class Voucher {
       associatedProductIds: associatedProductIds ?? this.associatedProductIds,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      minQuantity: minQuantity ?? this.minQuantity,
+      minTotalAmount: minTotalAmount ?? this.minTotalAmount,
     );
   }
 
@@ -155,6 +167,9 @@ class Voucher {
         return 'Không xác định';
     }
   }
+
+  String get formattedMinQuantity => '$minQuantity';
+  String get formattedMinTotalAmount => '${minTotalAmount.toStringAsFixed(0)} VNĐ';
 
   @override
   String toString() {

@@ -44,6 +44,8 @@ $discount_amount = floatval($input['discount_amount']);
 $quantity = intval($input['quantity']);
 $start_date = $input['start_date'];
 $end_date = $input['end_date'];
+$min_quantity = isset($input['min_quantity']) ? intval($input['min_quantity']) : 1;
+$min_total_amount = isset($input['min_total_amount']) ? floatval($input['min_total_amount']) : 0;
 
 // Validate data
 if ($discount_amount <= 0) {
@@ -53,6 +55,16 @@ if ($discount_amount <= 0) {
 
 if ($quantity <= 0) {
     sendResponse(400, 'Quantity must be greater than 0', null);
+    exit;
+}
+
+if ($min_quantity <= 0) {
+    sendResponse(400, 'Min quantity must be greater than 0', null);
+    exit;
+}
+
+if ($min_total_amount < 0) {
+    sendResponse(400, 'Min total amount must be >= 0', null);
     exit;
 }
 
@@ -86,8 +98,8 @@ try {
     }
     
     // Cập nhật voucher
-    $stmt = $conn->prepare("UPDATE vouchers SET voucher_code = ?, discount_amount = ?, quantity = ?, start_date = ?, end_date = ? WHERE id = ?");
-    $stmt->bind_param("sdissi", $voucher_code, $discount_amount, $quantity, $start_date, $end_date, $id);
+    $stmt = $conn->prepare("UPDATE vouchers SET voucher_code = ?, discount_amount = ?, quantity = ?, start_date = ?, end_date = ?, min_quantity = ?, min_total_amount = ? WHERE id = ?");
+    $stmt->bind_param("sdissidi", $voucher_code, $discount_amount, $quantity, $start_date, $end_date, $min_quantity, $min_total_amount, $id);
     $stmt->execute();
     
     // Lấy thông tin voucher đã cập nhật

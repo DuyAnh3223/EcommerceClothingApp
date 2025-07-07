@@ -18,6 +18,8 @@ class _AddEditVoucherDialogState extends State<AddEditVoucherDialog> {
   final _voucherCodeController = TextEditingController();
   final _discountAmountController = TextEditingController();
   final _quantityController = TextEditingController();
+  final _minQuantityController = TextEditingController();
+  final _minTotalAmountController = TextEditingController();
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 30));
   
@@ -56,6 +58,8 @@ class _AddEditVoucherDialogState extends State<AddEditVoucherDialog> {
       _selectedVoucherType = widget.voucher!.voucherType;
       _selectedCategory = widget.voucher!.categoryFilter;
       _selectedProductIds = widget.voucher!.associatedProductIds ?? [];
+      _minQuantityController.text = widget.voucher!.minQuantity.toString();
+      _minTotalAmountController.text = widget.voucher!.minTotalAmount.toString();
     }
     _loadProducts();
   }
@@ -88,6 +92,8 @@ class _AddEditVoucherDialogState extends State<AddEditVoucherDialog> {
     _voucherCodeController.dispose();
     _discountAmountController.dispose();
     _quantityController.dispose();
+    _minQuantityController.dispose();
+    _minTotalAmountController.dispose();
     super.dispose();
   }
 
@@ -169,6 +175,8 @@ class _AddEditVoucherDialogState extends State<AddEditVoucherDialog> {
         voucherType: _selectedVoucherType,
         categoryFilter: _selectedCategory,
         associatedProductIds: _selectedVoucherType == 'specific_products' ? _selectedProductIds : null,
+        minQuantity: int.parse(_minQuantityController.text),
+        minTotalAmount: double.parse(_minTotalAmountController.text),
       );
       Navigator.of(context).pop(voucher);
     }
@@ -231,6 +239,44 @@ class _AddEditVoucherDialogState extends State<AddEditVoucherDialog> {
                   final quantity = int.tryParse(value);
                   if (quantity == null || quantity <= 0) {
                     return 'Số lượng phải lớn hơn 0';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _minQuantityController,
+                decoration: const InputDecoration(
+                  labelText: 'Số lượng tối thiểu',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Vui lòng nhập số lượng tối thiểu';
+                  }
+                  final minQ = int.tryParse(value);
+                  if (minQ == null || minQ < 1) {
+                    return 'Số lượng tối thiểu phải >= 1';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _minTotalAmountController,
+                decoration: const InputDecoration(
+                  labelText: 'Tổng tiền tối thiểu (VNĐ)',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Vui lòng nhập tổng tiền tối thiểu';
+                  }
+                  final minT = double.tryParse(value);
+                  if (minT == null || minT < 0) {
+                    return 'Tổng tiền tối thiểu phải >= 0';
                   }
                   return null;
                 },

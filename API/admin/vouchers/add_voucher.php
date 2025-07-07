@@ -31,6 +31,8 @@ $input = json_decode(file_get_contents('php://input'), true);
 
 // Validate input
 $required_fields = ['voucher_code', 'discount_amount', 'quantity', 'start_date', 'end_date'];
+$min_quantity = isset($input['min_quantity']) ? intval($input['min_quantity']) : 1;
+$min_total_amount = isset($input['min_total_amount']) ? floatval($input['min_total_amount']) : 0;
 foreach ($required_fields as $field) {
     if (!isset($input[$field]) || empty($input[$field])) {
         sendResponse(400, "Missing required field: $field", null);
@@ -55,6 +57,16 @@ if ($quantity <= 0) {
     exit;
 }
 
+if ($min_quantity <= 0) {
+    sendResponse(400, 'Min quantity must be greater than 0', null);
+    exit;
+}
+
+if ($min_total_amount < 0) {
+    sendResponse(400, 'Min total amount must be >= 0', null);
+    exit;
+}
+
 // Validate dates
 $start_datetime = new DateTime($start_date);
 $end_datetime = new DateTime($end_date);
@@ -75,8 +87,8 @@ try {
     }
     
     // Thêm voucher mới
-    $stmt = $conn->prepare("INSERT INTO vouchers (voucher_code, discount_amount, quantity, start_date, end_date) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sdiss", $voucher_code, $discount_amount, $quantity, $start_date, $end_date);
+    $stmt = $conn->prepare("INSERT INTO vouchers (voucher_code, discount_amount, quantity, start_date, end_date, min_quantity, min_total_amount) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sdissid", $voucher_code, $discount_amount, $quantity, $start_date, $end_date, $min_quantity, $min_total_amount);
     $stmt->execute();
     
     $voucher_id = $conn->insert_id;
