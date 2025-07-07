@@ -5,11 +5,13 @@ class VoucherService {
   static const String baseUrl = 'http://127.0.0.1/EcommerceClothingApp/API';
 
   // Validate voucher for specific products
-  static Future<VoucherValidationResult> validateVoucher(String voucherCode, List<int> productIds) async {
+  static Future<VoucherValidationResult> validateVoucher(String voucherCode, List<int> productIds, {List<int>? quantities, List<double>? prices}) async {
     try {
       final requestBody = {
         'voucher_code': voucherCode,
         'product_ids': productIds,
+        if (quantities != null) 'quantities': quantities,
+        if (prices != null) 'prices': prices,
       };
       
       final requestJson = json.encode(requestBody);
@@ -96,6 +98,36 @@ class VoucherService {
       }
     } catch (e) {
       throw Exception('Network error: $e');
+    }
+  }
+
+  static Future<Map<String, List<Map<String, dynamic>>>> getAvailableVouchersForCart({required int userId, required double cartTotal, required int cartQuantity}) async {
+    final url = '$baseUrl/vouchers/get_available_vouchers.php';
+    print('DEBUG getAvailableVouchersForCart: userId=$userId, cartTotal=$cartTotal, cartQuantity=$cartQuantity');
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'user_id': userId,
+        'cart_total': cartTotal,
+        'cart_quantity': cartQuantity,
+      }),
+    );
+    print('DEBUG getAvailableVouchersForCart: statusCode=${response.statusCode}');
+    print('DEBUG getAvailableVouchersForCart: responseBody=${response.body}');
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      print('DEBUG getAvailableVouchersForCart: parsedData=$data');
+      if (data['success'] == true && data['data'] != null) {
+        return {
+          'eligible_vouchers': List<Map<String, dynamic>>.from(data['data']['eligible_vouchers'] ?? []),
+          'ineligible_vouchers': List<Map<String, dynamic>>.from(data['data']['ineligible_vouchers'] ?? []),
+        };
+      } else {
+        throw Exception(data['message'] ?? 'Không lấy được danh sách voucher');
+      }
+    } else {
+      throw Exception('Lỗi mạng: ${response.statusCode}');
     }
   }
 }

@@ -19,6 +19,12 @@ class _CartScreenState extends State<CartScreen> {
   double originalTotal = 0.0;
   double finalTotal = 0.0;
 
+  // Thêm các biến voucher ở đây
+  List<Map<String, dynamic>> eligibleVouchers = [];
+  List<Map<String, dynamic>> ineligibleVouchers = [];
+  Map<String, dynamic>? selectedVoucher;
+  bool isLoadingVouchers = false;
+
   @override
   void initState() {
     super.initState();
@@ -31,27 +37,23 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> _loadCart() async {
-    if (mounted) {
-      setState(() { isLoading = true; });
-    }
+    setState(() { isLoading = true; });
     final userData = await AuthService.getUserData();
     final userId = userData?['id'];
     if (userId == null) return;
     final result = await AuthService.getCart(userId: userId);
     if (result['success'] == true && result['data'] is List) {
-      if (mounted) {
-        setState(() {
-          cartItems = result['data'];
-          isLoading = false;
-        });
-      }
+      setState(() {
+        cartItems = result['data'];
+        isLoading = false;
+      });
+      // Gọi lại voucher sau khi cart đã load xong
+      await _loadAvailableVouchers();
     } else {
-      if (mounted) {
-        setState(() { isLoading = false; });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Lỗi tải giỏ hàng'), backgroundColor: Colors.red),
-        );
-      }
+      setState(() { isLoading = false; });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Lỗi tải giỏ hàng'), backgroundColor: Colors.red),
+      );
     }
   }
 
@@ -117,6 +119,9 @@ class _CartScreenState extends State<CartScreen> {
           // Refresh notification count after successful order
           _loadNotificationCount();
         },
+        eligibleVouchers: eligibleVouchers,
+        ineligibleVouchers: ineligibleVouchers,
+        isLoadingVouchers: isLoadingVouchers,
       ),
     );
   }
@@ -631,18 +636,50 @@ class _CartScreenState extends State<CartScreen> {
                 ),
     );
   }
+
+  // 2. Thêm hàm load voucher khả dụng
+  Future<void> _loadAvailableVouchers() async {
+    setState(() { isLoadingVouchers = true; });
+    final userData = await AuthService.getUserData();
+    final userId = userData?['id'];
+    if (userId == null) return;
+    final cartTotal = cartItems.fold<double>(0, (sum, item) => sum + (item['total_price'] ?? 0));
+    final cartQuantity = cartItems.fold<int>(0, (sum, item) => sum + ((item['quantity'] ?? 0) as num).toInt());
+    print('DEBUG _loadAvailableVouchers: cartTotal=$cartTotal, cartQuantity=$cartQuantity');
+    try {
+      final result = await VoucherService.getAvailableVouchersForCart(
+        userId: userId,
+        cartTotal: cartTotal,
+        cartQuantity: cartQuantity,
+      );
+      setState(() {
+        eligibleVouchers = List<Map<String, dynamic>>.from(result['eligible_vouchers'] ?? []);
+        ineligibleVouchers = List<Map<String, dynamic>>.from(result['ineligible_vouchers'] ?? []);
+        isLoadingVouchers = false;
+      });
+    } catch (e) {
+      setState(() { isLoadingVouchers = false; });
+      print('Voucher load error: $e');
+    }
+  }
 }
 
 class CartOrderConfirmDialog extends StatefulWidget {
   final List cartItems;
   final double totalPrice;
   final VoidCallback onOrderPlaced;
+  final List<Map<String, dynamic>> eligibleVouchers;
+  final List<Map<String, dynamic>> ineligibleVouchers;
+  final bool isLoadingVouchers;
 
   const CartOrderConfirmDialog({
     Key? key,
     required this.cartItems,
     required this.totalPrice,
     required this.onOrderPlaced,
+    required this.eligibleVouchers,
+    required this.ineligibleVouchers,
+    required this.isLoadingVouchers,
   }) : super(key: key);
 
   @override
@@ -655,7 +692,9 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
   String paymentMethod = 'COD';
   bool isLoading = false;
   
-  // Voucher variables
+  // Voucher variables cho dialog xác nhận đơn hàng
+  Map<String, dynamic>? selectedVoucher;
+
   final TextEditingController _voucherController = TextEditingController();
   Map<String, dynamic>? appliedVoucher;
   bool isApplyingVoucher = false;
@@ -666,10 +705,8 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
   @override
   void initState() {
     super.initState();
-    // Initialize totals from widget cart items
     originalTotal = widget.totalPrice;
     finalTotal = originalTotal;
-    // Load user addresses
     _loadAddresses();
   }
 
@@ -861,13 +898,11 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
   Future<void> _placeOrder() async {
     final userData = await AuthService.getUserData();
     final userId = userData?['id'];
-    
     print('=== DEBUG ORDER REQUEST ===');
     print('User Data: $userData');
     print('User ID: $userId');
     print('Selected Address ID: $selectedAddressId');
     print('Cart Items Count: ${widget.cartItems.length}');
-    
     if (userId == null) {
       print('ERROR: User ID is null');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -875,7 +910,6 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
       );
       return;
     }
-    
     if (selectedAddressId == null) {
       print('ERROR: Address ID is null');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -883,7 +917,6 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
       );
       return;
     }
-    
     if (widget.cartItems.isEmpty) {
       print('ERROR: Cart items is empty');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -891,34 +924,30 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
       );
       return;
     }
-    
     setState(() { isLoading = true; });
-    
     try {
       // Debug: Log order data
       print('Payment Method: $paymentMethod');
-      print('Applied Voucher: $appliedVoucher');
+      print('Selected Voucher: $selectedVoucher');
       print('Discount Amount: $discountAmount');
-      
-      // Prepare voucher data if applied
+      // Prepare voucher data if selected
       Map<String, dynamic>? voucherData;
-      if (appliedVoucher != null) {
+      if (selectedVoucher != null) {
         voucherData = {
-          'voucher_id': appliedVoucher!['voucher_id'],
-          'voucher_code': appliedVoucher!['voucher_code'],
+          'voucher_id': selectedVoucher!['id'],
+          'voucher_code': selectedVoucher!['voucher_code'],
           'discount_amount': discountAmount,
         };
         print('=== DEBUG CART SCREEN VOUCHER ===');
-        print('Applied Voucher: $appliedVoucher');
+        print('Selected Voucher: $selectedVoucher');
         print('Voucher Data: $voucherData');
-        print('Voucher ID: ${appliedVoucher!['voucher_id']}');
-        print('Voucher Code: ${appliedVoucher!['voucher_code']}');
+        print('Voucher ID: ${selectedVoucher!['id']}');
+        print('Voucher Code: ${selectedVoucher!['voucher_code']}');
         print('Discount Amount: $discountAmount');
       } else {
         print('=== DEBUG CART SCREEN VOUCHER ===');
-        print('No applied voucher');
+        print('No selected voucher');
       }
-      
       print('Calling placeOrderWithCombinations...');
       final result = await AuthService.placeOrderWithCombinations(
         userId: userId,
@@ -927,9 +956,7 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
         cartItems: widget.cartItems.cast<Map<String, dynamic>>(),
         voucherData: voucherData,
       );
-      
       print('Order Result: $result');
-      
       if (result['success'] == true) {
         // Xóa items khỏi giỏ hàng
         for (var item in widget.cartItems) {
@@ -937,7 +964,6 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
         }
         setState(() { isLoading = false; });
         widget.onOrderPlaced();
-        
         // Kiểm tra nếu cần thanh toán VNPAY
         if (result['requires_payment'] == true && result['payment_method'] == 'VNPAY') {
           // Hiển thị dialog thanh toán VNPAY
@@ -1246,85 +1272,58 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
               const SizedBox(height: 8),
               
               // Voucher section
-              const Text('🎫 Mã giảm giá:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('🎫 Chọn voucher:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              
-              if (appliedVoucher != null) ...[
-                // Applied voucher display
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    border: Border.all(color: Colors.green.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Voucher: ${appliedVoucher!['voucher_code']}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green.shade700,
-                              ),
-                            ),
-                            Text(
-                              'Giảm ${discountAmount.toStringAsFixed(0)} VNĐ',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.green.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _removeVoucher,
-                        icon: Icon(Icons.close, color: Colors.green.shade700),
-                        iconSize: 20,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ] else ...[
-                // Voucher input
-                Row(
+              Builder(
+                builder: (context) {
+                  print('DEBUG UI eligibleVouchers: ' + widget.eligibleVouchers.toString());
+                  print('DEBUG UI ineligibleVouchers: ' + widget.ineligibleVouchers.toString());
+                  return const SizedBox.shrink();
+                },
+              ),
+              if (widget.isLoadingVouchers)
+                const Center(child: CircularProgressIndicator()),
+              if (!widget.isLoadingVouchers && widget.eligibleVouchers.isEmpty && widget.ineligibleVouchers.isEmpty)
+                const Text('Không có voucher khả dụng'),
+              if (!widget.isLoadingVouchers && (widget.eligibleVouchers.isNotEmpty || widget.ineligibleVouchers.isNotEmpty))
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _voucherController,
-                        decoration: const InputDecoration(
-                          hintText: 'Nhập mã voucher',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
+                    ...widget.eligibleVouchers.map((v) => RadioListTile<Map<String, dynamic>>(
+                      value: v,
+                      groupValue: selectedVoucher,
+                      onChanged: (val) {
+                        setState(() {
+                          selectedVoucher = val;
+                          if (selectedVoucher != null) {
+                            discountAmount = (selectedVoucher!['discount_amount'] ?? 0).toDouble();
+                            finalTotal = originalTotal - discountAmount;
+                          } else {
+                            discountAmount = 0.0;
+                            finalTotal = originalTotal;
+                          }
+                        });
+                        print('DEBUG: Chọn voucher: ' + (val?['voucher_code'] ?? '').toString());
+                      },
+                      title: Text('${v['voucher_code']} - ${v['discount_formatted']}'),
+                      subtitle: Text(v['condition_text'] ?? '', style: const TextStyle(color: Colors.green)),
+                      activeColor: Colors.green,
+                    )),
+                    if (widget.ineligibleVouchers.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text('Voucher không đủ điều kiện:', style: TextStyle(color: Colors.grey)),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: isApplyingVoucher ? null : _applyVoucher,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade600,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: isApplyingVoucher
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Text('Áp dụng'),
-                    ),
+                    ...widget.ineligibleVouchers.map((v) => RadioListTile<Map<String, dynamic>>(
+                      value: v,
+                      groupValue: null,
+                      onChanged: null,
+                      title: Text('${v['voucher_code']} - ${v['discount_formatted']}', style: const TextStyle(color: Colors.grey)),
+                      subtitle: Text(v['status_message'] ?? '', style: const TextStyle(color: Colors.red)),
+                      activeColor: Colors.grey,
+                    )),
                   ],
                 ),
-                const SizedBox(height: 8),
-              ],
               
               // Payment method
               const Text('Phương thức thanh toán:'),
@@ -1352,12 +1351,12 @@ class _CartOrderConfirmDialogState extends State<CartOrderConfirmDialog> {
                       Text('${originalTotal.toStringAsFixed(0)} VNĐ', style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
-                  if (appliedVoucher != null) ...[
+                  if (selectedVoucher != null) ...[
                     const SizedBox(height: 4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Giảm giá (${appliedVoucher!['voucher_code']}):', style: TextStyle(color: Colors.green.shade700)),
+                        Text('Giảm giá (${selectedVoucher!['voucher_code']}):', style: TextStyle(color: Colors.green.shade700)),
                         Text('-${discountAmount.toStringAsFixed(0)} VNĐ', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold)),
                       ],
                     ),

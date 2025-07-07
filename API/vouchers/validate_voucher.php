@@ -51,7 +51,9 @@ try {
             v.end_date,
             v.voucher_type,
             v.category_filter,
-            v.status
+            v.status,
+            v.min_quantity,
+            v.min_total_amount
         FROM vouchers v
         WHERE v.voucher_code = '$voucherCode'
     ";
@@ -107,6 +109,26 @@ try {
     
     if ($voucher['quantity'] <= 0) {
         sendResponse(false, 'Voucher đã hết số lượng sử dụng', null, 400);
+        exit;
+    }
+    
+    // Lấy thêm min_quantity, min_total_amount
+    $minQuantity = isset($voucher['min_quantity']) ? (int)$voucher['min_quantity'] : 1;
+    $minTotalAmount = isset($voucher['min_total_amount']) ? (float)$voucher['min_total_amount'] : 0.0;
+    $totalQuantity = 0;
+    $totalAmount = 0;
+    if (isset($input['quantities']) && is_array($input['quantities'])) {
+        $totalQuantity = array_sum($input['quantities']);
+    }
+    if (isset($input['prices']) && is_array($input['prices'])) {
+        $totalAmount = array_sum($input['prices']);
+    }
+    if ($totalQuantity < $minQuantity) {
+        sendResponse(false, "Cần mua tối thiểu $minQuantity sản phẩm để áp dụng voucher", null, 400);
+        exit;
+    }
+    if ($totalAmount < $minTotalAmount) {
+        sendResponse(false, "Cần tổng tiền tối thiểu " . number_format($minTotalAmount) . "đ để áp dụng voucher", null, 400);
         exit;
     }
     
